@@ -6,80 +6,68 @@
   <title>Admin Portal | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { 
-      --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; 
-      --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; 
-    }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
     
     .app-container { width: 100%; max-width: 600px; padding: 20px; padding-bottom: 80px; }
     
-    /* SECURE LOGIN OVERLAY */
-    #login-overlay {
-      position: fixed; inset: 0; background: var(--deep-green); z-index: 9999;
-      display: flex; align-items: center; justify-content: center; flex-direction: column;
-    }
+    /* SECURE LOGIN */
+    #login-overlay { position: fixed; inset: 0; background: var(--deep-green); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
     .login-box h2 { color: var(--deep-green); margin-bottom: 10px; font-size: 1.8rem; }
     .login-box p { color: var(--muted); margin-bottom: 25px; font-size: 0.95rem; }
     .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; background: #FAFAFA; }
-    .login-box input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
-    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
-    .login-box button:hover { background: #0A5F42; }
+    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; }
     .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: 600; }
 
-    /* Main Dashboard Area */
+    /* MAIN DASHBOARD */
     #dashboard-area { display: none; }
-    
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header h1 { font-size: 1.5rem; color: var(--deep-green); }
     .logout-btn { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text); }
 
     /* Tabs */
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-    .tab { 
-      background: white; border: 1px solid var(--border); padding: 10px 20px; 
-      border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; transition: 0.2s;
-    }
+    .tab { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
     .tab.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
     
     .view-section { display: none; }
     .view-section.active { display: block; }
 
     /* Panels */
-    .panel { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .panel { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); }
     .panel h2 { font-size: 1.1rem; color: var(--deep-green); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     
     /* Request Cards */
     .req-item { display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: #FAFAFA; }
     .req-info h4 { font-size: 0.95rem; margin-bottom: 5px; color: var(--deep-green); }
     .req-info p { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
-    .proof-img { max-width: 100px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px; display: block; }
     
+    /* Fixed Image Box */
+    .proof-img { width: 100%; max-width: 200px; height: auto; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; display: block; }
+
     /* Buttons */
-    .btn-approve { background: var(--emerald); color: white; border: none; padding : 10px; border-radius: 6px;8 cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
+    .btn-approve { background: var(--emerald); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
     .btn-reject { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
     .btn-outline { background: white; border: 1px solid var(--border); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--text); flex: 1;}
 
     /* User List */
     .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
     .user-info h4 { font-size: 0.95rem; color: var(--deep-green); margin-bottom: 2px; }
-    .user-info p { font-size: 0.8rem; color: var(--muted); margin-bottom: px4px; }
-    .user-status { font-weight: 700;; font-size: 0.75rem; padding: 4 borderpx-radius: 4px; display: inline-block; }
+    .user-info p { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    .user-status { font-weight: 700; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; display: inline-block; }
     .user-status.active { background: #D1FAE5; color: #065F46; }
     .user-status.frozen { background: #FEE2E2; color: #991B1B; }
-    
     .user-actions { display: flex; gap: 8px; }
     
-    /* Loading Spinner */
+    /* Spinner */
     .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--emerald); animation: spin 1s ease-in-out infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
 
-  <!-- SECURE LOGIN OVERLAY -->
   <div id="login-overlay">
     <div class="login-box">
       <h2>Admin Access</h2>
@@ -90,20 +78,18 @@
     </div>
   </div>
 
-  <!-- MAIN DASHBOARD AREA -->
   <div id="dashboard-area" class="app-container">
     <div class="header">
       <h1>Admin Panel</h1>
       <button class="logout-btn" onclick="window.location.replace('../index.html')">Exit</button>
     </div>
 
-    <!-- TABS -->
     <div class="tabs">
       <div class="tab active" id="tab-requests" onclick="switchTab('requests')">Requests</div>
       <div class="tab" id="tab-users" onclick="switchTab('users')">Users</div>
+      <div class="tab" id="tab-complaints" onclick="switchTab('complaints')">Complaints</div>
     </div>
 
-    <!-- VIEW: REQUESTS -->
     <div id="view-requests" class="view-section active">
       <div class="panel">
         <h2>Pending Approvals</h2>
@@ -111,20 +97,24 @@
       </div>
     </div>
 
-    <!-- VIEW: USERS -->
     <div id="view-users" class="view-section">
       <div class="panel">
         <h2>Registered Users</h2>
         <div id="user-list"><div class="spinner"></div></div>
       </div>
     </div>
+
+    <div id="view-complaints" class="view-section">
+      <div class="panel">
+        <h2>Support Complaints</h2>
+        <div id="complaint-list"><div class="spinner"></div></div>
+      </div>
+    </div>
   </div>
 
   <script>
-    // --- SECURITY PASSCODE LOGIC ---
     function verifyPasscode() {
-      const pass = document.getElementById('admin-pass').value;
-      if (pass === "@@@@") {
+      if (document.getElementById('admin-pass').value === "@@@@") {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('dashboard-area').style.display = 'block';
         loadRequests();
@@ -134,32 +124,25 @@
       }
     }
 
-    document.getElementById('admin-pass').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter') verifyPasscode();
-    });
-
-    // --- TAB SWITCHING ---
     function switchTab(tabName) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
-      
       document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
       document.getElementById(`view-${tabName}`).classList.add('active');
 
       if (tabName === 'requests') loadRequests();
       if (tabName === 'users') loadUsers();
+      if (tabName === 'complaints') loadComplaints();
     }
 
-    // --- DATA LOADERS ---
+    // Load Requests
     async function loadRequests() {
       const container = document.getElementById('req-list');
       container.innerHTML = '<div class="spinner"></div>';
-      
       try {
         const res = await fetch('/api/admin/requests');
         const requests = await res.json();
         
-        // FIX: Replaced the HTML entity issues with clean strings
         container.innerHTML = requests.length > 0 ? requests.map(tx => {
           const typeStr = tx.type.replace(/_/g, ' ');
           return `
@@ -181,10 +164,10 @@
       }
     }
 
+    // Load Users
     async function loadUsers() {
       const container = document.getElementById('user-list');
       container.innerHTML = '<div class="spinner"></div>';
-      
       try {
         const res = await fetch('/api/admin/users');
         const data = await res.json();
@@ -194,9 +177,7 @@
           return;
         }
 
-        const users = data;
-        
-        container.innerHTML = users.length > 0 ? users.map(u => `
+        container.innerHTML = data.length > 0 ? data.map(u => `
           <div class="user-row">
             <div class="user-info">
               <h4>${u.name} (@${u.username})</h4>
@@ -214,7 +195,37 @@
       }
     }
 
-    // --- ACTIONS ---
+    // Load Complaints
+    async function loadComplaints() {
+      const container = document.getElementById('complaint-list');
+      container.innerHTML = '<div class="spinner"></div>';
+      try {
+        const res = await fetch('/api/admin/complaints');
+        const complaints = await res.json();
+        
+        container.innerHTML = complaints.length > 0 ? complaints.map(c => `
+          <div class="req-item">
+            <div class="req-info">
+              <h4>${c.subject} (${c.ref_number})</h4>
+              <p><strong>From:</strong> ${c.name}</p>
+              <p><strong>Category:</strong> ${c.category}</p>
+              <p style="margin-top:5px; font-style:italic;">"${c.message}"</p>
+              <p style="margin-top:5px;"><strong>Status:</strong> <span style="color:${c.status === 'Resolved' ? 'var(--emerald)' : 'var(--warning)'}">${c.status}</span></p>
+              ${c.admin_response ? `<p style="margin-top:10px; background:#E6F4EE; padding:10px; border-radius:6px;"><strong>Admin Reply:</strong> ${c.admin_response}</p>` : ''}
+            </div>
+            ${c.status !== 'Resolved' ? `
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+              <button class="btn-outline" onclick="respondComplaint(${c.id})">Respond & Resolve</button>
+            </div>
+            ` : ''}
+          </div>
+        `).join('') : '<p style="color:var(--muted); text-align:center;">No complaints.</p>';
+      } catch (err) {
+        container.innerHTML = '<p style="color:var(--danger); text-align:center;">Failed to load complaints.</p>';
+      }
+    }
+
+    // Actions
     async function approveReq(id, action) {
       await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txId: id, action }) });
       loadRequests();
@@ -230,6 +241,13 @@
       if (!confirm("Are you sure you want to delete this user?")) return;
       await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
       loadUsers();
+    }
+
+    async function respondComplaint(id) {
+      const response = prompt("Enter your reply to this complaint:");
+      if (response === null) return;
+      await fetch(`/api/admin/complaints/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'Resolved', response }) });
+      loadComplaints();
     }
   </script>
 </body>
