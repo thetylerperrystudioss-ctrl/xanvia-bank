@@ -10,10 +10,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
 
-// Image Upload Configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
@@ -25,7 +23,6 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Database Setup
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
   else {
@@ -72,13 +69,25 @@ app.post('/api/register', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Email may already exist.' }); }
 });
 
+// UPDATED LOGIN TO ENSURE FLAGS EXIST
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
     const user = result.rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
-    if (user.status === 'Flagged') return res.status(403).json({ error: 'Account flagged.' });
+    
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Invalid credentials.' });
+    }
+    if (user.status === 'Flagged') {
+      return res.status(403).json({ error: 'Account flagged.' });
+    }
+
+    // Ensure boolean flags are sent as true/false
+    user.has_bank = user.has_bank || false;
+    user.has_loan = user.has_loan || false;
+    user.has_investment = user.has_investment || false;
+
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
@@ -89,19 +98,29 @@ app.post('/api/open-account', async (req, res) => {
   try {
     if (type === 'bank') {
       await pool.query(`UPDATE users SET has_bank = true WHERE id = $1`, [userId]);
-      await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0.00), ($1, 'savings', 0.00)`, [userId]);
+      // Check if accounts already exist to prevent duplication
+      const check = await pool.query(`SELECT * FROM accounts WHERE user_id = $1 AND type = 'checking'`, [userId]);
+      if (check.rows.length === 0) {
+        await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0.00), ($1, 'savings', 0.00)`, [userId]);
+      }
     } else if (type === 'investment') {
       await pool.query(`UPDATE users SET has_investment = true WHERE id = $1`, [userId]);
-      await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'brokerage', 0.00), ($1, 'bitcoin', 0.00)`, [userId]);
+      const check = await pool.query(`SELECT * FROM accounts WHERE user_id = $1 AND type = 'brokerage'`, [userId]);
+      if (check.rows.length === 0) {
+        await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'brokerage', 0.00), ($1, 'bitcoin', 0.00)`, [userId]);
+      }
     } else if (type === 'loan') {
       await pool.query(`UPDATE users SET has_loan = true WHERE id = $1`, [userId]);
-      await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'loan', 0.00)`, [userId]);
+      const check = await pool.query(`SELECT * FROM accounts WHERE user_id = $1 AND type = 'loan'`, [userId]);
+      if (check.rows.length === 0) {
+        await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'loan', 0.00)`, [userId]);
+      }
     }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Failed to open account.' }); }
 });
 
-// GET USER ACCOUNTS (Feeds the mobile dashboard header)
+// GET ACCOUNTS & TRANSACTIONS
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
@@ -111,7 +130,6 @@ app.get('/api/accounts/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// GET TRANSACTIONS (Feeds the mobile app list)
 app.get('/api/transactions/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -126,7 +144,7 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
   const imagePath = `/uploads/${req.file.filename}`;
   try {
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, [userId, amount, imagePath]);
-    res.json({ success: true, message: 'Deposit requested. Pending Admin verification.' });
+    res.json({ success: true, message: 'Deposit sent. Pending Admin verification.' });
   } catch (err) { res.status(500).json({ error: 'Request failed.' }); }
 });
 
@@ -164,12 +182,11 @@ app.get('/api/loans/:userId', async (req, res) => {
   catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// INVESTMENTS & BITCOIN
+// INVESTMENTS
 app.post('/api/investments/buy', async (req, res) => {
-  const { userId, symbol, shares, price, accountType } = req.body; 
+  const { userId, symbol, shares, price, accountType } = req.body;
   const totalCost = shares * price;
   const sourceAccount = 'checking'; 
-  
   try {
     const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = '${sourceAccount}'`, [userId]);
     if (parseFloat(check.rows[0].balance) < totalCost) return res.status(400).json({ error: 'Insufficient funds.' });
@@ -187,7 +204,7 @@ app.get('/api/investments/:userId', async (req, res) => {
   catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// ADMIN
+// ADMIN ROUTES
 app.get('/api/admin/requests', async (req, res) => {
   try {
     const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status = 'Pending' ORDER BY t.created_at DESC`);
