@@ -23,12 +23,14 @@ form.addEventListener("submit", async (e) => {
       return;
     }
     
-    // Save the user to the session so the dashboard knows who is logged in
-    localStorage.setItem("xanvia_session", JSON.stringify(data.user));
+    // Save the token and user data exactly as the dashboard expects
+    localStorage.setItem("xanvia_token", "token_" + data.user.id);
+    localStorage.setItem("xanvia_user", JSON.stringify(data.user));
     
     msg.textContent = `Welcome back, ${data.user.name.split(' ')[0]}!`;
     msg.className = "auth-msg success";
     
+    // Redirect after a short delay
     setTimeout(() => { window.location.href = "dashboard.html"; }, 1000);
     
   } catch (error) {

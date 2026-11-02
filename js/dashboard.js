@@ -1,29 +1,36 @@
-// 1. Secure Auth Guard
+// 1. Check for the token and user data
 const token = localStorage.getItem("xanvia_token");
 const userStr = localStorage.getItem("xanvia_user");
 
+// 2. If they don't exist, kick the user back to login
 if (!token || !userStr) {
   window.location.href = "login.html";
 }
 
-const user = JSON.parse(userStr);
-
-// 2. Display User Info
-document.addEventListener("DOMContentLoaded", () => {
-  const nameEl = document.querySelector("#user-name");
-  if (nameEl) nameEl.textContent = user.name.split(' ')[0];
-  
-  // Note: We are keeping your existing dashboard render logic for now.
-  // In the next stage, we can build a route to fetch account balances from the database.
-  console.log("Dashboard loaded securely for:", user.email);
-});
-
-// 3. Logout
-const logoutBtn = document.querySelector("#logout-btn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("xanvia_token");
-    localStorage.removeItem("xanvia_user");
-    window.location.href = "login.html";
-  });
+// 3. Parse the user object
+let user;
+try {
+  user = JSON.parse(userStr);
+} catch (e) {
+  window.location.href = "login.html";
 }
+
+// 4. Once the page loads, set up the UI
+document.addEventListener("DOMContentLoaded", () => {
+  
+  // Display the user's first name in the dashboard header
+  const nameEl = document.querySelector("#user-name");
+  if (nameEl && user) {
+    nameEl.textContent = user.name.split(' ')[0];
+  }
+  
+  // Set up the Logout button
+  const logoutBtn = document.querySelector("#logout-btn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("xanvia_token");
+      localStorage.removeItem("xanvia_user");
+      window.location.href = "login.html";
+    });
+  }
+});
