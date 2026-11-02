@@ -10,7 +10,6 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
 
 const storage = multer.diskStorage({
@@ -25,7 +24,7 @@ const pool = new Pool({
 });
 
 // ==========================================
-// 1. DATABASE SETUP
+// 1. DATABASE SETUP (WITH AUTO-FIX)
 // ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
@@ -33,8 +32,7 @@ pool.connect((err, client, release) => {
     client.query(`
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE, password VARCHAR(100), status VARCHAR(20) DEFAULT 'Active',
-        has_bank BOOLEAN DEFAULT false, has_loan BOOLEAN DEFAULT false, has_investment BOOLEAN DEFAULT false,
-        age INTEGER, address TEXT, ssn_last4 VARCHAR(4)
+        has_bank BOOLEAN DEFAULT false, has_loan BOOLEAN DEFAULT false, has_investment BOOLEAN DEFAULT false
       );
       CREATE TABLE IF NOT EXISTS accounts (
         id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), balance DECIMAL(12,2) DEFAULT 0.00
@@ -52,14 +50,26 @@ pool.connect((err, client, release) => {
         id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE, value TEXT
       );
     `, (err) => {
-      release();
       if (err) console.error('Table Error:', err.message);
-      else {
-        pool.query(`INSERT INTO system_settings (key, value) VALUES 
-          ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') 
-          ON CONFLICT DO NOTHING`);
-        console.log('✅ Database & Settings ready.');
-      }
+      
+      // FORCE ADD COLUMNS IF THEY DON'T EXIST (FIXES THE CRASH)
+      client.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4);
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS has_bank BOOLEAN DEFAULT false;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS has_loan BOOLEAN DEFAULT false;
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS has_investment BOOLEAN DEFAULT false;
+      `, (err2) => {
+        release();
+        if (err2) console.error('Alter Table Error:', err2.message);
+        else {
+          pool.query(`INSERT INTO system_settings (key, value) VALUES 
+            ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') 
+            ON CONFLICT DO NOTHING`);
+          console.log('✅ Database upgraded and ready.');
+        }
+      });
     });
   }
 });
@@ -128,7 +138,7 @@ app.post('/api/complete-onboarding', async (req, res) => {
 });
 
 // ==========================================
-// 4. DASHBOARD DATA
+// 4. DASHBOARD DATA & TRANSACTIONS
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
@@ -173,7 +183,7 @@ app.post('/api/withdraw/request', async (req, res) => {
 });
 
 // ==========================================
-// 6. LOANS
+// 6. LOANS & INVESTMENTS
 // ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount, termMonths, rate } = req.body;
@@ -194,9 +204,6 @@ app.get('/api/loans/:userId', async (req, res) => {
   catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// ==========================================
-// 7. INVESTMENTS
-// ==========================================
 app.post('/api/investments/buy', async (req, res) => {
   const { userId, symbol, shares, price, accountType } = req.body;
   const totalCost = shares * price;
@@ -219,7 +226,7 @@ app.get('/api/investments/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 8. ADMIN
+// 7. ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
@@ -284,9 +291,6 @@ app.post('/api/admin/approve', async (req, res) => {
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ==========================================
-// 9. SERVE FRONTEND
-// ==========================================
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
 const PORT = process.env.PORT || 3000;
