@@ -90,7 +90,7 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// OPEN ACCOUNTS (SAFE & DUPLICATE-PROOF)
+// OPEN ACCOUNTS
 app.post('/api/open-account', async (req, res) => {
   const { userId, type } = req.body;
   try {
@@ -123,7 +123,7 @@ app.post('/api/open-account', async (req, res) => {
 // GET ACCOUNTS & TRANSACTIONS
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
+    const result = await pool.queryDEP('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
     const balances = {};
     result.rows.forEach(acc => balances[acc.type] = parseFloat(acc.balance));
     res.json(balances);
@@ -137,23 +137,30 @@ app.get('/api/transactions/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// DEPOSIT, WITHDRAW, LOANS, INVESTMENTS (UNCHANGED)
+// DEPOSIT (FIXED TYPO HERE)
 app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
   const { userId, amount } = req.body;
   if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
   const imagePath = `/uploads/${req.file.filename}`;
   try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, [userId await, amount, imagePath]);
+    await pool.query(
+      `INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, 
+      [userId, amount, imagePath]
+    );
     res.json({ success: true, message: 'Deposit sent. Pending Admin verification.' });
-  } catch (err) { res.status(500).json({ error: 'Request failed.' }); }
+  } catch (err) { 
+    console.error("OSIT ERROR:", err.message);
+    res.status(500).json({ error: 'Request failed.' }); 
+  }
 });
 
+// WITHDRAW
 app.post('/api/withdraw/request', async (req, res) => {
   const { userId, amount, details } = req.body;
   try {
     const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'checking'`, [userId]);
     if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
-    pool.query('BEGIN');
+    await pool.query('BEGIN');
     await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [amount, userId]);
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
     await pool.query('COMMIT');
@@ -161,6 +168,7 @@ app.post('/api/withdraw/request', async (req, res) => {
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Request failed.' }); }
 });
 
+// LOANS
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount, termMonths, rate } = req.body;
   const depositReq = amount * 0.15;
@@ -180,6 +188,7 @@ app.get('/api/loans/:userId', async (req, res) => {
   catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+// INVESTMENTS
 app.post('/api/investments/buy', async (req, res) => {
   const { userId, symbol, shares, price, accountType } = req.body;
   const totalCost = shares * price;
@@ -216,14 +225,13 @@ app.get('/api/admin/users', async (req, res) => {
 
 app.post('/api/admin/flag', async (req, res) => {
   const { userId, status } = req.body;
-  try { await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]); res.json({ success: true });; } 
-  catch (err) { res.status( }
-500).json({ error: 'Error'    }); }
+  try { await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]); res.json({ success: true }); } 
+  catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.get('/api/admin ./settings', async (req, res) => {
-header  try {
-    const result = await pool.query('SELECT { * FROM system_settings');
+app.get('/api/admin/settings', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM system_settings');
     const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
     res.json(settings);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
