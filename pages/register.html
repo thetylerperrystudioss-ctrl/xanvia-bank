@@ -10,13 +10,11 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
     .auth-card { background: white; width: 100%; max-width: 420px; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-    
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
     .logo-icon { background: var(--emerald); color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; }
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.3rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
-
     h2 { color: var(--deep-green); font-size: 1.8rem; margin-bottom: 8px; }
     p.sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 30px; }
     .input-group { margin-bottom: 20px; }
@@ -40,66 +38,34 @@
         <span class="logo-subtitle">Credit Union</span>
       </div>
     </div>
-    
     <h2>Create Account</h2>
     <p class="sub">Join Xanvia Credit Union in under a minute.</p>
-    
     <div id="msg" class="msg"></div>
-    
     <form id="register-form">
-      <div class="input-group">
-        <label>Full Name</label>
-        <input type="text" id="name" required>
-      </div>
-      <div class="input-group">
-        <label>Email Address</label>
-        <input type="email" id="email" required>
-      </div>
-      <div class="input-group">
-        <label>Password</label>
-        <input type="password" id="password" required>
-      </div>
+      <div class="input-group"><label>Full Name</label><input type="text" id="name" required></div>
+      <div class="input-group"><label>Username</label><input type="text" id="username" required></div>
+      <div class="input-group"><label>Email Address</label><input type="email" id="email" required></div>
+      <div class="input-group"><label>Password</label><input type="password" id="password" required></div>
       <button type="submit" class="btn-primary">Sign Up</button>
     </form>
-    
     <div class="switch-link">Already have an account? <a href="login.html">Log In</a></div>
   </div>
-
   <script>
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('msg');
       const btn = document.querySelector('.btn-primary');
       btn.textContent = "Creating...";
-      msg.className = "msg";
-
       try {
-        const res = await fetch('/api/register', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            name: document.getElementById('name').value, 
-            email: document.getElementById('email').value, 
-            password: document.getElementById('password').value 
-          }) 
-        });
-        
+        const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: document.getElementById('name').value, username: document.getElementById('username').value, email: document.getElementById('email').value, password: document.getElementById('password').value }) });
         const data = await res.json();
-        
         if (data.success) {
-          msg.className = "msg success"; 
-          msg.textContent = "Account created! Redirecting...";
+          msg.className = "msg success"; msg.textContent = "Account created! Redirecting...";
           setTimeout(() => window.location.href = "login.html", 1500);
         } else {
-          msg.className = "msg error"; 
-          msg.textContent = data.error || "Registration failed."; 
-          btn.textContent = "Sign Up";
+          msg.className = "msg error"; msg.textContent = data.error || "Registration failed."; btn.textContent = "Sign Up";
         }
-      } catch (err) { 
-        msg.className = "msg error"; 
-        msg.textContent = "Server error."; 
-        btn.textContent = "Sign Up"; 
-      }
+      } catch (err) { msg.className = "msg error"; msg.textContent = "Server error."; btn.textContent = "Sign Up"; }
     });
   </script>
 </body>

@@ -4,43 +4,35 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Dashboard | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
-    .app-header { 
-      padding: 20px 20px 50px; 
-      border-radius: 0 0 30px 30px; 
-      text-align: center; 
-      position: relative; 
-      background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); 
-      color: white; 
-    }
-    .top-nav { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      margin-bottom: 20px; 
-    }
-    
+    .app-header { padding: 20px 20px 50px; border-radius: 0 0 30px 30px; text-align: center; position: relative; background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; }
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon { background: var(--emerald); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; text-align: left; }
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.2rem; font-weight: 900; line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
-
     .logout-btn { color: white; background: rgba(255,255,255,0.1); border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
     .balance-section { margin-top: 10px; }
     .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; }
     .balance-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
-    
     .quick-actions { display: flex; justify-content: center; gap: 15px; margin-top: 30px; position: absolute; bottom: -35px; left: 0; right: 0; padding: 0 20px; }
     .action-btn { background: white; border: none; border-radius: 16px; padding: 15px 10px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
     .icon-circle { width: 36px; height: 36px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .action-btn span { font-size: 0.8rem; font-weight: 600; }
+    
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; font-family: inherit; }
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
   </style>
 </head>
 <body class="mobile-app-body">
-
   <header class="app-header">
     <div class="top-nav">
       <div class="logo">
@@ -52,25 +44,14 @@
       </div>
       <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
-    
     <div class="balance-section">
       <h1 class="balance-amount" id="total-balance">$0.00</h1>
       <p class="balance-label">Available Balance</p>
     </div>
-
     <div class="quick-actions">
-      <a href="hub.html" class="action-btn">
-        <div class="icon-circle">⚙️</div>
-        <span>Manage</span>
-      </a>
-      <a href="withdraw.html" class="action-btn">
-        <div class="icon-circle">↗</div>
-        <span>Transfer</span>
-      </a>
-      <a href="deposit.html?target=checking" class="action-btn">
-        <div class="icon-circle">+</div>
-        <span>Deposit</span>
-      </a>
+      <a href="hub.html" class="action-btn"><div class="icon-circle">⚙️</div><span>Manage</span></a>
+      <a href="withdraw.html" class="action-btn"><div class="icon-circle">↗</div><span>Transfer</span></a>
+      <a href="deposit.html?target=checking" class="action-btn"><div class="icon-circle">+</div><span>Deposit</span></a>
     </div>
   </header>
 
@@ -84,36 +65,62 @@
       <button class="filter-btn active">All</button>
       <button class="filter-btn">Food</button>
       <button class="filter-btn">Entertainment</button>
-      <button class="filter-btn">Hobby</button>
-      <button class="filter-btn">Income</button>
     </div>
 
-    <div class="transaction-container" id="transaction-list">
-      <!-- Transactions injected by JS -->
+    <div class="transaction-container" id="transaction-list"></div>
+
+    <!-- Complaint Button -->
+    <div style="padding: 20px; margin-top: 20px;">
+      <h3 style="color: var(--deep-green); margin-bottom: 10px;">Support Center</h3>
+      <button onclick="openComplaint()" style="width:100%; padding:14px; background:white; border:1px solid #ddd; border-radius:10px; font-weight:600; color:var(--danger);">Lodge a Complaint</button>
     </div>
   </main>
 
+  <!-- COMPLAINT MODAL -->
+  <div id="complaint-modal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="document.getElementById('complaint-modal').classList.remove('open')">×</button>
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Lodge a Complaint</h2>
+      
+      <div class="form-group">
+        <label>Category</label>
+        <select id="cmp-category">
+          <option>Deposit Issues</option>
+          <option>Withdrawal Issues</option>
+          <option>Investment Issues</option>
+          <option>Loan Issues</option>
+          <option>Account Restrictions</option>
+          <option>Login Problems</option>
+          <option>Transfers</option>
+          <option>Other Issues</option>
+        </select>
+      </div>
+      
+      <div class="form-group">
+        <label>Subject</label>
+        <input type="text" id="cmp-subject" placeholder="Brief summary">
+      </div>
+      
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="cmp-message" rows="4" placeholder="Explain your issue..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Attachment (Optional)</label>
+        <input type="file" id="cmp-file" accept="image/*">
+      </div>
+
+      <button onclick="submitComplaint()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit Complaint</button>
+      <div id="cmp-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
+    </div>
+  </div>
+
   <nav class="bottom-nav">
-    <a href="#" class="nav-item">
-      <span class="icon">💳</span>
-      <span class="label">Payments</span>
-    </a>
-    <a href="#" class="nav-item">
-      <span class="icon">📊</span>
-      <span class="label">Spending</span>
-    </a>
-    <a href="dashboard.html" class="nav-item active">
-      <span class="icon">🏠</span>
-      <span class="label">Home</span>
-    </a>
-    <a href="cards.html" class="nav-item">
-      <span class="icon">💳</span>
-      <span class="label">Cards</span>
-    </a>
-    <a href="#" class="nav-item">
-      <span class="icon">🧩</span>
-      <span class="label">Spaces</span>
-    </a>
+    <a href="#" class="nav-item"><span class="icon">💳</span><span class="label">Payments</span></a>
+    <a href="#" class="nav-item"><span class="icon">📊</span><span class="label">Spending</span></a>
+    <a href="dashboard.html" class="nav-item active"><span class="icon">🏠</span><span class="label">Home</span></a>
+    <a href="cards.html" class="nav-item"><span class="icon">💳</span><span class="label">Cards</span></a>
   </nav>
 
   <script>
@@ -125,16 +132,38 @@
       window.location.replace("../index.html");
     }
 
-    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    function openComplaint() { document.getElementById('complaint-modal').classList.add('open'); }
+
+    async function submitComplaint() {
+      const category = document.getElementById('cmp-category').value;
+      const subject = document.getElementById('cmp-subject').value;
+      const message = document.getElementById('cmp-message').value;
+      const file = document.getElementById('cmp-file').files[0];
+      const msg = document.getElementById('cmp-msg');
+
+      if (!subject || !message) { msg.textContent = "Please fill all fields."; msg.style.color = "red"; return; }
+
+      const formData = new FormData();
+      formData.append('userId', user.id);
+      formData.append('category', category);
+      formData.append('subject', subject);
+      formData.append('message', message);
+      if (file) formData.append('attachment', file);
+
+      const res = await fetch('/api/complaints', { method: 'POST', body: formData });
+      const data = await res.json();
+      
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { document.getElementById('complaint-modal').classList.remove('open'); }, 2000);
+    }
 
     async function loadDashboard() {
       try {
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
-        
         const checking = data.checking || 0;
         const savings = data.savings || 0;
-        
         document.getElementById('total-balance').textContent = formatUSD(checking + savings);
 
         const txRes = await fetch(`/api/transactions/${user.id}`);
@@ -146,45 +175,23 @@
           return;
         }
 
-        let html = `
-          <div class="month-header">
-            <span>Recent Activity</span>
-            <span class="spent-text">Transactions</span>
-          </div>
-        `;
-
-        txs.forEach(tx => {
-          const isCredit = tx.type.includes('DEPOSIT') || tx.type.includes('LOAN');
-          const amountClass = isCredit ? 'credit' : 'debit';
-          const sign = isCredit ? '+' : '-';
-          const icon = tx.type === 'DEPOSIT' ? '⬇️' : tx.type === 'WITHDRAWAL' ? '⬆️' : '🔄';
-          
-          const date = new Date(tx.created_at);
-          const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          const dateStr = date.toLocaleDateString([], { month: '2-digit', day: '2-digit' });
-
-          html += `
-            <div class="tx-item">
-              <div class="tx-icon">${icon}</div>
-              <div class="tx-details">
-                <h4>${tx.type.replace('_', ' ')}</h4>
-                <p>${timeStr} • ${dateStr}</p>
-              </div>
-              <div class="tx-amount ${amountClass}">
-                ${sign}${formatUSD(parseFloat(tx.amount))}
-                <span class="tx-status">${tx.status}</span>
-              </div>
+        container.innerHTML = txs.map(tx => `
+          <div class="tx-item">
+            <div class="tx-icon">🔄</div>
+            <div class="tx-details">
+              <h4>${tx.type.replace('_', ' ')}</h4>
+              <p>${new Date(tx.created_at).toLocaleDateString()}</p>
             </div>
-          `;
-        });
-
-        container.innerHTML = html;
-
-      } catch (err) { 
-        console.error("Dashboard Error:", err); 
-      }
+            <div class="tx-amount ${tx.type.includes('DEPOSIT') ? 'credit' : 'debit'}">
+              ${formatUSD(parseFloat(tx.amount))}
+              <span class="tx-status">${tx.status}</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) { console.error(err); }
     }
 
+    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
     loadDashboard();
   </script>
 </body>

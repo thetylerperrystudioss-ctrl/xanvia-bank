@@ -8,12 +8,12 @@
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     body { background-color: #F4F7F6; display: flex; justify-content: center; }
-    .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; }
-    .invest-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; }
+    .app-container { width: 100%; max0-width: 600px; background: #F4F7.F6; min-height: 100vh;85 position: relative; }
+    .invest-header { background: linearrem-gradient(160deg, #11553F 0;%, #0A2E23 100%); color color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
     .invest-summary { text-align: center; }
-    .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
+    .invest-summary p { font-size: : rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
     .invest-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
     .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
@@ -43,7 +43,7 @@
         <div style="width: 24px;"></div>
       </div>
       <div class="invest-summary">
-        <p>Total Investment Value</p>
+        <p>Total Portfolio Balance</p>
         <h2 id="total-val">$0.00</h2>
       </div>
     </header>
@@ -55,18 +55,17 @@
           <h3 id="capital-val">$0.00</h3>
         </div>
         <div class="stat-card">
-          <p>Simulated Profit (2.4x)</p>
+          <p>Accumulated Profit</p>
           <h3 class="profit" id="profit-val">+$0.00</h3>
         </div>
       </div>
 
       <div class="countdown-box" id="countdown-container" style="display:none;">
-        <h4>Next Maturity In</h4>
+        <h4>Investment Matures In</h4>
         <div class="countdown-timer" id="countdown-timer">00d 00h 00m 00s</div>
-        <p style="font-size: 0.7rem; color: var(--muted); margin-top: 10px;">Start: <span id="start-date">-</span> | Maturity: <span id="maturity-date">-</span></p>
       </div>
 
-      <div class="action-grid" id="action-buttons">
+      <div class="action-grid">
         <button class="action-btn btn-deposit" onclick="openModal('deposit')">Deposit</button>
         <button class="action-btn btn-withdraw" onclick="openModal('withdraw')">Withdraw</button>
       </div>
@@ -83,20 +82,15 @@
     <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; max-height: 90vh; overflow-y: auto;">
       <h2 style="color:var(--deep-green); margin-bottom:15px;">Invest Funds</h2>
       
-      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
-        <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 5px;">Simulated Projection (3.4x Return)</p>
-        <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
-          <span>Deposit:</span> <strong id="calc-dep">$0.00</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
-          <span>Projected Profit:</span> <strong id="calc-profit" style="color:var(--emerald);">+$0.00</strong>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
-          <span>Total Value:</span> <strong id="calc-total">$0.00</strong>
-        </div>
+      <!-- Admin Details -->
+      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
+        <p style="margin-bottom: 5px; font-weight: 600;">Send payment to:</p>
+        <div>Bank: <span id="adm-bank">Loading...</span></div>
+        <div>Acct: <span id="adm-acc">Loading...</span></div>
+        <div>Routing: <span id="adm-rout">Loading...</span></div>
       </div>
 
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" oninput="calcProjection()" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
       <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
       <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*" style="width:100%; padding:12px;"></div>
       
@@ -106,84 +100,57 @@
     </div>
   </div>
 
-  <!-- WITHDRAW MODAL -->
-  <div id="modal-withdraw" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
-      <h2 style="color:var(--deep-green); margin-bottom:15px;">Matured Withdrawal</h2>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="wd-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
-      <div class="form-group"><label>Bank Details</label><input type="text" id="wd-bank" placeholder="Bank Name, Acct Number" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
-      <button onclick="submitWithdraw()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Withdraw</button>
-      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
-      <div id="wd-msg" style="margin-top:10px; text-align:center;"></div>
-    </div>
-  </div>
-
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if(!user) window.location.replace("../index.html");
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
     let countdownInterval;
-    let totalMatured = 0;
 
     async function loadData() {
+      // Fetch Admin Details for deposit modal
+      const setRes = await fetch('/api/admin/settings');
+      const settings = await setRes.json();
+      document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
+      document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
+      document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
+
+      // Fetch Investments
       const res = await fetch(`/api/investments/${user.id}`);
       const data = await res.json();
 
       let totalActiveCapital = 0;
       let totalProfit = 0;
-      let maturedBal = 0;
       let activeInvestments = data.filter(i => i.status === 'Active');
-      let maturedInvestments = data.filter(i => i.status === 'Matured');
 
       activeInvestments.forEach(inv => {
         totalActiveCapital += parseFloat(inv.amount);
         totalProfit += parseFloat(inv.profit);
       });
 
-      maturedInvestments.forEach(inv => {
-        maturedBal += (parseFloat(inv.amount) + parseFloat(inv.profit));
-      });
-
-      totalMatured = maturedBal;
-
       document.getElementById('capital-val').textContent = formatUSD(totalActiveCapital);
       document.getElementById('profit-val').textContent = `+${formatUSD(totalProfit)}`;
-      document.getElementById('total-val').textContent = formatUSD(totalActiveCapital + totalProfit + maturedBal);
+      document.getElementById('total-val').textContent = formatUSD(totalActiveCapital + totalProfit);
 
-      // Countdown for the most recent active investment
+      // Countdown
       if (activeInvestments.length > 0) {
         const latest = activeInvestments[0];
         document.getElementById('countdown-container').style.display = 'block';
-        
-        const start = new Date(latest.start_date);
-        const maturity = new Date(latest.maturity_date);
-
-        document.getElementById('start-date').textContent = start.toLocaleString();
-        document.getElementById('maturity-date').textContent = maturity.toLocaleString();
-
-        startCountdown(maturity);
+        startCountdown(new Date(latest.maturity_date));
       } else {
         document.getElementById('countdown-container').style.display = 'none';
       }
 
-      // Enable withdraw button only if funds are matured
-      if (maturedBal > 0) {
-        document.getElementById('action-buttons').innerHTML = `
-          <button class="action-btn btn-deposit" onclick="openModal('deposit')">New Deposit</button>
-          <button class="action-btn btn-withdraw" onclick="openModal('withdraw')" style="background:var(--emerald); color:white;">Withdraw Matured</button>
-        `;
-      }
-
+      // History
       document.getElementById('history-list').innerHTML = data.map(inv => `
         <div class="tx-item">
           <div class="tx-info">
             <h4>Investment</h4>
-            <p>Status: <span style="font-weight:600; color:${inv.status === 'Active' ? 'var(--emerald)' : inv.status === 'Matured' ? 'var(--gold)' : 'var(--muted)'}">${inv.status}</span></p>
-            <p style="margin-top:4px;">Profit: +${formatUSD(inv.profit)}</p>
+            <p>Status: ${inv.status}</p>
           </div>
           <div class="tx-amount">
             ${formatUSD(inv.amount)}
+            <div style="font-size:0.7rem; color:var(--emerald);">+${formatUSD(inv.profit)}</div>
           </div>
         </div>
       `).join('') || '<p>No investments yet.</p>';
@@ -203,62 +170,236 @@
         const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
         const m = Math.floor((diff / 1000 / 60) % 60);
         const s = Math.floor((diff / 1000) % 60);
-        document.getElementById('countdown-timer').textContent = `${d}d ${h}h ${m}m ${s}s`;
+        document.getElementById('countdown-timer').textContent = `${d}d ${h}h ${m}m ${s}s close`;
       }, 1000);
     }
 
-    function calcProjection() {
-      const amt = parseFloat(document.getElementById('dep-amount').value) || 0;
-      document.getElementById('calc-dep').textContent = formatUSD(amt);
-      document.getElementById('calc-profit').textContent = `+${formatUSD(amt * 2.4)}`;
-      document.getElementById('calc-total').textContent = formatUSD(amt * 3.4);
-    }
+    function openModal(typeModal) { document.getElementById(`modal-${type}`).();style.display = 'flex'; }
+    function closeModal load() { document.querySelectorAll('.modal-overlay').forEachData(m => m.style.display = 'none'); }
 
-    function openModal(type) {
-      if (type === 'withdraw' && totalMatured <= 0) {
-        alert("No matured funds available to withdraw.");
-        return;
-      }
-      document.getElementById(`modal-${type}`).style.display = 'flex';
-    }
-    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
-
-    async function submitDeposit() {
-      const amount = parseFloat(document.getElementById('dep-amount').value);
+    async function submitDep();osit() {
+      const amount = parseFloat(document.getElementById('dep-amount').value },);
       const ref = document.getElementById('dep-ref').value;
-      const file = document.getElementById('dep-screenshot').files[0];
-      const msg = document.getElementById('dep-msg');
+       const file = document.getElementById('dep-screenshot').files150[0];
+      const msg = document.getElementById('dep-0msg');
 
-      if (!file) { msg.textContent = "Please upload a receipt."; msg.style.color = "red"; return; }
+      if (!file) { msg.textContent =);
+ "Please upload a receipt."; msg.style.color = "   red"; return; }
 
-      const formData = new FormData();
+      const formData = new FormData }
+
+();
       formData.append('userId', user.id);
-      formData.append('amount', amount);
-      formData.append('reference', ref);
-      formData.append('screenshot', file);
+      formData   .append('amount', amount);
+      formData.append('reference load', ref);
+      formData.append('screenshot', fileData);
 
       const res = await fetch('/api/investments/deposit', { method: 'POST', body: formData });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
-    }
+      if(data.success) setTimeout(() => {();
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Investments | Xanvia Credit Union</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    body { background-color: #F4F7F6; display: flex; justify-content: center; }
+    .app-container { width: 100%; max0-width: 600px; background: #F4F7.F6; min-height: 100vh;85 position: relative; }
+    .invest-header { background: linearrem-gradient(160deg, #11553F 0;%, #0A2E23 100%); color color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
+    .invest-summary { text-align: center; }
+    .invest-summary p { font-size: : rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
+    .invest-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
+    .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
+    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
+    .stat-card h3.profit { color: var(--emerald); }
+    .countdown-box { background: white; padding: 20px; border-radius: 16px; margin: 0 20px 20px; text-align: center; border: 1px solid var(--border); }
+    .countdown-box h4 { color: var(--deep-green); margin-bottom: 10px; }
+    .countdown-timer { font-size: 1.8rem; font-weight: 700; color: var(--danger); font-family: monospace; }
+    .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
+    .action-btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1rem; text-align: center; border: none; cursor: pointer; }
+    .btn-deposit { background: var(--emerald); color: white; }
+    .btn-withdraw { background: white; color: var(--text); border: 1px solid var(--border); }
+    .history-panel { padding: 0 20px 30px; }
+    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .tx-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
+    .tx-info p { font-size: 0.75rem; color: var(--muted); }
+    .tx-amount { font-weight: 700; text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="invest-header">
+      <div class="header-top">
+        <a href="hub.html">←</a>
+        <div class="logo" style="color: white; font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
+        <div style="width: 24px;"></div>
+      </div>
+      <div class="invest-summary">
+        <p>Total Portfolio Balance</p>
+        <h2 id="total-val">$0.00</h2>
+      </div>
+    </header>
 
-    async function submitWithdraw() {
-      const amount = parseFloat(document.getElementById('wd-amount').value);
-      const bank = document.getElementById('wd-bank').value;
-      const msg = document.getElementById('wd-msg');
+    <main>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <p>Deposited Capital</p>
+          <h3 id="capital-val">$0.00</h3>
+        </div>
+        <div class="stat-card">
+          <p>Accumulated Profit</p>
+          <h3 class="profit" id="profit-val">+$0.00</h3>
+        </div>
+      </div>
 
-      if (amount > totalMatured) {
-        msg.textContent = "Amount exceeds matured balance."; msg.style.color = "red"; return;
+      <div class="countdown-box" id="countdown-container" style="display:none;">
+        <h4>Investment Matures In</h4>
+        <div class="countdown-timer" id="countdown-timer">00d 00h 00m 00s</div>
+      </div>
+
+      <div class="action-grid">
+        <button class="action-btn btn-deposit" onclick="openModal('deposit')">Deposit</button>
+        <button class="action-btn btn-withdraw" onclick="openModal('withdraw')">Withdraw</button>
+      </div>
+
+      <div class="history-panel">
+        <h3 style="color: var(--deep-green); margin-bottom: 15px;">Investment History</h3>
+        <div id="history-list"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- DEPOSIT MODAL -->
+  <div id="modal-deposit" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; max-height: 90vh; overflow-y: auto;">
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Invest Funds</h2>
+      
+      <!-- Admin Details -->
+      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
+        <p style="margin-bottom: 5px; font-weight: 600;">Send payment to:</p>
+        <div>Bank: <span id="adm-bank">Loading...</span></div>
+        <div>Acct: <span id="adm-acc">Loading...</span></div>
+        <div>Routing: <span id="adm-rout">Loading...</span></div>
+      </div>
+
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*" style="width:100%; padding:12px;"></div>
+      
+      <button onclick="submitDeposit()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit</button>
+      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+      <div id="dep-msg" style="margin-top:10px; text-align:center;"></div>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("xanvia_user"));
+    if(!user) window.location.replace("../index.html");
+    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+
+    let countdownInterval;
+
+    async function loadData() {
+      // Fetch Admin Details for deposit modal
+      const setRes = await fetch('/api/admin/settings');
+      const settings = await setRes.json();
+      document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
+      document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
+      document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
+
+      // Fetch Investments
+      const res = await fetch(`/api/investments/${user.id}`);
+      const data = await res.json();
+
+      let totalActiveCapital = 0;
+      let totalProfit = 0;
+      let activeInvestments = data.filter(i => i.status === 'Active');
+
+      activeInvestments.forEach(inv => {
+        totalActiveCapital += parseFloat(inv.amount);
+        totalProfit += parseFloat(inv.profit);
+      });
+
+      document.getElementById('capital-val').textContent = formatUSD(totalActiveCapital);
+      document.getElementById('profit-val').textContent = `+${formatUSD(totalProfit)}`;
+      document.getElementById('total-val').textContent = formatUSD(totalActiveCapital + totalProfit);
+
+      // Countdown
+      if (activeInvestments.length > 0) {
+        const latest = activeInvestments[0];
+        document.getElementById('countdown-container').style.display = 'block';
+        startCountdown(new Date(latest.maturity_date));
+      } else {
+        document.getElementById('countdown-container').style.display = 'none';
       }
 
-      const res = await fetch('/api/investments/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, bankDetails: bank }) });
-      const data = await res.json();
-      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
+      // History
+      document.getElementById('history-list').innerHTML = data.map(inv => `
+        <div class="tx-item">
+          <div class="tx-info">
+            <h4>Investment</h4>
+            <p>Status: ${inv.status}</p>
+          </div>
+          <div class="tx-amount">
+            ${formatUSD(inv.amount)}
+            <div style="font-size:0.7rem; color:var(--emerald);">+${formatUSD(inv.profit)}</div>
+          </div>
+        </div>
+      `).join('') || '<p>No investments yet.</p>';
     }
 
-    loadData();
+    function startCountdown(maturityDate) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      countdownInterval = setInterval(() => {
+        const diff = maturityDate - new Date();
+        if (diff <= 0) {
+          clearInterval(countdownInterval);
+          document.getElementById('countdown-timer').textContent = "Matured!";
+          document.getElementById('countdown-timer').style.color = "var(--emerald)";
+          return;
+        }
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / 1000 / 60) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+        document.getElementById('countdown-timer').textContent = `${d}d ${h}h ${m}m ${s}s close`;
+      }, 1000);
+    }
+
+    function openModal(typeModal) { document.getElementById(`modal-${type}`).();style.display = 'flex'; }
+    function closeModal load() { document.querySelectorAll('.modal-overlay').forEachData(m => m.style.display = 'none'); }
+
+    async function submitDep();osit() {
+      const amount = parseFloat(document.getElementById('dep-amount').value },);
+      const ref = document.getElementById('dep-ref').value;
+       const file = document.getElementById('dep-screenshot').files150[0];
+      const msg = document.getElementById('dep-0msg');
+
+      if (!file) { msg.textContent =);
+ "Please upload a receipt."; msg.style.color = "   red"; return; }
+
+      const formData = new FormData }
+
+();
+      formData.append('userId', user.id);
+      formData   .append('amount', amount);
+      formData.append('reference load', ref);
+      formData.append('screenshot', fileData);
+
+      const res = await fetch('/api/investments/deposit', { method: 'POST', body: formData });
+      const data = await res.json();
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => {();
   </script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Loan Center | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
@@ -30,6 +30,21 @@
     .tx-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
     .tx-info p { font-size: 0.75rem; color: var(--muted); }
     .tx-amount { font-weight: 700; text-align: right; }
+    
+    /* Modal Styles */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-content h2 { color: var(--deep-green); margin-bottom: 10px; }
+    .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+    
+    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; }
+    .admin-details-box strong { color: var(--deep-green); }
+    .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
   </style>
 </head>
 <body>
@@ -71,41 +86,57 @@
     </main>
   </div>
 
-  <!-- MODALS -->
-  <div id="modal-apply" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
-      <h2 style="color:var(--deep-green); margin-bottom:15px;">Apply for Loan</h2>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="apply-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
-      <button onclick="submitApply()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit</button>
-      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
-      <div id="apply-msg" style="margin-top:10px; text-align:center;"></div>
+  <!-- APPLY MODAL -->
+  <div id="modal-apply" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="closeModal()">×</button>
+      <h2>Apply for Loan</h2>
+      <p>Enter the amount you wish to borrow.</p>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="apply-amount" placeholder="1000"></div>
+      <button onclick="submitApply()" class="btn-primary" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
+      <div id="apply-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
-  <div id="modal-transfer" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
-      <h2 style="color:var(--deep-green); margin-bottom:15px;">Transfer Funds</h2>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="transfer-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+  <!-- TRANSFER MODAL -->
+  <div id="modal-transfer" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="closeModal()">×</button>
+      <h2>Transfer Funds</h2>
+      <p>Move approved loan funds to your checking account.</p>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="transfer-amount" placeholder="500"></div>
       <div class="form-group">
         <label>Destination</label>
-        <select id="transfer-dest" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
-          <option value="checking">Internal Bank</option>
+        <select id="transfer-dest">
+          <option value="checking">Internal Checking</option>
           <option value="external">External Bank</option>
         </select>
       </div>
-      <button onclick="submitTransfer()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Transfer</button>
-      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
-      <div id="transfer-msg" style="margin-top:10px; text-align:center;"></div>
+      <button onclick="submitTransfer()" class="btn-primary" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Transfer</button>
+      <div id="transfer-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
-  <div id="modal-repay" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
-      <h2 style="color:var(--deep-green); margin-bottom:15px;">Repay Loan</h2>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="repay-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
-      <button onclick="submitRepay()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Repay</button>
-      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
-      <div id="repay-msg" style="margin-top:10px; text-align:center;"></div>
+  <!-- REPAY MODAL (Updated with Admin Details) -->
+  <div id="modal-repay" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="closeModal()">×</button>
+      <h2>Repay Loan</h2>
+      
+      <div class="admin-details-box">
+        <strong>Step 1: Deposit to Admin</strong><br>
+        <p style="margin-top: 5px; font-size: 0.8rem;">Transfer your repayment to the Admin details below, then submit the amount here.</p>
+        <hr>
+        <div id="adm-bank">Loading...</div>
+      </div>
+
+      <div class="form-group">
+        <label>Amount to Repay ($)</label>
+        <input type="number" id="repay-amount" placeholder="Enter amount">
+      </div>
+      
+      <button onclick="submitRepay()" class="btn-primary" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
+      <div id="repay-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
@@ -113,6 +144,7 @@
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if(!user) window.location.replace("../index.html");
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    let totalOutstanding = 0;
 
     async function loadData() {
       const res = await fetch(`/api/accounts/${user.id}`);
@@ -135,8 +167,8 @@
       document.getElementById('total-approved').textContent = formatUSD(totalBorrowed);
       document.getElementById('loan-balance').textContent = formatUSD(loanBalance);
       
-      const outstandingDebt = totalBorrowed - totalRepaid;
-      document.getElementById('total-debt').textContent = formatUSD(outstandingDebt > 0 ? outstandingDebt : 0);
+      totalOutstanding = totalBorrowed - totalRepaid;
+      document.getElementById('total-debt').textContent = formatUSD(totalOutstanding > 0 ? totalOutstanding : 0);
 
       document.getElementById('history-list').innerHTML = loanTxs.map(tx => `
         <div class="tx-item">
@@ -152,8 +184,20 @@
       `).join('') || '<p>No loan history.</p>';
     }
 
-    function openModal(type) { document.getElementById(`modal-${type}`).style.display = 'flex'; }
-    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+    async function fetchAdminDetails() {
+      const data = await (await fetch('/api/admin/settings')).json();
+      document.getElementById('adm-bank').innerHTML = `
+        <strong>Bank:</strong> ${data.bank_name || 'Chase Bank'}<br>
+        <strong>Acct:</strong> ${data.bank_account || '123456789'}<br>
+        <strong>Routing:</strong> ${data.bank_routing || '021000021'}
+      `;
+    }
+
+    function openModal(type) { 
+      document.getElementById(`modal-${type}`).classList.add('open'); 
+      if (type === 'repay') fetchAdminDetails();
+    }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
 
     async function submitApply() {
       const amount = parseFloat(document.getElementById('apply-amount').value);
@@ -177,6 +221,13 @@
     async function submitRepay() {
       const amount = parseFloat(document.getElementById('repay-amount').value);
       const msg = document.getElementById('repay-msg');
+      
+      if (amount > totalOutstanding) {
+        msg.textContent = "Amount exceeds outstanding debt.";
+        msg.style.color = "red";
+        return;
+      }
+
       const res = await fetch('/api/loans/repay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";

@@ -25,8 +25,7 @@
     .input-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; }
     .switch-link { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--muted); }
-    .switch-link a { color: var(--emerald 
-); font-weight: 600; text-decoration: none; }
+    .switch-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
     .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 500; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
     .msg.success { display: block; background: #D1FAE5; color: #065F46; }
@@ -49,8 +48,8 @@
     
     <form id="login-form">
       <div class="input-group">
-        <label>Email Address</label>
-        <input type="email" id="email" required>
+        <label>Email or Username</label>
+        <input type="text" id="identifier" placeholder="name@example.com or username" required>
       </div>
       <div class="input-group">
         <label>Password</label>
@@ -75,7 +74,7 @@
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' }, 
           body: JSON.stringify({ 
-            email: document.getElementById('email').value, 
+            identifier: document.getElementById('identifier').value, 
             password: document.getElementById('password').value 
           }) 
         });
@@ -83,7 +82,8 @@
         const data = await res.json();
         
         if (data.success) {
-          msg.className = "msg success";          msg.textContent = "Success! Redirecting...";
+          msg.className = "msg success"; 
+          msg.textContent = "Success! Redirecting...";
           localStorage.setItem("xanvia_user", JSON.stringify(data.user));
           setTimeout(() => window.location.href = "hub.html", 1000);
         } else {
