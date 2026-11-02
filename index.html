@@ -35,6 +35,16 @@
     .btn-outline:hover { background: var(--emerald-light); }
     .btn-large { padding: 16px 32px; font-size: 1.05rem; }
 
+    /* Admin Button Style */
+    .btn-admin { 
+      background: transparent; 
+      color: var(--gold); 
+      border: 1px solid var(--gold); 
+      padding: 10px 20px;
+      font-size: 0.9rem;
+    }
+    .btn-admin:hover { background: rgba(201, 162, 75, 0.1); }
+
     /* Header */
     .top-banner { background: var(--deep-green); color: var(--white); text-align: center; padding: 12px; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.02em; }
     .top-banner a { color: var(--gold); text-decoration: underline; margin-left: 8px; cursor: pointer; }
@@ -45,7 +55,7 @@
     .nav-links { display: flex; gap: 28px; align-items: center; height: 100%; }
     .nav-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; font-weight: 500; font-size: 0.95rem; color: var(--text-muted); }
     .nav-item:hover { color: var(--emerald); }
-    .header-actions { display: flex; gap: 16px; align-items: center; }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
 
     /* Hero */
     .hero { padding: 100px 0 80px; background: var(--white); border-bottom: 1px solid var(--border); }
@@ -71,8 +81,8 @@
     .goal-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 32px 24px; text-align: center; transition: all 0.2s; cursor: pointer; }
     .goal-card:hover { border-color: var(--emerald); box-shadow: 0 10px 20px rgba(15,138,95,0.08); transform: translateY(-4px); }
     .goal-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
-    .goal-card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
-    .goal-card span { font-size: 0.85rem; color: var(--text-muted); }
+    .goal-card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottomBank: 8px; }
+    .goal-card span {ing font-size: 0.85rem; color: var(--text-muted); }
 
     /* Pillars Section */
     .pillars-section { padding: 80px 0; background: var(--white); }
@@ -104,6 +114,9 @@
     @media (max-width: 768px) {
       .hero-content h1 { font-size: 2.4rem; }
       .goals-grid { grid-template-columns: 1fr; }
+      .header-actions { gap: 8px; }
+      .btn-admin { padding: 8px 12px; font-size: 0.8rem; }
+      .btn-primary { padding: 8px 12px; font-size: 0.85rem; }
     }
   </style>
 </head>
@@ -122,6 +135,8 @@
         <div class="nav-item">Investments</div>
       </nav>
       <div class="header-actions">
+        <!-- NEW ADMIN BUTTON HERE -->
+        <a href="pages/admin.html" class="btn btn-admin">Admin Portal</a>
         <a href="pages/login.html" class="btn btn-primary">Log In</a>
       </div>
     </div>
@@ -131,7 +146,7 @@
     <div class="container hero-grid">
       <div class="hero-content">
         <div class="hero-rate">4.85% APY Savings</div>
-        <h1>Banking for real life, not just numbers.</h1>
+        <h1> for real life, not just numbers.</h1>
         <p>Save with confidence, borrow without surprises, and invest in your future—all from one secure, US-based platform.</p>
         <div class="hero-ctas">
           <a href="pages/register.html" class="btn btn-primary btn-large">Open Account</a>
@@ -247,8 +262,6 @@
           <a href="#">Disclosures</a>
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>
-          <!-- HIDDEN ADMIN BUTTON -->
-          <a href="pages/admin.html" style="opacity: 0.4; font-size: 0.75rem; margin-top: 10px;">Admin Portal</a>
         </div>
       </div>
 
