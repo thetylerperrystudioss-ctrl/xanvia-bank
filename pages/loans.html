@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loans | Xanvia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span>X</span> Xanvia</div>
+    <a class="nav-item" href="dashboard.html"><span>Overview</span></a>
+    <a class="nav-item active" href="loans.html"><span>Loans</span></a>
+    <div class="admin-profile"><button class="logout-btn" onclick="window.location.href='dashboard.html'">Back</button></div>
+  </aside>
+
+  <main class="main-content">
+    <div class="dashboard-padding">
+      <div class="dash-header"><h1>Loan Application</h1></div>
+      
+      <div class="panel" style="max-width: 500px;">
+        <div class="panel-title">Apply for a Loan</div>
+        <p style="color: var(--muted); margin-bottom: 15px; font-size: 0.9rem;">A <strong>15% deposit</strong> of the requested loan amount is required upfront and will be deducted from your Checking account.</p>
+        
+        <div class="form-group"><label>Loan Amount ($)</label><input type="number" id="loan-amt" placeholder="10000"></div>
+        <div class="form-group">
+          <label>Term</label>
+          <select id="loan-term"><option value="12">12 Months</option><option value="24">24 Months</option><option value="36">36 Months</option></select>
+        </div>
+        
+        <div style="background: var(--bg); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; font-weight: bold; color: var(--danger);">
+            <span>Required 15% Deposit:</span> <span id="deposit-req">$0.00</span>
+          </div>
+        </div>
+
+        <button class="btn-primary" style="width: 100%;" onclick="submitLoan()">Submit Application</button>
+        <div id="loan-msg" style="margin-top: 15px; font-weight: bold;"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("xanvia_user"));
+    
+    document.getElementById('loan-amt').addEventListener('input', (e) => {
+      const amt = parseFloat(e.target.value) || 0;
+      document.getElementById('deposit-req').textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amt * 0.15);
+    });
+
+    async function submitLoan() {
+      const amount = parseFloat(document.getElementById('loan-amt').value);
+      const term = parseInt(document.getElementById('loan-term').value);
+      const msg = document.getElementById('loan-msg');
+
+      const res = await fetch('/api/loans/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, amount, termMonths: term, rate: 6.49 })
+      });
+      const data = await res.json();
+      
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? 'var(--emerald)' : 'var(--danger)';
+    }
+  </script>
+</body>
+</html>

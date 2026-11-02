@@ -7,271 +7,261 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
   
   <style>
-    /* ================= CSS COMBINED ================= */
     :root {
       --emerald: #0F8A5F;
       --emerald-dark: #0A5F42;
-      --emerald-light: #E6F4EE;
-      --deep-green: #0B2E23;
       --gold: #C9A24B;
-      --bg-color: #F8F9FA;
-      --text-main: #1A1A1A;
-      --text-muted: #4A5D56;
       --white: #FFFFFF;
-      --border: #E2E8F0;
       --font-sans: "Inter", sans-serif;
       --font-serif: "Merriweather", Georgia, serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font-sans); background: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font-sans); background-color: #0B2E23; color: var(--white); }
+
     a { text-decoration: none; color: inherit; }
     
-    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-    .btn { padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-    .btn-primary { background: var(--emerald); color: var(--white); }
-    .btn-primary:hover { background: var(--emerald-dark); }
-    .btn-outline { background: transparent; color: var(--emerald); border: 1px solid var(--emerald); }
-    .btn-outline:hover { background: var(--emerald-light); }
-    .btn-large { padding: 16px 32px; font-size: 1.05rem; }
-
-    /* Admin Button Style */
-    .btn-admin { 
-      background: transparent; 
-      color: var(--gold); 
-      border: 1px solid var(--gold); 
-      padding: 10px 20px;
-      font-size: 0.9rem;
-    }
-    .btn-admin:hover { background: rgba(201, 162, 75, 0.1); }
-
     /* Header */
-    .top-banner { background: var(--deep-green); color: var(--white); text-align: center; padding: 12px; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.02em; }
-    .top-banner a { color: var(--gold); text-decoration: underline; margin-left: 8px; cursor: pointer; }
-    
-    .global-header { background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-    .header-inner { display: flex; justify-content: space-between; align-items: center; height: 76px; }
-    .logo { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 900; color: var(--emerald); letter-spacing: -0.02em; cursor: pointer; }
-    .nav-links { display: flex; gap: 28px; align-items: center; height: 100%; }
-    .nav-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; font-weight: 500; font-size: 0.95rem; color: var(--text-muted); }
-    .nav-item:hover { color: var(--emerald); }
-    .header-actions { display: flex; gap: 12px; align-items: center; }
-
-    /* Hero */
-    .hero { padding: 100px 0 80px; background: var(--white); border-bottom: 1px solid var(--border); }
-    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-    .hero-content h1 { font-family: var(--font-serif); font-size: 3.4rem; font-weight: 900; line-height: 1.1; color: var(--deep-green); margin-bottom: 24px; letter-spacing: -0.02em; }
-    .hero-content p { font-size: 1.15rem; color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; max-width: 500px; }
-    .hero-rate { display: inline-block; background: var(--emerald-light); color: var(--emerald-dark); padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; margin-bottom: 24px; }
-    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
-    
-    .hero-visual { background: linear-gradient(135deg, var(--emerald-light) 0%, #d4e9e0 100%); border-radius: 24px; padding: 40px; position: relative; overflow: hidden; border: 1px solid var(--border); }
-    .hero-visual::after { content: ""; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--gold); opacity: 0.1; border-radius: 50%; }
-    .hero-card { background: var(--white); border-radius: 16px; padding: 30px; box-shadow: 0 20px 40px rgba(11,46,35,0.08); position: relative; z-index: 1; }
-    .hero-card-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
-    .hero-card-value { font-family: var(--font-serif); font-size: 2.8rem; font-weight: 700; color: var(--deep-green); margin-bottom: 16px; }
-    .hero-card-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
-    
-    /* Goals Section */
-    .goals-section { padding: 80px 0; background: var(--bg-color); }
-    .section-header { text-align: center; margin-bottom: 48px; }
-    .section-header h2 { font-family: var(--font-serif); font-size: 2.2rem; font-weight: 700; color: var(--deep-green); margin-bottom: 12px; }
-    .section-header p { color: var(--text-muted); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
-    .goals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
-    .goal-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 32px 24px; text-align: center; transition: all 0.2s; cursor: pointer; }
-    .goal-card:hover { border-color: var(--emerald); box-shadow: 0 10px 20px rgba(15,138,95,0.08); transform: translateY(-4px); }
-    .goal-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
-    .goal-card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottomBank: 8px; }
-    .goal-card span {ing font-size: 0.85rem; color: var(--text-muted); }
-
-    /* Pillars Section */
-    .pillars-section { padding: 80px 0; background: var(--white); }
-    .pillars-grid { display: grid; grid-template-columns: 4fr 3fr 3fr; gap: 24px; }
-    .pillar-card { border: 1px solid var(--border); border-radius: 12px; padding: 40px; background: var(--white); transition: box-shadow 0.3s; }
-    .pillar-card:hover { box-shadow: 0 15px 30px rgba(11,46,35,0.06); }
-    .pillar-icon { font-size: 2.2rem; margin-bottom: 20px; }
-    .pillar-card h3 { font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 20px; color: var(--deep-green); }
-    .pillar-card ul { list-style: none; margin-bottom: 28px; }
-    .pillar-card ul li { position: relative; padding-left: 24px; margin-bottom: 12px; color: var(--text-muted); font-size: 0.95rem; }
-    .pillar-card ul li::before { content: "✓"; position: absolute; left: 0; color: var(--emerald); font-weight: bold; }
-    .pillar-link { color: var(--emerald); font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; cursor: pointer; }
-    .pillar-link:hover { color: var(--emerald-dark); }
-
-    /* Footer */
-    .global-footer { background: #061a13; color: #A7C4B7; padding: 60px 0 40px; font-size: 0.9rem; }
-    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
-    .footer-col h4 { color: var(--white); font-size: 0.95rem; margin-bottom: 20px; font-weight: 600; }
-    .footer-col a { display: block; margin-bottom: 10px; color: #A7C4B7; font-size: 0.85rem; }
-    .footer-col a:hover { color: var(--white); text-decoration: underline; }
-    .footer-disclosures { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 32px; font-size: 0.75rem; line-height: 1.8; color: #6A8A7D; }
-
-    @media (max-width: 1024px) {
-      .hero-grid, .pillars-grid { grid-template-columns: 1fr; }
-      .goals-grid { grid-template-columns: 1fr 1fr; }
-      .footer-grid { grid-template-columns: 1fr 1fr; }
-      .nav-links { display: none; }
+    .global-header { 
+      position: fixed; top: 0; width: 100%; z-index: 100; 
+      background: rgba(11, 46, 35, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
+    
+    .header-inner { 
+      display: flex; justify-content: space-between; align-items: center; 
+      height: 76px; max-width: 1200px; margin: 0 auto; padding: 0 24px; gap: 10px;
+    }
+
+    .logo { 
+      font-family: var(--font-serif); font-size: 1.6rem; font-weight: 900; 
+      color: var(--white); display: flex; align-items: center; gap: 10px; cursor: pointer;
+    }
+
+    .logo-icon {
+      background: var(--emerald); color: var(--white);
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1. {2rem; font-weight: 800;
+    }
+
+    .nav-links { display: flex; gap: 32px; }
+    .nav display-item { font-weight: 500; font-size: :0.95rem; color: #E flex2E8F0; cursor: pointer; }
+    .nav-item;:hover { color: var(--gold); }
+
+    gap .header-actions: 10px; align-items: center; }
+
+    .btn { 
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; 
+      cursor: pointer; border: none; font-size: 0.9rem; 
+      display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;
+    }
+    
+    .btn-primary { background: var(--emerald); color: var(--white); }
+    .btn-admin { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+
+    /* Hero Section */
+    .hero { 
+      position: relative;
+      height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      text-align: center; 
+      padding: 0 24px; 
+      overflow: hidden;
+    }
+
+    /* 
+      THE FIX: Using a real <img> tag to force the building to show 
+    */
+    .hero-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top; /* Focuses on the top of the building */
+      z-index: -1;
+    }
+
+    /* The subtle emerald overlay */
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(11, 46, 35, 0.95) 0%, rgba(11, 46, 35, 0.4) 40%, rgba(11, 46, 35, 0.4) 60%, rgba(11, 46, 35, 0.95) 100%);
+      z-index: 0;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px; 
+      margin-top: 40px;
+      text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9), 0 2px 10px rgba(0, 0, 0, 0.7);
+    }
+
+    .hero-eyebrow {
+      display: inline-block; background: rgba(15, 138, 95, 0.6); border: 1px solid var(--emerald);
+      color: var(--gold); padding: 6px 16px; border-radius: 999px;
+      font-size: 0.85rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 24px; backdrop-filter: blur(8px);
+    }
+
+    .hero h1 { font-family: var(--font-serif); font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; line-height: 1.1; margin-bottom: 24px; }
+    .hero h1 .gold { color: var(--gold); }
+    .hero p { font-size: clamp(1rem, 2vw, 1.25rem); color: #F3F4F6; margin-bottom: 40px; line-height: 1.6; max-width: 650px; margin: 0 auto 40px; }
+
+    .hero-ctas { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+    .btn-large { padding: 16px 36px; font-size: 1.05rem; border-radius: 10px; }
+    .btn-outline { background: rgba(11, 46, 35, 0.8); color: var(--white); border: 1px solid rgba(255, 255, 255, 0.6); }
+    .btn-outline:hover { background: rgba(11, 46, 35, 1); border-color: var(--white); }
+
+    /* Services & Footer (Unchanged) */
+    .services-section { background: #061a13; padding: 100px 24px; text-align: center; }
+    .section-title { font-family: var(--font-serif); font-size: 2.5rem; color: var(--white); margin-bottom: 15px; }
+    .section-subtitle { color: #A7C4B7; margin-bottom: 60px; font-size: 1.1rem; }
+    .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; max-width: 1200px; margin: 0 auto; }
+    .service-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 40px 30px; text-align: left; }
+    .service-icon { font-size: 2.5rem; margin-bottom: 20px; background: rgba(15, 138, 95, 0.2); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+    .service-card h3 { font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 15px; color: var(--white); }
+    .service-card p { color: #A7C4B7; font-size: 0.95rem; line-height: 1.6; margin-bottom: 25px; }
+    .service-link { color: var(--gold); font-weight: 600; font-size: 0.95rem; }
+
+    .site-footer { background: #0B2E23; padding: 60px 24px 30px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .footer-brand p { color: #A7C4B7; margin-top: 15px; max-width: 300px; font-size: 0.9rem; }
+    .footer-col h4 { color: var(--white); margin-bottom: 20px; font-size: 1rem; }
+    .footer-col ul { list-style: none; }
+    .footer-col ul li { margin-bottom: 10px; }
+    .footer-col ul li a { color: #A7C4B7; font-size: 0.9rem; }
+    .footer-bottom { max-width: 1200px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; text-align: center; color: #6A8A7D; font-size: 0.85rem; }
+
+    /* Mobile */
+    @media (max-width: 1024px) { .services-grid { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 768px) {
-      .hero-content h1 { font-size: 2.4rem; }
-      .goals-grid { grid-template-columns: 1fr; }
-      .header-actions { gap: 8px; }
-      .btn-admin { padding: 8px 12px; font-size: 0.8rem; }
-      .btn-primary { padding: 8px 12px; font-size: 0.85rem; }
+      .nav-links { display: none; }
+      .header-inner { padding: 0 15px; }
+      .logo { font-size: 1.3rem; }
+      .logo-icon { width: 30px; height: 30px; font-size: 1rem; }
+      .btn-admin { padding: 8px 10px; font-size: 0.75rem; }
+      .btn-primary { padding: 8px 12px; font-size: 0.8rem; }
+      .hero-ctas { flex-direction: column; width: 100%; max-width: 300px; margin: 0 auto; }
+      .services-grid { grid-template-columns: 1fr; }
+      .footer-inner { grid-template-columns: 1fr; text-align: center; }
+      .footer-brand p { margin: 15px auto; }
     }
   </style>
 </head>
 <body>
 
-  <div class="top-banner">
-    Earn 4.85% APY on High-Yield Savings. <a href="pages/register.html">Open an account →</a>
-  </div>
-
   <header class="global-header">
-    <div class="container header-inner">
-      <a href="index.html" class="logo">Xanvia</a>
+    <div class="header-inner">
+      <div class="logo" onclick="window.location.href='index.html'">
+        <div class="logo-icon">X</div>
+        Xanvia
+      </div>
+      
       <nav class="nav-links">
-        <div class="nav-item">Banking</div>
-        <div class="nav-item">Loans</div>
-        <div class="nav-item">Investments</div>
+        <a href="#services" class="nav-item">Banking</a>
+        <a href="#services" class="nav-item">Loans</a>
+        <a href="#services" class="nav-item">Investments</a>
       </nav>
+
       <div class="header-actions">
-        <!-- NEW ADMIN BUTTON HERE -->
-        <a href="pages/admin.html" class="btn btn-admin">Admin Portal</a>
+        <a href="pages/admin.html" class="btn btn-admin">Admin</a>
         <a href="pages/login.html" class="btn btn-primary">Log In</a>
       </div>
     </div>
   </header>
 
   <section class="hero">
-    <div class="container hero-grid">
-      <div class="hero-content">
-        <div class="hero-rate">4.85% APY Savings</div>
-        <h1> for real life, not just numbers.</h1>
-        <p>Save with confidence, borrow without surprises, and invest in your future—all from one secure, US-based platform.</p>
-        <div class="hero-ctas">
-          <a href="pages/register.html" class="btn btn-primary btn-large">Open Account</a>
-          <a href="pages/login.html" class="btn btn-outline btn-large">Log In</a>
-        </div>
-      </div>
-      <div class="hero-visual">
-        <div class="hero-card">
-          <div class="hero-card-label">High-Yield Savings</div>
-          <div class="hero-card-value">$24,860.42</div>
-          <div class="hero-card-meta">
-            <span>4.85% APY</span>
-            <span>FDIC Insured</span>
-          </div>
-        </div>
+    <!-- THE IMAGE IS NOW LOADED DIRECTLY IN HTML TO FORCE IT TO SHOW ON MOBILE -->
+    <img 
+      src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2000&auto=format&fit=crop" 
+      class="hero-bg" 
+      alt="Modern Skyscraper"
+    >
+    <div class="hero-overlay"></div>
+
+    <div class="hero-content">
+      <div class="hero-eyebrow">Welcome to the Future of Finance</div>
+      <h1>The Standard in <br><span class="gold">Modern Banking.</span></h1>
+      <p>Experience seamless checking, high-yield savings, instant lending, and commission-free investments — all secured within one elegant, US-based platform.</p>
+      
+      <div class="hero-ctas">
+        <a href="pages/register.html" class="btn btn-primary btn-large">Open an Account</a>
+        <a href="pages/login.html" class="btn btn-outline btn-large">Client Login</a>
       </div>
     </div>
   </section>
 
-  <section class="goals-section">
-    <div class="container">
-      <div class="section-header">
-        <h2>What do you want to do today?</h2>
-        <p>Tell us your goal, and we'll show you the path.</p>
+  <section class="services-section" id="services">
+    <h2 class="section-title">Comprehensive Financial Solutions</h2>
+    <p class="section-subtitle">Everything you need to manage, grow, and protect your wealth.</p>
+
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🏦</div>
+        <h3>Personal Banking</h3>
+        <p>High-yield savings accounts, everyday checking with zero hidden fees, and instant peer-to-peer transfers.</p>
+        <a href="pages/login.html" class="service-link">Explore Accounts →</a>
       </div>
-      <div class="goals-grid">
-        <a href="pages/register.html" class="goal-card">
-          <span class="goal-icon">💰</span>
-          <h3>Grow my savings</h3>
-          <span>Earn 4.85% APY</span>
-        </a>
-        <a href="pages/register.html" class="goal-card">
-          <span class="goal-icon">🏠</span>
-          <h3>Buy a home</h3>
-          <span>Mortgages from 5.8%</span>
-        </a>
-        <a href="pages/register.html" class="goal-card">
-          <span class="goal-icon">📉</span>
-          <h3>Reduce debt</h3>
-          <span>Personal loans up to $50k</span>
-        </a>
-        <a href="pages/register.html" class="goal-card">
-          <span class="goal-icon">📈</span>
-          <h3>Start investing</h3>
-          <span>Zero commissions</span>
-        </a>
+
+      <div class="service-card">
+        <div class="service-icon">💳</div>
+        <h3>Smart Lending</h3>
+        <p>Personal loans, mortgages, and auto financing with transparent rates, fast digital approvals, and flexible terms.</p>
+        <a href="pages/login.html" class="service-link">View Loan Rates →</a>
+      </div>
+
+      <div class="service-card">
+        <div class="service-icon">📈</div>
+        <h3>Wealth Management</h3>
+        <p>Commission-free stock trading, automated robo-advising, and retirement IRAs to help build your portfolio.</p>
+        <a href="pages/login.html" class="service-link">Start Investing →</a>
       </div>
     </div>
   </section>
 
-  <section class="pillars-section">
-    <div class="container pillars-grid">
-      <div class="pillar-card">
-        <div class="pillar-icon">🏦</div>
-        <h3>Banking</h3>
-        <ul>
-          <li>Spend & Save Seamlessly</li>
-          <li>4.85% APY Savings Account</li>
-          <li>Early Paycheck Access (2 days)</li>
-        </ul>
-        <a href="pages/register.html" class="pillar-link">Explore Accounts →</a>
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="logo">
+          <div class="logo-icon">X</div>
+          Xanvia
+        </div>
+        <p>Xanvia Bank is a modern financial technology platform providing premium banking, lending, and investment services.</p>
       </div>
-      <div class="pillar-card">
-        <div class="pillar-icon">💳</div>
-        <h3>Loans</h3>
+
+      <div class="footer-col">
+        <h4>Support & Help</h4>
         <ul>
-          <li>Fast Digital Approvals</li>
-          <li>Mortgages from 5.8% APR</li>
-          <li>Personal Loans up to $50k</li>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">Contact Us</a></li>
+          <li><a href="#">Security Center</a></li>
+          <li><a href="#">Report Fraud</a></li>
         </ul>
-        <a href="pages/register.html" class="pillar-link">View Rates →</a>
       </div>
-      <div class="pillar-card">
-        <div class="pillar-icon">📈</div>
-        <h3>Investments</h3>
+
+      <div class="footer-col">
+        <h4>Legal</h4>
         <ul>
-          <li>Zero-Commission Stocks</li>
-          <li>Automated Robo-Advising</li>
-          <li>Retirement IRAs</li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+          <li><a href="#">Disclosures</a></li>
+          <li><a href="#">Licensing</a></li>
         </ul>
-        <a href="pages/register.html" class="pillar-link">Start Today →</a>
       </div>
     </div>
-  </section>
 
-  <footer class="global-footer">
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-col">
-          <div class="logo" style="color: var(--white); margin-bottom: 16px; font-size: 1.4rem;">Xanvia</div>
-          <p style="color: #6A8A7D; font-size: 0.85rem;">Banking for real life.</p>
-        </div>
-        <div class="footer-col">
-          <h4>Products</h4>
-          <a href="#">Checking</a>
-          <a href="#">Savings (HYSA)</a>
-          <a href="#">CDs / IRAs</a>
-        </div>
-        <div class="footer-col">
-          <h4>Borrowing</h4>
-          <a href="#">Mortgages</a>
-          <a href="#">Personal Loans</a>
-          <a href="#">Auto Loans</a>
-        </div>
-        <div class="footer-col">
-          <h4>Wealth Mgmt</h4>
-          <a href="#">Active Trading</a>
-          <a href="#">Robo-Advisory</a>
-          <a href="#">Retirement Plan</a>
-        </div>
-        <div class="footer-col">
-          <h4>Legal & Privacy</h4>
-          <a href="#">Disclosures</a>
-          <a href="#">Privacy Policy</a>
-          <a href="#">Terms of Service</a>
-        </div>
-      </div>
-
-      <div class="footer-disclosures">
-        <p><strong>Disclosures:</strong> Banking products and services are offered by Xanvia Bank, N.A. Member FDIC.</p>
-        <p>Investment products are offered via Xanvia Securities LLC, member FINRA / SIPC.</p>
-        <p>Loans are subject to credit approval. Equal Housing Lender.</p>
-        <p style="margin-top: 16px;">© 2025 Xanvia Bank. All rights reserved.</p>
-      </div>
+    <div class="footer-bottom">
+      <p>© 2013 Xanvia Bank. All rights reserved. Member FDIC. Equal Housing Lender.</p>
     </div>
   </footer>
+
 </body>
 </html>

@@ -3,96 +3,152 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Dashboard | Xanvia</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/variables.css">
+  <title>Dashboard | Xanvia Bank</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
 </head>
 <body>
-  <header class="mobile-topbar">
-    <button class="hamburger" id="menu-btn">☰</button>
-    <h2>Xanvia</h2>
-    <div style="width: 24px;"></div>
-  </header>
-
-  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
   <aside class="sidebar" id="sidebar">
-    <div class="logo">Xanvia</div>
-    <ul class="side-nav">
-      <li><a class="active" onclick="showView('overview')">Overview</a></li>
-      <li><a onclick="showView('transfer')">Transfers</a></li>
-      <li><a onclick="showView('loans')">Loans</a></li>
-      <li><a style="color: #FCA5A5; margin-top: 20px;" id="logout-btn">Log Out</a></li>
-    </ul>
+    <div class="brand"><span>X</span> Xanvia</div>
+    <div class="nav-section">BANKING</div>
+    <a class="nav-item active" href="dashboard.html"><span>Overview</span></a>
+    <a class="nav-item" onclick="showTab('deposit')"><span>Deposit</span></a>
+    <a class="nav-item" onclick="showTab('withdraw')"><span>Withdraw</span></a>
+    <a class="nav-item" onclick="showTab('transfer')"><span>External Transfer</span></a>
+    <div class="nav-section">FINANCE</div>
+    <a class="nav-item" href="loans.html"><span>Loans</span></a>
+    <div class="admin-profile">
+      <div class="avatar" id="user-avatar">U</div>
+      <div><p id="user-display-name">Loading...</p></div>
+      <button class="logout-btn" id="logout-btn">Log Out</button>
+    </div>
   </aside>
 
-  <main class="dash-main">
-    <div class="dash-header">
-      <h1 id="page-title">Unified Dashboard</h1>
-      <p>Welcome, <span id="user-name">Loading...</span></p>
-    </div>
+  <main class="main-content">
+    <header class="top-bar">
+      <button class="mobile-menu-btn" id="menu-btn">☰</button>
+      <h2 style="font-size: 1.1rem; color: var(--deep-green);" id="page-title">Overview</h2>
+    </header>
 
-    <!-- OVERVIEW VIEW -->
-    <div id="view-overview">
-      <div class="net-worth-ribbon">
-        <p style="margin: 0; font-size: 0.9rem; text-transform: uppercase; opacity: 0.9;">Total Net Worth</p>
-        <h2 id="net-worth">$0.00</h2>
-        <div class="ribbon-stats">
-          <div><span>Cash</span><strong id="cash-val">$0.00</strong></div>
-          <div><span>Equities</span><strong id="equity-val">$0.00</strong></div>
-          <div><span>Liabilities</span><strong id="loan-val" style="color: #FCA5A5;">$0.00</strong></div>
+    <div class="dashboard-padding">
+      <!-- OVERVIEW TAB -->
+      <div id="tab-overview">
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-title">Total Balance</div><div class="kpi-value" id="total-balance">$0.00</div></div>
+          <div class="kpi-card"><div class="kpi-title">Checking</div><div class="kpi-value" id="checking-bal">$0.00</div></div>
+          <div class="kpi-card"><div class="kpi-title">Savings</div><div class="kpi-value" id="savings-bal">$0.00</div></div>
+          <div class="kpi-card"><div class="kpi-title">Investments</div><div class="kpi-value" id="brokerage-bal">$0.00</div></div>
+        </div>
+        
+        <div class="panel">
+          <div class="panel-header"><div class="panel-title">Recent Transactions</div></div>
+          <table class="tx-table">
+            <thead><tr><th>Type</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
+            <tbody id="tx-table-body"></tbody>
+          </table>
         </div>
       </div>
 
-      <div class="panel">
-        <h3>Your Accounts</h3>
-        <div id="accounts-list"></div>
-      </div>
-    </div>
-
-    <!-- TRANSFER VIEW -->
-    <div id="view-transfer" style="display: none;">
-      <div class="panel">
-        <h3>Send Money</h3>
-        <div id="transfer-msg" style="margin-bottom: 10px; color: #0F8A5F; font-weight: bold;"></div>
-        <form id="transfer-form">
-          <div style="margin-bottom: 15px;">
-            <label>From Account</label>
-            <select id="from-acc" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;">
-              <option value="checking">Checking</option>
-              <option value="savings">Savings</option>
-            </select>
-          </div>
-          <div style="margin-bottom: 15px;">
-            <label>To Account</label>
-            <select id="to-acc" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;">
-              <option value="savings">Savings</option>
-              <option value="checking">Checking</option>
-            </select>
-          </div>
-          <div style="margin-bottom: 20px;">
-            <label>Amount ($)</label>
-            <input type="number" id="transfer-amt" required style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;">
-          </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: #0F8A5F; color: white; border: none; border-radius: 6px; font-weight: bold;">Transfer Funds</button>
-        </form>
-      </div>
-    </div>
-
-    <!-- LOANS VIEW -->
-    <div id="view-loans" style="display: none;">
-      <div class="panel">
-        <h3>Active Loan</h3>
-        <p style="font-size: 2rem; color: #0B2E23; margin: 10px 0;">$5,000.00</p>
-        <p style="color: #666;">Remaining Balance</p>
-        <div style="height: 8px; background: #E2E8F0; border-radius: 4px; margin: 15px 0;">
-          <div style="height: 100%; width: 100%; background: #0F8A5F; border-radius: 4px;"></div>
+      <!-- DEPOSIT TAB -->
+      <div id="tab-deposit" style="display: none; max-width: 500px;">
+        <div class="panel">
+          <div class="panel-title">Deposit Funds</div>
+          <p style="color: var(--muted); margin-bottom: 15px; font-size: 0.9rem;">Enter the amount you wish to deposit. Admin will verify and credit your account.</p>
+          <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount"></div>
+          <button class="btn-primary" onclick="submitDeposit()">Request Deposit</button>
+          <div id="dep-msg" style="margin-top: 10px; font-weight: bold;"></div>
         </div>
       </div>
+
+      <!-- WITHDRAW TAB -->
+      <div id="tab-withdraw" style="display: none; max-width: 500px;">
+        <div class="panel">
+          <div class="panel-title">Withdraw Funds</div>
+          <p style="color: var(--muted); margin-bottom: 15px; font-size: 0.9rem;">Enter amount and your receiving details (Bank Account or BTC Address).</p>
+          <div class="form-group"><label>Amount ($)</label><input type="number" id="wd-amount"></div>
+          <div class="form-group"><label>Receiving Details (Bank / Crypto)</label><input type="text" id="wd-details" placeholder="Acct: 123456789 or bc1q..."></div>
+          <button class="btn-primary" onclick="submitWithdrawal()">Request Withdrawal</button>
+          <div id="wd-msg" style="margin-top: 10px; font-weight: bold;"></div>
+        </div>
+      </div>
+
+      <!-- EXTERNAL TRANSFER TAB -->
+      <div id="tab-transfer" style="display: none; max-width: 500px;">
+        <div class="panel">
+          <div class="panel-title">Send to Other Banks</div>
+          <p style="color: var(--muted); margin-bottom: 15px; font-size: 0.9rem;">Transfer to an external account. Pending Admin verification.</p>
+          <div class="form-group"><label>Amount ($)</label><input type="number" id="ext-amount"></div>
+          <div class="form-group"><label>Recipient Bank Details</label><input type="text" id="ext-details" placeholder="Bank Name, Acct Number, Routing"></div>
+          <button class="btn-primary" onclick="submitExternal()">Send Transfer</button>
+          <div id="ext-msg" style="margin-top: 10px; font-weight: bold;"></div>
+        </div>
+      </div>
+
     </div>
   </main>
 
-  <script type="module" src="../js/dashboard.js"></script>
+  <script>
+    const user = JSON.parse(localStorage.getItem("xanvia_user"));
+    if (!user) window.location.href = "login.html";
+    document.getElementById('user-display-name').textContent = user.name;
+
+    window.showTab = (tab) => {
+      ['overview', 'deposit', 'withdraw', 'transfer'].forEach(t => document.getElementById(`tab-${t}`).style.display = 'none');
+      document.getElementById(`tab-${tab}`).style.display = 'block';
+      document.getElementById('page-title').textContent = tab.charAt(0).toUpperCase() + tab.slice(1);
+    };
+
+    async function loadData() {
+      const res = await fetch(`/api/dashboard/${user.id}`);
+      const data = await res.json();
+      
+      const { checking, savings, brokerage, loan } = data.balances;
+      document.getElementById('total-balance').textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(checking + savings + brokerage - loan);
+      document.getElementById('checking-bal').textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(checking);
+      document.getElementById('savings-bal').textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(savings);
+      document.getElementById('brokerage-bal').textContent = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(brokerage);
+
+      document.getElementById('tx-table-body').innerHTML = data.transactions.map(tx => `
+        <tr>
+          <td><strong>${tx.type}</strong></td>
+          <td>${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(tx.amount)}</td>
+          <td>${new Date(tx.created_at).toLocaleDateString()}</td>
+          <td><span style="color: ${tx.status === 'Approved' ? 'var(--emerald)' : tx.status === 'Rejected' ? 'red' : 'var(--warning)'}; font-weight: bold;">${tx.status}</span></td>
+        </tr>
+      `).join('');
+    }
+
+    async function submitDeposit() {
+      const amount = parseFloat(document.getElementById('dep-amount').value);
+      const res = await fetch('/api/deposit/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
+      const data = await res.json();
+      document.getElementById('dep-msg').textContent = data.message || data.error;
+      document.getElementById('dep-msg').style.color = data.success ? 'var(--emerald)' : 'red';
+      loadData();
+    }
+
+    async function submitWithdrawal() {
+      const amount = parseFloat(document.getElementById('wd-amount').value);
+      const details = document.getElementById('wd-details').value;
+      const res = await fetch('/api/withdraw/request', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, details }) });
+      const data = await res.json();
+      document.getElementById('wd-msg').textContent = data.message || data.error;
+      document.getElementById('wd-msg').style.color = data.success ? 'var(--emerald)' : 'red';
+      loadData();
+    }
+
+    async function submitExternal() {
+      const amount = parseFloat(document.getElementById('ext-amount').value);
+      const bankDetails = document.getElementById('ext-details').value;
+      const res = await fetch('/api/transfer/external', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, bankDetails }) });
+      const data = await res.json();
+      document.getElementById('ext-msg').textContent = data.message || data.error;
+      document.getElementById('ext-msg').style.color = data.success ? 'var(--emerald)' : 'red';
+      loadData();
+    }
+
+    loadData();
+  </script>
 </body>
 </html>
