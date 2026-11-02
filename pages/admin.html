@@ -29,7 +29,9 @@
     .login-box button:hover { background: #0A5F42; }
     .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: 600; }
 
-    /* Header */
+    /* Main Dashboard Area */
+    #dashboard-area { display: none; }
+    
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header h1 { font-size: 1.5rem; color: var(--deep-green); }
     .logout-btn { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text); }
@@ -88,7 +90,8 @@
     </div>
   </div>
 
-  <div class="app-container">
+  <!-- MAIN DASHBOARD AREA (Hidden by default) -->
+  <div id="dashboard-area" class="app-container">
     <div class="header">
       <h1>Admin Panel</h1>
       <button class="logout-btn" onclick="window.location.replace('../index.html')">Exit</button>
@@ -132,7 +135,9 @@
       const pass = document.getElementById('admin-pass').value;
       if (pass === "@@@@") {
         document.getElementById('login-overlay').style.display = 'none';
-        // Load the initial data once unlocked
+        document.getElementById('dashboard-area').style.display = 'block';
+        
+        // Load initial data
         loadRequests();
       } else {
         document.getElementById('login-error').style.display = 'block';
@@ -147,12 +152,15 @@
 
     // --- TAB SWITCHING ---
     function switchTab(tabName) {
+      // 1. Update active tab style
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.getElementById(tabName === 'requests' ? 'tab-requests' : tabName === 'users' ? 'tab-users' : 'tab-complaints').classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
       
+      // 2. Hide all views, show selected view
       document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
       document.getElementById(`view-${tabName}`).classList.add('active');
 
+      // 3. Load data for that specific tab
       if (tabName === 'requests') loadRequests();
       if (tabName === 'users') loadUsers();
       if (tabName === 'complaints') loadComplaints();
@@ -182,7 +190,7 @@
           </div>
         `).join('') : '<p style="color:var(--muted); text-align:center;">No pending requests.</p>';
       } catch (err) {
-        container.innerHTML = '<p style="color:var(--danger); text-align:center;">Failed to load requests.</p>';
+        container.innerHTML = '<p style="color:var(--danger); text-align:center;">Failed to load requests. Check server.</p>';
       }
     }
 
@@ -244,13 +252,13 @@
 
     // --- ACTIONS ---
     async function approveReq(id, action) {
-      await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: fetch JSON.stringify({ txId: id, action })('/ });
-      loadapiRequests();
+      await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txId: id, action }) });
+      loadRequests();
     }
 
     async function freezeUser(id, currentStatus) {
-      const newStatus = currentStatus === '/adminActive' ? 'Frozen' : 'Active';
-      await/freeze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, status: newStatus }) });
+      const newStatus = currentStatus === 'Active' ? 'Frozen' : 'Active';
+      await fetch('/api/admin/freeze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, status: newStatus }) });
       loadUsers();
     }
 
