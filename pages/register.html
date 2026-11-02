@@ -3,39 +3,111 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Open Account | Xanvia Bank</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/variables.css">
-  <link rel="stylesheet" href="../css/base.css">
-  <link rel="stylesheet" href="../css/auth.css">
+  <title>Register | Xanvia Bank</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+    
+    .auth-card {
+      background: white; width: 100%; max-width: 420px; padding: 40px 30px;
+      border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border);
+    }
+    
+    .logo { font-family: 'Merriweather', serif; font-size: 1.8rem; font-weight: 900; color: var(--emerald); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .logo-icon { background: var(--emerald); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif; font-size: 1rem; }
+    
+    h2 { color: var(--deep-green); font-size: 1.8rem; margin-bottom: 8px; }
+    p.sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 30px; }
+    
+    .input-group { margin-bottom: 20px; }
+    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+    .input-group input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; transition: 0.2s; background: #FAFAFA; }
+    .input-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+    .btn-primary:active { background: #0A5F42; transform: scale(0.98); }
+    
+    .switch-link { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--muted); }
+    .switch-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
+    .switch-link a:hover { text-decoration: underline; }
+    
+    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 500; }
+    .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
+    .msg.success { display: block; background: #D1FAE5; color: #065F46; }
+  </style>
 </head>
 <body>
-  <div class="auth-shell">
-    <div class="auth-card">
-      <a href="../index.html" class="logo" style="display:block; margin-bottom: 24px;">Xanvia</a>
-      <h2>Open Account</h2>
-      <p>Join Xanvia in under a minute.</p>
-      <div id="auth-msg" class="auth-msg"></div>
-      <form id="register-form">
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="name" required>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" id="email" required>
-        </div>
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" id="password" required>
-        </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create Account</button>
-      </form>
-      <div class="auth-switch">
-        Already have an account? <a href="login.html">Log In</a>
+
+  <div class="auth-card">
+    <div class="logo"><div class="logo-icon">X</div> Xanvia</div>
+    <h2>Create Account</h2>
+    <p class="sub">Join Xanvia Bank in under a minute.</p>
+    
+    <div id="msg" class="msg"></div>
+
+    <form id="register-form">
+      <div class="input-group">
+        <label>Full Name</label>
+        <input type="text" id="name" placeholder="John Doe" required>
       </div>
+      <div class="input-group">
+        <label>Email Address</label>
+        <input type="email" id="email" placeholder="name@example.com" required>
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-primary">Sign Up</button>
+    </form>
+
+    <div class="switch-link">
+      Already have an account? <a href="login.html">Log In</a>
     </div>
   </div>
-  <script src="../js/register.js" type="module"></script>
+
+  <script>
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const msg = document.getElementById('msg');
+      const btn = document.querySelector('.btn-primary');
+
+      btn.textContent = "Creating...";
+      msg.className = "msg";
+
+      try {
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          msg.className = "msg success";
+          msg.textContent = "Account created! Redirecting to login...";
+          
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1500);
+        } else {
+          msg.className = "msg error";
+          msg.textContent = data.error || "Registration failed.";
+          btn.textContent = "Sign Up";
+        }
+      } catch (err) {
+        msg.className = "msg error";
+        msg.textContent = "Server connection error.";
+        btn.textContent = "Sign Up";
+      }
+    });
+  </script>
 </body>
 </html>

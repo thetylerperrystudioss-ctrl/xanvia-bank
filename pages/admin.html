@@ -2,147 +2,327 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Portal | Xanvia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Admin Control | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
-    :root { --emerald: #0F8A5F; --danger: #EF4444; --warning: #F59E0B; --deep-green: #0B2E23; --bg: #F4F7F6; --border: #E5E7EB; }
+    :root {
+      --emerald: #0F8A5F;
+      --emerald-dark: #0A5F42;
+      --deep-green: #0B2E23;
+      --bg-base: #F4F7F6;
+      --panel-bg: rgba(255, 255, 255, 0.9);
+      --text-dark: #1A1A1A;
+      --text-muted: #6B7280;
+      --border: rgba(255, 255, 255, 0.4);
+      --sidebar-w: 260px;
+      --danger: #EF4444;
+      --warning: #F59E0B;
+    }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); color: #111827; display: flex; min-height: 100vh; }
     
-    /* Secure Login Overlay */
-    #login-overlay { position: fixed; inset: 0; background: var(--deep-green); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-    .login-box { background: white; padding: 40px; border-radius: 12px; text-align: center; width: 100%; max-width: 400px; }
-    .login-box input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 1.2rem; text-align: center; letter-spacing: 5px; margin-bottom: 15px; }
-    .login-box button { width: 100%; padding: 15px; background: var(--emerald); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    body { 
+      background-color: var(--bg-base);
+      background-image: radial-gradient(circle at 10% 20%, rgba(15, 138, 95, 0.15) 0%, transparent 40%),
+                        radial-gradient(circle at 90% 80%, rgba(11, 46, 35, 0.1) 0%, transparent 40%);
+      color: var(--text-dark); 
+      min-height: 100vh;
+      display: flex;
+    }
+
+    /* ================= SECURE LOGIN OVERLAY ================= */
+    #login-overlay {
+      position: fixed; inset: 0; background: var(--deep-green); z-index: 9999;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+    }
+    .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
+    .login-box h2 { color: var(--deep-green); margin-bottom: 10px; font-size: 1.8rem; }
+    .login-box p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem; }
+    .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; background: #FAFAFA; }
+    .login-box input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+    .login-box button:hover { background: var(--emerald-dark); }
+    .error-msg { color: var(--danger); font;-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: 600; }
+
+    /* ================= SIDEBAR ================= */
+    .sidebar { 
+      width: var(--sidebar-w); 
+      background: linear-gradient(180deg, #0B2E23 0%, #0A5F42 100%);
+      color: white; 
+      position: fixed; top: 0; bottom: 0; left: -280px;
+      display: flex; flex-direction: column; z-index: 1000; transition: left 0.3s ease;
+      border-right: 1px solid rgba(255,255,255,0.05);
+    }
+    .sidebar.open { left: 0 }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; backdrop-filter: blur(4px); }
+    .sidebar-overlay.open { display: block; }
+
+    .brand { font-size: 1.6rem; font-weight: 800; padding: 30px 24px; letter-spacing: 1px; color: white; display: flex; align-items: center; gap: 10px; }
+    .brand span { background: var(--emerald); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
     
-    .sidebar { width: 240px; background: var(--deep-green); color: white; position: fixed; top: 0; bottom: 0; left: 0; padding: 20px 0; }
-    .brand { font-size: 1.4rem; font-weight: 700; padding: 0 20px; margin-bottom: 30px; }
-    .nav-item { padding: 12px 20px; color: #A7C4B7; cursor: pointer; }
-    .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left: 3px solid var(--emerald); }
+    .nav-menu { list-style: none; padding: 0 15px; flex: 1; }
+    .nav-menu li { margin-bottom: 8px; }
+    .nav-menu a {
+      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px;
+      color: #A7C4B7; font-size: 0.95rem; font-weight: 500; text-decoration: none; cursor: pointer; transition: 0.2s;
+    }
+    .nav-menu a:hover, .nav-menu a.active { 
+      background: rgba(255,255,255,0.1); color: white; box-shadow: inset 3px 0 0 var(--emerald); 
+    }
+    .admin-profile { padding: 24px; border-top: 1px solid rgba(255,255,255,0.1); }
+    .logout-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+    .logout-btn:hover { background: var(--danger); border-color: var(--danger); }
+
+    /* ================= MAIN CONTENT ================= */
+    .main-content { margin-left: 0; flex: 1; padding: 20px; display: flex; flex-direction: column; }
     
-    .main-content { margin-left: 240px; flex: 1; padding: 30px; }
-    .panel { background: white; border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
-    .panel-title { font-size: 1.2rem; font-weight: 600; color: var(--deep-green); margin-bottom: 20px; }
+    /* Top Bar */
+    .top-bar { 
+      background: var(--panel-bg); backdrop-filter: blur(12px); 
+      padding: 15px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
+      margin-bottom: 25px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    }
+    .top-bar h1 { font-size: 1.2rem; color: var(--deep-green); font-weight: 700; display: flex; align-items: center; gap: 15px; }
+    .mobile-menu-btn { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--deep-green); }
     
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
-    th { background: var(--bg); }
-    
-    .btn-approve { background: var(--emerald); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-    .btn-reject { background: var(--danger); color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-    .form-input { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 10px; }
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+    .kpi-card { 
+      background: var(--panel-bg); backdrop-filter: blur(12px); border-radius: 16px; padding: 20px; 
+      border: 1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.03); position: relative; overflow: hidden;
+    }
+    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--emerald); }
+    .kpi-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--deep-green); margin-top: 8px; }
+
+    /* Panels */
+    .panel { 
+      background: var(--panel-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); 
+      border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.03);
+    }
+    .panel-title { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Forms */
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+    .form-group { margin-bottom: 0; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; outline: none; background: #FAFAFA; }
+    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    .btn-primary { background: var(--emerald); color: white; border: none ; padding: 14px; border-radius:15 10px; font-weight: 600; cursor: pointer;px width: 100%; font-size: 1rem;; margin-top: 10px; }
+
+    /* color Requests Feed */
+    .req-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; background: white; }
+    .req-info h4 { color: var(--text-dark); font-size: 1rem; margin-bottom: 5px; }
+    .req-info p { color: var(--text-muted); font-size: 0.85rem; }
+    .req-actions { display: flex; gap: 10px; }
+    .btn-approve { background: var(--emerald); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .btn-reject { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+
+    /* Table */
+    .data-table { width: 100%; border-collapse: collapse; }
+    .data-table th { text-align: left; padding:: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid #eee; }
+    .data-table td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+    .status-active { background: #D1FAE5; color: #065F46; }
+    .status-flagged { background: #FEE2E2; color: #991B1B; }
+    .btn-flag { background: var(--warning); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
+
+    /* Desktop */
+    @media (min-width: 1024px) {
+      .sidebar { left: 0; }
+      .main-content { margin-left: var(--sidebar-w); padding: 30px; }
+      .mobile-menu-btn { display: none; }
+      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
 
+  <!-- SECURE LOGIN -->
   <div id="login-overlay">
     <div class="login-box">
-      <h2>Admin Passcode</h2>
-      <input type="password" id="admin-pass" maxlength="4" placeholder="••••">
-      <button onclick="verifyPasscode()">Unlock</button>
+      <h2>Admin Access</h2>
+      <p>Enter the 4-digit security passcode.</p>
+      <div id="login-error" class="error-msg">Invalid Passcode. Access Denied.</div>
+      <input type="password" id="admin-pass" maxlength="4" placeholder="••••" autocomplete="off">
+      <button onclick="verifyPasscode()">Unlock Dashboard</button>
     </div>
   </div>
 
-  <aside class="sidebar">
-    <div class="brand">Admin</div>
-    <a class="nav-item active" onclick="showAdminTab('requests')">Pending Requests</a>
-    <a class="nav-item" onclick="showAdminTab('settings')">Payment Settings</a>
+  <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span>X</span> Xanvia</div>
+    <ul class="nav-menu">
+      <li><a class="active"><span class="icon">📊</span> Dashboard</a></li>
+      <li><a><span class="icon">💸</span> Pending Requests</a></li>
+      <li><a><span class="icon">👥</span> User Management</a></li>
+      <li><a><span class="icon">⚙️</span> Payment Settings</a></li>
+    </ul>
+    <div class="admin-profile">
+      <button class="logout-btn" onclick="logoutAdmin()">Secure Logout</button>
+    </div>
   </aside>
 
+  <!-- MAIN CONTENT -->
   <main class="main-content">
-    
-    <!-- PENDING REQUESTS TAB -->
-    <div id="admin-tab-requests">
-      <div class="panel">
-        <div class="panel-title">Verification Queue</div>
-        <table>
-          <thead><tr><th>User</th><th>Type</th><th>Amount</th><th>Details</th><th>Actions</th></tr></thead>
-          <tbody id="request-table">
-            <tr><td colspan="5">Loading...</td></tr>
-          </tbody>
-        </table>
+    <header class="top-bar">
+      <h1>
+        <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
+        Admin Control Center
+      </h1>
+    </header>
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Total Users</div>
+        <div class="kpi-value" id="kpi-users">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Pending Approvals</div>
+        <div class="kpi-value" id="kpi-pending">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Flagged Accounts</div>
+        <div class="kpi-value" id="kpi-flagged" style="color: var(--danger);">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">System Status</div>
+        <div class="kpi-value" style="color: var(--emerald);">Online</div>
       </div>
     </div>
 
-    <!-- SETTINGS TAB -->
-    <div id="admin-tab-settings" style="display: none;">
-      <div class="panel" style="max-width: 600px;">
-        <div class="panel-title">Update Payment Details</div>
-        <p style="color: var(--muted); margin-bottom: 20px; font-size: 0.9rem;">These details will be shown to users when they deposit.</p>
-        <label style="font-weight: 600; font-size: 0.9rem;">Bitcoin Deposit Address</label>
-        <input type="text" id="set-btc" class="form-input">
-        
-        <label style="font-weight: 600; font-size: 0.9rem; margin-top: 10px; display: block;">Bank Account Details</label>
-        <input type="text" id="set-bank" class="form-input">
-        
-        <button class="btn-approve" style="margin-top: 15px; width: 100%; padding: 12px;" onclick="saveSettings()">Save Settings</button>
-        <div id="set-msg" style="margin-top: 10px; color: var(--emerald); font-weight: bold;"></div>
+    <!-- SETTINGS PANEL -->
+    <div class="panel">
+      <div class="panel-title">Payment Settings</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name"></div>
+        <div class="form-group"><label>Account Number</label><input type="text" id="bank-account"></div>
+        <div class="form-group"><label>Routing Number</label><input type="text" id="bank-routing"></div>
+        <div class="form-group"><label>Bitcoin Address</label><input type="text" id="btc-address"></div>
       </div>
+      <button class="btn-primary" onclick="saveSettings()">Save Details</button>
+      <div id="set-msg" style="color: var(--emerald); margin-top: 10px; font-weight: 600; text-align: center;"></div>
     </div>
+
+    <!-- REQUESTS PANEL -->
+    <div class="panel">
+      <div class="panel-title">Pending Requests</div>
+      <div id="req-list">Loading...</div>
+    </div>
+
+    <!-- USERS PANEL -->
+    <div class="panel">
+      <div class="panel-title">Manage Users</div>
+      <table class="data-table">
+ }
+
+        <thead><tr><th>Name</th><th>   Status</th><th //>Action</th></tr></thead>
+        <tbody id Pass="user-list"></tbody>
+      </table>
+    </codediv>
 
   </main>
 
   <script>
-    window.verifyPasscode = () => {
-      if (document.getElementById('admin-pass').value === "@@@@") {
+    Logic function toggleMenu() { 
+      document.getElementById('sidebar').classList.toggle('open'); 
+      document.getElementById('overlay').classList.toggle('open');
+   
+    function verifyPasscode() {
+      const pass = document.getElementById('admin-pass').value;
+      if (pass === "@@@@") {
         document.getElementById('login-overlay').style.display = 'none';
-        loadRequests();
-        loadSettings();
-      } else { alert("Access Denied"); }
-    };
+        loadData();
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    }
 
-    window.showAdminTab = (tab) => {
-      document.getElementById('admin-tab-requests').style.display = tab === 'requests' ? 'block' : 'none';
-      document.getElementById('admin-tab-settings').style.display = tab === 'settings' ? 'block' : 'none';
-    };
+    function logoutAdmin() {
+      document.getElementById('login-overlay').style.display = 'flex';
+      document.getElementById('admin-pass').value = "";
+    }
 
-    async function loadRequests() {
-      const res = await fetch('/api/admin/requests');
-      const txs = await res.json();
+    // Load Data
+    async function loadData() {
+      // 1. Settings
+      const settings = await (await fetch('/api/admin/settings')).json();
+      document.getElementById('bank-name').value = settings.bank_name || '';
+      document.getElementById('bank-account').value = settings.bank_account || '';
+      document.getElementById('bank-routing').value = settings.bank_routing || '';
+      document.getElementById('btc-address').value = settings.btc_address || '';
+
+      // 2. Requests
+      const requests = await (await fetch('/api/admin/requests')).json();
+      document.getElementById('kpi-pending').textContent = requests.length;
       
-      document.getElementById('request-table').innerHTML = txs.map(tx => `
+      document.getElementById('req-list').innerHTML = requests.map(tx => `
+        <div class="req-item">
+          <div class="req-info">
+            <h4>${tx.name} <span style="font-size:0.8rem; font-weight:400; color:#666;">(${tx.email})</span></h4>
+            <p><strong>Type:</strong> ${tx.type} | <strong>Amount:</strong> $${parseFloat(tx.amount).toFixed(2)}</p>
+            ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" style="height: 60px; border-radius: 6px; margin-top: 10px; border: 1px solid #ddd;"></a>` : ''}
+          </div>
+          <div class="req-actions">
+            <button class="btn-approve" onclick="approve(${tx.id}, 'approve')">Approve</button>
+            <button class="btn-reject" onclick="approve(${tx.id}, 'reject')">Reject</button>
+          </div>
+        </div>
+      `).join('') || '<p style="text-align:center; color:#666;">No pending requests.</p>';
+
+      // 3. Users
+      const users = await (await fetch('/api/admin/users')).json();
+      document.getElementById('kpi-users').textContent =          users.length;
+      document.getElementById('kpi-flagged').textContent = bank users.filter(u => u.status === 'Flagged')._namelength;
+      
+      document.getElementById('user-list').inner:HTML = users.map(u => `
         <tr>
-          <td><strong>${tx.name}</strong><br>${tx.email}</td>
-          <td>${tx.type}</td>
-          <td>$${parseFloat(tx.amount).toFixed(2)}</td>
-          <td>${tx.details || 'N/A'}</td>
+          document <td><strong>${u.name}</strong><br><small.getElementById style="color:#666;">${u.email}</small></td>
+          <td><span class="status-badge ${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
           <td>
-            <button class="btn-approve" onclick="processRequest(${tx.id}, 'approve')">Approve</button>
-            <button class="btn-reject" onclick="processRequest(${tx.id}, 'reject')">Reject</button>
+            <button class="btn-flag" style="${u.status === 'Active' ? '' : 'background:var(--emerald);'}" onclick="flag(${u.id}, '${u.status}')">
+              ${u.status === 'Active' ? 'Flag' : 'Unflag'}
+            </button>
           </td>
         </tr>
-      `).join('') || `<tr><td colspan="5">No pending requests.</td></tr>`;
+      `).join('');
     }
 
-    window.processRequest = async (txId, action) => {
-      if (!confirm(`Are you sure you want to ${action} this request?`)) return;
-      const res = await fetch('/api/admin/approve', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ txId, action })
-      });
-      const data = await res.json();
-      if (data.success) { loadRequests(); } else { alert(data.error); }
-    };
-
-    async function loadSettings() {
-      const res = await fetch('/api/admin/settings');
-      const data = await res.json();
-      document.getElementById('set-btc').value = data.btc_address || '';
-      document.getElementById('set-bank').value = data.bank_details || '';
-    }
-
-    window.saveSettings = async () => {
-      const btc_address = document.getElementById('set-btc').value;
-      const bank_details = document.getElementById('set-bank').value;
-      const res = await fetch('/api/admin/update-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ btc_address, bank_details })
+    async function saveSettings() {
+      await fetch('/api/admin/update-settings', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+('bank-name').value,
+          bank_account: document.getElementById('bank-account').value,
+          bank_routing: document.getElementById('bank-routing').value,
+          btc_address: document.getElementById('btc-address').value
+        })
       });
       document.getElementById('set-msg').textContent = "Settings saved successfully.";
-    };
+      setTimeout(() => document.getElementById('set-msg').textContent = "", 3000);
+    }
+
+    async function approve(id, action) {
+      await fetch('/api/admin/approve', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ txId: id, action })
+      });
+      loadData();
+    }
+
+    async function flag(id, current) {
+      const status = current === 'Active' ? 'Flagged' : 'Active';
+      await fetch('/api/admin/flag', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: id, status })
+      });
+      loadData();
+    }
   </script>
 </body>
 </html>

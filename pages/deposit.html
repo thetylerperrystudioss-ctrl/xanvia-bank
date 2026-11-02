@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Deposit Funds | Xanvia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .deposit-container { padding: 20px; max-width: 500px; margin: 0 auto; }
+    .step-card { background: var(--white); border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid var(--border); }
+    .step-title { font-size: 1.1rem; color: var(--deep-green); font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+    .step-number { background: var(--emerald); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+    
+    .bank-detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+    .bank-detail-row:last-child { border-bottom: none; }
+    .bank-detail-row span:first-child { color: var(--muted); }
+    .bank-detail-row span:last-child { font-weight: 600; color: var(--text); }
+    
+    .upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; background: #FAFAFA; }
+    .upload-area:hover { border-color: var(--emerald); background: var(--emerald-light); }
+    .upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-icon { font-size: 2rem; margin-bottom: 10px; }
+    
+    .btn-submit { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="top-bar" style="background: white; border-bottom: 1px solid var(--border); padding: 15px 20px; display: flex; align-items: center; gap: 15px;">
+    <a href="hub.html" style="text-decoration:none; color:var(--text); font-size:1.5rem;">←</a>
+    <h2 style="font-size: 1.1rem; color: var(--deep-green);">Deposit Funds</h2>
+  </header>
+
+  <div class="deposit-container">
+    
+    <!-- STEP 1: SEND MONEY -->
+    <div class="step-card">
+      <div class="step-title"><span class="step-number">1</span> Send the Funds</div>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 15px;">Transfer your desired amount to the official Xanvia Bank deposit account below.</p>
+      
+      <div id="admin-details">
+        <div class="bank-detail-row"><span>Bank Name</span><span>Loading...</span></div>
+      </div>
+    </div>
+
+    <!-- STEP 2: UPLOAD RECEIPT -->
+    <div class="step-card">
+      <div class="step-title"><span class="step-number">2</span> Upload Receipt</div>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 15px;">Enter the exact amount you sent and upload a screenshot of your receipt.</p>
+      
+      <form id="dep-form">
+        <div class="form-group">
+          <label>Amount Sent ($)</label>
+          <input type="number" id="amount" placeholder="0.00" required style="width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; margin-bottom: 15px;">
+        </div>
+        
+        <div class="upload-area">
+          <input type="file" id="screenshot" accept="image/*" required>
+          <div class="upload-icon">📄</div>
+          <p style="font-weight: 600; font-size: 0.9rem; color: var(--text);" id="file-name">Tap to upload screenshot</p>
+          <p style="font-size: 0.75rem; color: var(--muted); margin-top: 5px;">PNG, JPG up to 5MB</p>
+        </div>
+
+        <button type="submit" class="btn-submit">I Have Sent It</button>
+      </form>
+      
+      <div id="msg" style="margin-top: 15px; font-weight: 600; text-align: center; font-size: 0.9rem;"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("xanvia_user"));
+    if (!user) window.location.replace("../index.html");
+
+    // 1. Fetch Admin Details
+    fetch('/api/admin/settings').then(r => r.json()).then(data => {
+      document.getElementById('admin-details').innerHTML = `
+        <div class="bank-detail-row"><span>Bank Name</span><span>${data.bank_name || 'N/A'}</span></div>
+        <div class="bank-detail-row"><span>Account Number</span><span>${data.bank_account || 'N/A'}</span></div>
+        <div class="bank-detail-row"><span>Routing Number</span><span>${data.bank_routing || 'N/A'}</span></div>
+        <div class="bank-detail-row" style="margin-top: 10px; border-top: 1px dashed var(--border); padding-top: 15px;"><span>Bitcoin Address</span><span>${data.btc_address || 'N/A'}</span></div>
+      `;
+    });
+
+    // 2. Show selected file name
+    document.getElementById('screenshot').addEventListener('change', function() {
+      const fileName = this.files[0] ? this.files[0].name : 'Tap to upload screenshot';
+      document.getElementById('file-name').textContent = fileName;
+    });
+
+    // 3. Submit Form
+    document.getElementById('dep-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const amount = document.getElementById('amount').value;
+      const file = document.getElementById('screenshot').files[0];
+      const msg = document.getElementById('msg');
+      const btn = document.querySelector('.btn-submit');
+
+      if (!file) { msg.textContent = "Please upload a screenshot."; msg.style.color = "red"; return; }
+
+      btn.textContent = "Sending...";
+      btn.style.opacity = "0.7";
+
+      const formData = new FormData();
+      formData.append('userId', user.id);
+      formData.append('amount', amount);
+      formData.append('screenshot', file);
+
+      try {
+        const res = await fetch('/api/deposit/request', { method: 'POST', body: formData });
+        const data = await res.json();
+        
+        msg.textContent = data.message || data.error;
+        msg.style.color = data.success ? "var(--emerald)" : "red";
+        
+        if (data.success) {
+          btn.textContent = "Sent! Pending Approval";
+          btn.style.background = "#10B981";
+          setTimeout(() => window.location.href = "hub.html", 2000);
+        } else {
+          btn.textContent = "I Have Sent It";
+          btn.style.opacity = "1";
+        }
+      } catch (err) {
+        msg.textContent = "Upload failed. Server error.";
+        msg.style.color = "red";
+        btn.textContent = "I Have Sent It";
+        btn.style.opacity = "1";
+      }
+    });
+  </script>
+</body>
+</html>
