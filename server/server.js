@@ -36,6 +36,9 @@ pool.connect((err, client, release) => {
       CREATE TABLE IF NOT EXISTS accounts (
         id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), balance DECIMAL(12,2) DEFAULT 0.00, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS investments (
+        id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, amount DECIMAL(12,2), status VARCHAR(50) DEFAULT 'Pending', start_date TIMESTAMP, maturity_date TIMESTAMP, profit DECIMAL(12,2) DEFAULT 0.00, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
       CREATE TABLE IF NOT EXISTS transactions (
         id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), amount DECIMAL(12,2), status VARCHAR(20) DEFAULT 'Pending', reference VARCHAR(100), details TEXT, proof_image TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -48,7 +51,6 @@ pool.connect((err, client, release) => {
         ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4);
-        ALTER TABLE accounts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
         ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT;
       `, (err2) => {
         release();
@@ -64,7 +66,9 @@ pool.connect((err, client, release) => {
   }
 });
 
-// AUTH
+// ==========================================
+// 2. AUTHENTICATION & ONBOARDING
+// ==========================================
 app.post('/api/register', async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -90,14 +94,7 @@ app.post('/api/complete-onboarding', async (req, res) => {
   try {
     await pool.query('BEGIN');
     await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
-    
-    if (type === 'bank') {
-      await pool.query(`INSERT INTO accounts (user_id, type, balance) SELECT $1, 'checking', 0.00 WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE user_id = $1 AND type = 'checking')`, [userId]);
-    } else if (type === 'investment') {
-      await pool.query(`INSERT INTO accounts (user_id, type, balance) SELECT $1, 'brokerage', 0.00 WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE user_id = $1 AND type = 'brokerage')`, [userId]);
-    } else if (type === 'loan') {
-      await pool.query(`INSERT INTO accounts (user_id, type, balance) SELECT $1, 'loan', 0.00 WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE user_id = $1 AND type = 'loan')`, [userId]);
-    }
+    if (type === 'bank') await pool.query(`INSERT INTO accounts (user_id, type, balance) SELECT $1, 'checking', 0.00 WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE user_id = $1 AND type = 'checking')`, [userId]);
     await pool.query('COMMIT');
     res.json({ success: true });
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); }
@@ -107,25 +104,63 @@ app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
     const balances = {};
-    result.rows.forEach(acc => {
-      balances[acc.type] = parseFloat(acc.balance);
-      balances[`${acc.type}_created_at`] = acc.created_at;
-    });
+    result.rows.forEach(acc => { balances[acc.type] = parseFloat(acc.balance); });
     res.json(balances);
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
 // ==========================================
-// INVESTMENT & LOAN REQUESTS
+// 3. INVESTMENT SYSTEM
 // ==========================================
-app.post('/api/investments/deposit', async (req, res) => {
-  const { userId, amount, reference } = req.body;
+app.post('/api/investments/deposit', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, reference, targetAccount } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
+  const imagePath = `/uploads/${req.file.filename}`;
+  
   try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference) VALUES ($1, 'INVESTMENT_DEPOSIT', $2, 'Pending', $3)`, [userId, amount, reference]);
-    res.json({ success: true, message: 'Investment deposit pending Admin approval.' });
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'INVESTMENT_DEPOSIT', $2, 'Pending', $3, $4)`, 
+      [userId, amount, reference, imagePath]);
+    res.json({ success: true, message: 'Deposit request pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
+app.post('/api/investments/withdraw', async (req, res) => {
+  const { userId, amount, bankDetails } = req.body;
+  try {
+    // Check if user has matured funds
+    const check = await pool.query(`SELECT SUM(amount + profit) as total FROM investments WHERE user_id = $1 AND status = 'Matured'`, [userId]);
+    const balance = parseFloat(check.rows[0].total) || 0;
+    if (amount > balance) return res.status(400).json({ error: 'Insufficient matured funds.' });
+
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'INVESTMENT_WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, bankDetails]);
+    res.json({ success: true, message: 'Withdrawal pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/investments/reinvest', async (req, res) => {
+  const { userId, amount } = req.body;
+  try {
+    // Deduct from matured investments
+    const check = await pool.query(`SELECT SUM(amount + profit) as total FROM investments WHERE user_id = $1 AND status = 'Matured'`, [userId]);
+    const balance = parseFloat(check.rows[0].total) || 0;
+    if (amount > balance) return res.status(400).json({ error: 'Insufficient matured funds.' });
+
+    // Create new pending transaction
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'INVESTMENT_REINVEST', $2, 'Pending')`, [userId, amount]);
+    res.json({ success: true, message: 'Reinvestment pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/investments/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+// ==========================================
+// 4. LOANS SYSTEM
+// ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
@@ -134,24 +169,11 @@ app.post('/api/loans/apply', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.post('/api/investments/withdraw', async (req, res) => {
-  const { userId, amount, bankDetails } = req.body;
-  try {
-    // Only check funds if it's already in the account. 
-    const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'brokerage'`, [userId]);
-    if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
-
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'INVESTMENT_WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, bankDetails]);
-    res.json({ success: true, message: 'Withdrawal pending Admin approval.' });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
 app.post('/api/loans/transfer', async (req, res) => {
   const { userId, amount, destination } = req.body;
   try {
     const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'loan'`, [userId]);
     if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient loan balance.' });
-
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, destination]);
     res.json({ success: true, message: 'Transfer pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -162,14 +184,13 @@ app.post('/api/loans/repay', async (req, res) => {
   try {
     const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'checking'`, [userId]);
     if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient checking funds.' });
-
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
     res.json({ success: true, message: 'Repayment pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
 // ==========================================
-// ADMIN APPROVAL (The Math Fix)
+// 5. ADMIN APPROVALS (The Math Engine)
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
@@ -189,32 +210,39 @@ app.post('/api/admin/approve', async (req, res) => {
     if (action === 'approve') {
       await pool.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
       
-      // 1. INVESTMENT DEPOSIT (Add to brokerage, reset timestamp)
+      const now = new Date();
+      const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days later
+
+      // INVESTMENT DEPOSIT -> Create active investment record
       if (tx.type === 'INVESTMENT_DEPOSIT') {
-        await pool.query(`UPDATE accounts SET balance = balance + $1, created_at = CURRENT_TIMESTAMP WHERE user_id = $2 AND type = 'brokerage'`, [tx.amount, tx.user_id]);
+        await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, 
+          [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
       }
-      // 2. LOAN APPLICATION (Add to loan balance)
+      // INVESTMENT WITHDRAWAL -> Mark matured investments as Withdrawn
+      else if (tx.type === 'INVESTMENT_WITHDRAWAL') {
+        await pool.query(`UPDATE investments SET status = 'Withdrawn' WHERE user_id = $1 AND status = 'Matured'`, [tx.user_id]);
+      }
+      // INVESTMENT REINVEST -> Create new active investment
+      else if (tx.type === 'INVESTMENT_REINVEST') {
+        await pool.query(`UPDATE investments SET status = 'Reinvested' WHERE user_id = $1 AND status = 'Matured'`, [tx.user_id]);
+        await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, 
+          [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
+      }
+      // LOAN APPLICATION -> Add to loan balance
       else if (tx.type === 'LOAN_APPLICATION') {
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
       }
-      // 3. INVESTMENT WITHDRAWAL (Deduct from brokerage)
-      else if (tx.type === 'INVESTMENT_WITHDRAWAL') {
-        await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'brokerage'`, [tx.amount, tx.user_id]);
-      }
-      // 4. LOAN TRANSFER (Deduct from loan, add to checking)
+      // LOAN TRANSFER -> Deduct from loan, add to checking
       else if (tx.type === 'LOAN_TRANSFER') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
-        if (tx.details === 'checking') {
-          await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
-        }
+        if (tx.details === 'checking') await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
       }
-      // 5. LOAN REPAYMENT (Deduct from checking, deduct from loan debt)
+      // LOAN REPAYMENT -> Deduct from checking, deduct debt
       else if (tx.type === 'LOAN_REPAYMENT') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
       }
     } else {
-      // Reject - No money moves.
       await pool.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
     }
     

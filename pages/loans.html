@@ -120,7 +120,6 @@
 
       const loanBalance = data.loan || 0;
       
-      // We fetch all transactions to calculate total borrowed
       const txRes = await fetch(`/api/transactions/${user.id}`);
       const txs = await txRes.json();
       
@@ -136,7 +135,6 @@
       document.getElementById('total-approved').textContent = formatUSD(totalBorrowed);
       document.getElementById('loan-balance').textContent = formatUSD(loanBalance);
       
-      // Outstanding debt is what they still owe (Total Borrowed - Total Repaid)
       const outstandingDebt = totalBorrowed - totalRepaid;
       document.getElementById('total-debt').textContent = formatUSD(outstandingDebt > 0 ? outstandingDebt : 0);
 

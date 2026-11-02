@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     body { background-color: #F4F7F6; display: flex; justify-content: center; }
-    .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+    .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; }
     .invest-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
@@ -55,17 +55,18 @@
           <h3 id="capital-val">$0.00</h3>
         </div>
         <div class="stat-card">
-          <p>Accumulated Profit</p>
+          <p>Simulated Profit (2.4x)</p>
           <h3 class="profit" id="profit-val">+$0.00</h3>
         </div>
       </div>
 
       <div class="countdown-box" id="countdown-container" style="display:none;">
-        <h4>Investment Matures In</h4>
+        <h4>Next Maturity In</h4>
         <div class="countdown-timer" id="countdown-timer">00d 00h 00m 00s</div>
+        <p style="font-size: 0.7rem; color: var(--muted); margin-top: 10px;">Start: <span id="start-date">-</span> | Maturity: <span id="maturity-date">-</span></p>
       </div>
 
-      <div class="action-grid">
+      <div class="action-grid" id="action-buttons">
         <button class="action-btn btn-deposit" onclick="openModal('deposit')">Deposit</button>
         <button class="action-btn btn-withdraw" onclick="openModal('withdraw')">Withdraw</button>
       </div>
@@ -77,24 +78,41 @@
     </main>
   </div>
 
-  <!-- MODALS -->
+  <!-- DEPOSIT MODAL -->
   <div id="modal-deposit" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
-    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
+    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px; max-height: 90vh; overflow-y: auto;">
       <h2 style="color:var(--deep-green); margin-bottom:15px;">Invest Funds</h2>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      
+      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+        <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 5px;">Simulated Projection (3.4x Return)</p>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+          <span>Deposit:</span> <strong id="calc-dep">$0.00</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom: 5px;">
+          <span>Projected Profit:</span> <strong id="calc-profit" style="color:var(--emerald);">+$0.00</strong>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Total Value:</span> <strong id="calc-total">$0.00</strong>
+        </div>
+      </div>
+
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" oninput="calcProjection()" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
       <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*" style="width:100%; padding:12px;"></div>
+      
       <button onclick="submitDeposit()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit</button>
       <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
       <div id="dep-msg" style="margin-top:10px; text-align:center;"></div>
     </div>
   </div>
 
+  <!-- WITHDRAW MODAL -->
   <div id="modal-withdraw" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
     <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
-      <h2 style="color:var(--deep-green); margin-bottom:15px;">Withdraw Funds</h2>
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Matured Withdrawal</h2>
       <div class="form-group"><label>Amount ($)</label><input type="number" id="wd-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
       <div class="form-group"><label>Bank Details</label><input type="text" id="wd-bank" placeholder="Bank Name, Acct Number" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
-      <button onclick="submitWithdraw()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Request Withdrawal</button>
+      <button onclick="submitWithdraw()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Withdraw</button>
       <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
       <div id="wd-msg" style="margin-top:10px; text-align:center;"></div>
     </div>
@@ -106,53 +124,75 @@
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
     let countdownInterval;
+    let totalMatured = 0;
 
     async function loadData() {
-      const res = await fetch(`/api/accounts/${user.id}`);
+      const res = await fetch(`/api/investments/${user.id}`);
       const data = await res.json();
 
-      const totalCapital = data.brokerage || 0;
-      const startDate = data.brokerage_created_at ? new Date(data.brokerage_created_at) : null;
+      let totalActiveCapital = 0;
+      let totalProfit = 0;
+      let maturedBal = 0;
+      let activeInvestments = data.filter(i => i.status === 'Active');
+      let maturedInvestments = data.filter(i => i.status === 'Matured');
 
-      let profit = 0;
-      if (startDate && totalCapital > 0) {
-        const days = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
-        profit = totalCapital * 0.015 * days; // 1.5% daily
-      }
+      activeInvestments.forEach(inv => {
+        totalActiveCapital += parseFloat(inv.amount);
+        totalProfit += parseFloat(inv.profit);
+      });
 
-      document.getElementById('capital-val').textContent = formatUSD(totalCapital);
-      document.getElementById('profit-val').textContent = `+${formatUSD(profit)}`;
-      document.getElementById('total-val').textContent = formatUSD(totalCapital + profit);
+      maturedInvestments.forEach(inv => {
+        maturedBal += (parseFloat(inv.amount) + parseFloat(inv.profit));
+      });
 
-      if (startDate && totalCapital > 0) {
+      totalMatured = maturedBal;
+
+      document.getElementById('capital-val').textContent = formatUSD(totalActiveCapital);
+      document.getElementById('profit-val').textContent = `+${formatUSD(totalProfit)}`;
+      document.getElementById('total-val').textContent = formatUSD(totalActiveCapital + totalProfit + maturedBal);
+
+      // Countdown for the most recent active investment
+      if (activeInvestments.length > 0) {
+        const latest = activeInvestments[0];
         document.getElementById('countdown-container').style.display = 'block';
-        startCountdown(startDate);
+        
+        const start = new Date(latest.start_date);
+        const maturity = new Date(latest.maturity_date);
+
+        document.getElementById('start-date').textContent = start.toLocaleString();
+        document.getElementById('maturity-date').textContent = maturity.toLocaleString();
+
+        startCountdown(maturity);
+      } else {
+        document.getElementById('countdown-container').style.display = 'none';
       }
 
-      const txRes = await fetch(`/api/transactions/${user.id}`);
-      const txs = await txRes.json();
-      const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
+      // Enable withdraw button only if funds are matured
+      if (maturedBal > 0) {
+        document.getElementById('action-buttons').innerHTML = `
+          <button class="action-btn btn-deposit" onclick="openModal('deposit')">New Deposit</button>
+          <button class="action-btn btn-withdraw" onclick="openModal('withdraw')" style="background:var(--emerald); color:white;">Withdraw Matured</button>
+        `;
+      }
 
-      document.getElementById('history-list').innerHTML = investTxs.map(tx => `
+      document.getElementById('history-list').innerHTML = data.map(inv => `
         <div class="tx-item">
           <div class="tx-info">
-            <h4>${tx.type.replace('_', ' ')}</h4>
-            <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+            <h4>Investment</h4>
+            <p>Status: <span style="font-weight:600; color:${inv.status === 'Active' ? 'var(--emerald)' : inv.status === 'Matured' ? 'var(--gold)' : 'var(--muted)'}">${inv.status}</span></p>
+            <p style="margin-top:4px;">Profit: +${formatUSD(inv.profit)}</p>
           </div>
-          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'}">
-            ${formatUSD(tx.amount)}
-            <div style="font-size:0.7rem; color:var(--muted);">${tx.status}</div>
+          <div class="tx-amount">
+            ${formatUSD(inv.amount)}
           </div>
         </div>
-      `).join('') || '<p>No investment history.</p>';
+      `).join('') || '<p>No investments yet.</p>';
     }
 
-    function startCountdown(start) {
+    function startCountdown(maturityDate) {
       if (countdownInterval) clearInterval(countdownInterval);
-      const maturity = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
-
       countdownInterval = setInterval(() => {
-        const diff = maturity - new Date();
+        const diff = maturityDate - new Date();
         if (diff <= 0) {
           clearInterval(countdownInterval);
           document.getElementById('countdown-timer').textContent = "Matured!";
@@ -167,14 +207,37 @@
       }, 1000);
     }
 
-    function openModal(type) { document.getElementById(`modal-${type}`).style.display = 'flex'; }
+    function calcProjection() {
+      const amt = parseFloat(document.getElementById('dep-amount').value) || 0;
+      document.getElementById('calc-dep').textContent = formatUSD(amt);
+      document.getElementById('calc-profit').textContent = `+${formatUSD(amt * 2.4)}`;
+      document.getElementById('calc-total').textContent = formatUSD(amt * 3.4);
+    }
+
+    function openModal(type) {
+      if (type === 'withdraw' && totalMatured <= 0) {
+        alert("No matured funds available to withdraw.");
+        return;
+      }
+      document.getElementById(`modal-${type}`).style.display = 'flex';
+    }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
     async function submitDeposit() {
       const amount = parseFloat(document.getElementById('dep-amount').value);
       const ref = document.getElementById('dep-ref').value;
+      const file = document.getElementById('dep-screenshot').files[0];
       const msg = document.getElementById('dep-msg');
-      const res = await fetch('/api/investments/deposit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, reference: ref }) });
+
+      if (!file) { msg.textContent = "Please upload a receipt."; msg.style.color = "red"; return; }
+
+      const formData = new FormData();
+      formData.append('userId', user.id);
+      formData.append('amount', amount);
+      formData.append('reference', ref);
+      formData.append('screenshot', file);
+
+      const res = await fetch('/api/investments/deposit', { method: 'POST', body: formData });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
@@ -184,6 +247,11 @@
       const amount = parseFloat(document.getElementById('wd-amount').value);
       const bank = document.getElementById('wd-bank').value;
       const msg = document.getElementById('wd-msg');
+
+      if (amount > totalMatured) {
+        msg.textContent = "Amount exceeds matured balance."; msg.style.color = "red"; return;
+      }
+
       const res = await fetch('/api/investments/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, bankDetails: bank }) });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
