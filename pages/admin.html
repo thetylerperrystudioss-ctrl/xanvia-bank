@@ -3,21 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Admin Control | Xanvia Bank</title>
+  <title>Admin Control | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; --warning: #F59E0B; }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* LOGIN OVERLAY */
     #login-overlay { position: fixed; inset: 0; background: var(--deep-green); z-index: 9999; display: flex; align-items: center; justify-content: center; }
     .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; }
     .login-box h2 { color: var(--deep-green); margin-bottom: 10px; }
     .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; }
     .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
 
-    /* LAYOUT */
     .layout { display: flex; min-height: 100vh; }
     .sidebar { width: 260px; background: #0B2E23; color: white; padding: 20px 0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: -280px; z-index: 1000; transition: left 0.3s; }
     .sidebar.open { left: 0; }
@@ -28,37 +26,18 @@
     .logout-btn { margin: auto 20px 20px; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; cursor: pointer; font-weight: 600; }
 
     .main-content { flex: 1; padding: 20px; margin-left: 0; }
-    .top-bar { background: white; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .top-bar { background: white; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .mobile-menu-btn { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
     .top-bar h1 { font-size: 1.2rem; color: var(--deep-green); }
 
-    /* CARDS & PANELS */
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-    .kpi-card { background: white; padding: 20px; border-radius: 12px; border-left: 4px solid var(--emerald); }
-    .kpi-title { font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
-    .kpi-value { font-size: 1.6rem; font-weight: 700; color: var(--deep-green); margin-top: 5px; }
-
-    .panel { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .panel { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
     .panel-title { font-size: 1.1rem; font-weight: 700; color: var(--deep-green); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     
-    /* FORMS & LISTS */
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
-    .btn-save { background: var(--emerald); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
-
     .req-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: #FAFAFA; }
-    .req-info h4 { font-size: 0.95rem; margin-bottom: 5px; }
-    .req-info p { font-size: 0.85rem; color: var(--muted); }
+    .req-info h4 { font-size: 0.95rem; margin-bottom: 5px; color: var(--deep-green); }
+    .req-info p { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
     .btn-approve { background: var(--emerald); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 5px; }
     .btn-reject { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-    th { text-align: left; padding: 12px; color: var(--muted); border-bottom: 1px solid var(--border); }
-    td { padding: 12px; border-bottom: 1px solid var(--border); }
-    .status-active { color: var(--emerald); font-weight: 600; }
-    .status-flagged { color: var(--danger); font-weight: 600; }
-    .btn-flag { background: var(--warning); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
 
     .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
     .sidebar-overlay.open { display: block; }
@@ -67,7 +46,6 @@
       .sidebar { left: 0; }
       .main-content { margin-left: 260px; padding: 30px; }
       .mobile-menu-btn { display: none; }
-      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
     }
   </style>
 </head>
@@ -89,8 +67,6 @@
       <div class="nav-item active">Dashboard</div>
       <div class="nav-item">Pending Requests</div>
       <div class="nav-item">User Management</div>
-      <div class="nav-item">Card Requests</div>
-      <div class="nav-item">Payment Settings</div>
       <button class="logout-btn" onclick="logoutAdmin()">Secure Logout</button>
     </aside>
 
@@ -100,57 +76,20 @@
         <h1>Admin Portal</h1>
       </header>
 
-      <!-- KPI STATS -->
-      <div class="kpi-grid">
-        <div class="kpi-card">
-          <div class="kpi-title">Total Users</div>
-          <div class="kpi-value" id="kpi-users">0</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-title">Pending Requests</div>
-          <div class="kpi-value" id="kpi-pending">0</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-title">Flagged Accounts</div>
-          <div class="kpi-value" id="kpi-flagged" style="color: var(--danger);">0</div>
-        </div>
-        <div class="kpi-card">
-          <div class="kpi-title">System Status</div>
-          <div class="kpi-value" style="color: var(--emerald);">Online</div>
-        </div>
-      </div>
-
-      <!-- PAYMENT SETTINGS -->
       <div class="panel">
-        <div class="panel-title">Payment Settings</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-          <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name"></div>
-          <div class="form-group"><label>Account Number</label><input type="text" id="bank-account"></div>
-          <div class="form-group"><label>Routing Number</label><input type="text" id="bank-routing"></div>
-          <div class="form-group"><label>Bitcoin Address</label><input type="text" id="btc-address"></div>
-        </div>
-        <button class="btn-save" onclick="saveSettings()">Save Settings</button>
-      </div>
-
-      <!-- PENDING REQUESTS -->
-      <div class="panel">
-        <div class="panel-title">Pending Requests (Deposits/Loans)</div>
+        <div class="panel-title">Pending Requests (Deposits, Loans, Withdrawals)</div>
         <div id="req-list">Loading...</div>
       </div>
 
-      <!-- CARD REQUESTS -->
       <div class="panel">
-        <div class="panel-title">Pending Card Requests</div>
-        <div id="card-list">Loading...</div>
-      </div>
-
-      <!-- USER MANAGEMENT -->
-      <div class="panel">
-        <div class="panel-title">User Management</div>
-        <table>
-          <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="user-list"></tbody>
-        </table>
+        <div class="panel-title">Payment Settings</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+          <input type="text" id="bank-name" placeholder="Bank Name" style="padding:10px; border:1px solid #ddd; border-radius:6px;">
+          <input type="text" id="bank-account" placeholder="Account Number" style="padding:10px; border:1px solid #ddd; border-radius:6px;">
+          <input type="text" id="bank-routing" placeholder="Routing Number" style="padding:10px; border:1px solid #ddd; border-radius:6px;">
+          <input type="text" id="btc-address" placeholder="BTC Address" style="padding:10px; border:1px solid #ddd; border-radius:6px;">
+        </div>
+        <button class="btn-approve" onclick="saveSettings()" style="width: 100%;">Save Settings</button>
       </div>
 
     </main>
@@ -168,67 +107,27 @@
     function logoutAdmin() { document.getElementById('login-overlay').style.display = 'flex'; }
 
     async function loadData() {
-      // 1. Settings
-      try {
-        const settings = await (await fetch('/api/admin/settings')).json();
-        document.getElementById('bank-name').value = settings.bank_name || '';
-        document.getElementById('bank-account').value = settings.bank_account || '';
-        document.getElementById('bank-routing').value = settings.bank_routing || '';
-        document.getElementById('btc-address').value = settings.btc_address || '';
-      } catch(e) {}
+      const settings = await (await fetch('/api/admin/settings')).json();
+      document.getElementById('bank-name').value = settings.bank_name || '';
+      document.getElementById('bank-account').value = settings.bank_account || '';
+      document.getElementById('bank-routing').value = settings.bank_routing || '';
+      document.getElementById('btc-address').value = settings.btc_address || '';
 
-      // 2. Requests
-      try {
-        const requests = await (await fetch('/api/admin/requests')).json();
-        document.getElementById('kpi-pending').textContent = requests.length;
-        document.getElementById('req-list').innerHTML = requests.map(tx => `
-          <div class="req-item">
-            <div class="req-info">
-              <h4>${tx.name} (${tx.email})</h4>
-              <p><strong>${tx.type}</strong> - $${parseFloat(tx.amount).toFixed(2)}</p>
-              ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" style="height: 50px; border-radius: 4px; margin-top: 5px;"></a>` : ''}
-            </div>
-            <div>
-              <button class="btn-approve" onclick="approve(${tx.id}, 'approve')">Approve</button>
-              <button class="btn-reject" onclick="approve(${tx.id}, 'reject')">Reject</button>
-            </div>
+      const requests = await (await fetch('/api/admin/requests')).json();
+      document.getElementById('req-list').innerHTML = requests.map(tx => `
+        <div class="req-item">
+          <div class="req-info">
+            <h4>${tx.name} (${tx.email})</h4>
+            <p><strong>Type:</strong> ${tx.type}</p>
+            <p><strong>Amount:</strong> $${parseFloat(tx.amount).toFixed(2)}</p>
+            ${tx.reference ? `<p><strong>Ref:</strong> ${tx.reference}</p>` : ''}
           </div>
-        `).join('') || '<p style="color:var(--muted);">No pending requests.</p>';
-      } catch(e) {}
-
-      // 3. Card Requests
-      try {
-        const cards = await (await fetch('/api/admin/card-requests')).json();
-        document.getElementById('card-list').innerHTML = cards.map(c => `
-          <div class="req-item">
-            <div class="req-info">
-              <h4>${c.name}</h4>
-              <p>Requested: ${c.card_type}</p>
-            </div>
-            <div>
-              <button class="btn-approve" onclick="approveCard(${c.id})">Approve</button>
-            </div>
+          <div>
+            <button class="btn-approve" onclick="approve(${tx.id}, 'approve')">Approve</button>
+            <button class="btn-reject" onclick="approve(${tx.id}, 'reject')">Reject</button>
           </div>
-        `).join('') || '<p style="color:var(--muted);">No pending card requests.</p>';
-      } catch(e) {}
-
-      // 4. Users
-      try {
-        const users = await (await fetch('/api/admin/users')).json();
-        document.getElementById('kpi-users').textContent = users.length;
-        document.getElementById('kpi-flagged').textContent = users.filter(u => u.status === 'Flagged').length;
-        document.getElementById('user-list').innerHTML = users.map(u => `
-          <tr>
-            <td><strong>${u.name}</strong><br><small style="color:var(--muted);">${u.email}</small></td>
-            <td><span class="${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
-            <td>
-              <button class="btn-flag" onclick="flag(${u.id}, '${u.status}')">
-                ${u.status === 'Active' ? 'Flag' : 'Unflag'}
-              </button>
-            </td>
-          </tr>
-        `).join('');
-      } catch(e) {}
+        </div>
+      `).join('') || '<p style="color:var(--muted);">No pending requests.</p>';
     }
 
     async function saveSettings() {
@@ -252,19 +151,7 @@
       loadData();
     }
 
-    async function approveCard(id) {
-      await fetch(`/api/admin/approve-card/${id}`, { method: 'POST' });
-      loadData();
-    }
-
-    async function flag(id, current) {
-      const status = current === 'Active' ? 'Flagged' : 'Active';
-      await fetch('/api/admin/flag', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: id, status })
-      });
-      loadData();
-    }
+    loadData();
   </script>
 </body>
 </html>

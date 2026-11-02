@@ -2,323 +2,190 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Loan Center | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
-  
   <style>
     body { background-color: #F4F7F6; display: flex; justify-content: center; }
-    
-    .app-container {
-      width: 100%;
-      max-width: 600px;
-      background: #F4F7F6;
-      min-height: 100vh;
-      position: relative;
-      box-shadow: 0 0 20px rgba(0,0,0,0.05);
-    }
-
-    .loan-hero { 
-      background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); 
-      color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; 
-      position: relative;
-    }
-
+    .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+    .loan-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
-    
     .loan-summary { text-align: center; }
     .loan-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
     .loan-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
-    
-    /* Stats Grid */
-    .stats-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-      margin: -30px 20px 20px; position: relative; z-index: 10;
-    }
-    .stat-card {
-      background: white; padding: 20px 15px; border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center;
-      display: flex; flex-direction: column; justify-content: center;
-    }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
+    .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
     .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
     .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
     .stat-card h3.debt { color: var(--danger); }
-
-    /* Actions Grid */
     .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px 20px; }
-    .action-btn {
-      padding: 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem;
-      text-align: center; display: flex; align-items: center; justify-content: center; gap: 8px;
-      border: none; cursor: pointer; text-decoration: none; transition: 0.2s;
-    }
+    .action-btn { padding: 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-align: center; border: none; cursor: pointer; }
     .btn-primary { background: var(--emerald); color: white; }
     .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
     .btn-full { grid-column: span 2; }
-
-    /* History */
-    .history-panel { padding: 0 20px 80px; }
-    .history-panel h3 { font-size: 1.1rem; color: var(--deep-green); margin-bottom: 15px; }
-    .tx-item {
-      background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
-      border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
-    }
-    .tx-info h4 { font-size: 0.95rem; color: var(--text); margin-bottom: 4px; }
+    .history-panel { padding: 0 20px 30px; }
+    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .tx-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
     .tx-info p { font-size: 0.75rem; color: var(--muted); }
-    .tx-amount { font-weight: 700; font-size: 1rem; text-align: right; }
-    .tx-amount.credit { color: var(--emerald); }
-    .tx-amount.debit { color: var(--danger); }
-
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.open { display: flex; }
-    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-content h2 { color: var(--deep-green); margin-bottom: 10px; }
-    .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
-    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
-    
-    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; }
-    .admin-details-box strong { color: var(--deep-green); }
+    .tx-amount { font-weight: 700; text-align: right; }
   </style>
 </head>
 <body>
-
   <div class="app-container">
-    <!-- HEADER -->
-    <header class="loan-hero">
+    <header class="loan-header">
       <div class="header-top">
         <a href="hub.html">←</a>
         <div class="logo" style="color: white; font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
         <div style="width: 24px;"></div>
       </div>
-      
       <div class="loan-summary">
-        <p>Available to Spend</p>
-        <h2 id="loan-balance-display">$0.00</h2>
+        <p>Available Loan Balance</p>
+        <h2 id="loan-balance">$0.00</h2>
       </div>
     </header>
 
     <main>
-      <!-- STATS -->
       <div class="stats-grid">
         <div class="stat-card">
-          <p>Total Outstanding Debt</p>
-          <h3 class="debt" id="total-debt">$0.00</h3>
+          <p>Total Approved</p>
+          <h3 id="total-approved">$0.00</h3>
         </div>
         <div class="stat-card">
-          <p>Interest Rate</p>
-          <h3>6.49% APR</h3>
+          <p>Outstanding Debt</p>
+          <h3 class="debt" id="total-debt">$0.00</h3>
         </div>
       </div>
 
-      <!-- ACTIONS -->
       <div class="action-grid">
-        <button class="action-btn btn-primary btn-full" onclick="openModal('apply')">
-          <span>+</span> Apply for Loan
-        </button>
-        <button class="action-btn btn-outline" onclick="openModal('transfer')">
-          <span>↗</span> Transfer Funds
-        </button>
-        <button class="action-btn btn-outline" onclick="openModal('repay')">
-          <span>💵</span> Repay Loan
-        </button>
+        <button class="action-btn btn-primary btn-full" onclick="openModal('apply')">Apply for Loan</button>
+        <button class="action-btn btn-outline" onclick="openModal('transfer')">Transfer Funds</button>
+        <button class="action-btn btn-outline" onclick="openModal('repay')">Repay Loan</button>
       </div>
 
-      <!-- HISTORY -->
       <div class="history-panel">
-        <h3>Loan Transaction History</h3>
-        <div id="loan-history-list">Loading...</div>
+        <h3 style="color: var(--deep-green); margin-bottom: 15px;">Loan Transaction History</h3>
+        <div id="history-list"></div>
       </div>
     </main>
   </div>
 
-  <!-- APPLY MODAL -->
-  <div class="modal-overlay" id="modal-apply">
-    <div class="modal-content">
-      <button class="close-modal" onclick="closeModal()">×</button>
-      <h2>Apply for Loan</h2>
-      
-      <div class="admin-details-box">
-        <strong>Step 1: 15% Deposit Required</strong>
-        <p style="margin-top:5px; margin-bottom: 10px;">Send this deposit to the Admin details below:</p>
-        <div id="admin-details-content">Loading...</div>
-      </div>
-
-      <div class="form-group">
-        <label>Loan Amount ($)</label>
-        <input type="number" id="apply-amount" placeholder="10000" oninput="calcDeposit()">
-      </div>
-      <div style="margin-bottom: 15px; font-weight: 600; color: var(--danger);">
-        Required Deposit: <span id="deposit-req">$0.00</span>
-      </div>
-      
-      <button class="btn-primary action-btn btn-full" onclick="submitLoan()">Submit Application</button>
-      <div id="apply-msg" style="margin-top:15px; text-align:center; font-weight:bold;"></div>
+  <!-- MODALS -->
+  <div id="modal-apply" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Apply for Loan</h2>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="apply-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <button onclick="submitApply()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit</button>
+      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+      <div id="apply-msg" style="margin-top:10px; text-align:center;"></div>
     </div>
   </div>
 
-  <!-- TRANSFER MODAL -->
-  <div class="modal-overlay" id="modal-transfer">
-    <div class="modal-content">
-      <button class="close-modal" onclick="closeModal()">×</button>
-      <h2>Transfer Loan Funds</h2>
-      <p>Move your available loan balance to your Checking account or another bank.</p>
-      
-      <div class="form-group">
-        <label>Amount ($)</label>
-        <input type="number" id="transfer-amount" placeholder="0.00">
-      </div>
+  <div id="modal-transfer" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Transfer Funds</h2>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="transfer-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
       <div class="form-group">
         <label>Destination</label>
-        <select id="transfer-destination">
-          <option value="checking">Internal Checking Account</option>
-          <option value="external">External Bank Account</option>
+        <select id="transfer-dest" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
+          <option value="checking">Internal Bank</option>
+          <option value="external">External Bank</option>
         </select>
       </div>
-      
-      <button class="btn-primary action-btn btn-full" onclick="submitTransfer()">Transfer Now</button>
-      <div id="transfer-msg" style="margin-top:15px; text-align:center; font-weight:bold;"></div>
+      <button onclick="submitTransfer()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Transfer</button>
+      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+      <div id="transfer-msg" style="margin-top:10px; text-align:center;"></div>
     </div>
   </div>
 
-  <!-- REPAY MODAL -->
-  <div class="modal-overlay" id="modal-repay">
-    <div class="modal-content">
-      <button class="close-modal" onclick="closeModal()">×</button>
-      <h2>Repay Loan</h2>
-      <p>Pay back your loan using funds from your Checking account.</p>
-      
-      <div class="form-group">
-        <label>Amount to Repay ($)</label>
-        <input type="number" id="repay-amount" placeholder="0.00">
-      </div>
-      
-      <button class="btn-primary action-btn btn-full" onclick="submitRepay()">Confirm Repayment</button>
-      <div id="repay-msg" style="margin-top:15px; text-align:center; font-weight:bold;"></div>
+  <div id="modal-repay" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Repay Loan</h2>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="repay-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <button onclick="submitRepay()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Repay</button>
+      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+      <div id="repay-msg" style="margin-top:10px; text-align:center;"></div>
     </div>
   </div>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
-    if (!user) window.location.replace("../index.html");
-    
+    if(!user) window.location.replace("../index.html");
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-    let currentLoanBalance = 0;
 
-    async function loadLoanData() {
-      try {
-        const res = await fetch(`/api/accounts/${user.id}`);
-        const data = await res.json();
-        
-        currentLoanBalance = data.loan || 0;
-        document.getElementById('loan-balance-display').textContent = formatUSD(currentLoanBalance);
-        document.getElementById('total-debt').textContent = formatUSD(currentLoanBalance);
+    async function loadData() {
+      const res = await fetch(`/api/accounts/${user.id}`);
+      const data = await res.json();
 
-        const txRes = await fetch(`/api/transactions/${user.id}`);
-        const txs = await txRes.json();
-        const loanTxs = txs.filter(tx => tx.type.includes('LOAN'));
+      const loanBalance = data.loan || 0;
+      
+      // We fetch all transactions to calculate total borrowed
+      const txRes = await fetch(`/api/transactions/${user.id}`);
+      const txs = await txRes.json();
+      
+      let totalBorrowed = 0;
+      let totalRepaid = 0;
+      const loanTxs = txs.filter(tx => tx.type.includes('LOAN'));
 
-        const historyList = document.getElementById('loan-history-list');
-        if (loanTxs.length === 0) {
-          historyList.innerHTML = `<p style="text-align:center; color:var(--muted); font-size:0.9rem;">No loan history yet.</p>`;
-        } else {
-          historyList.innerHTML = loanTxs.map(tx => `
-            <div class="tx-item">
-              <div class="tx-info">
-                <h4>${tx.type.replace('_', ' ')}</h4>
-                <p>${new Date(tx.created_at).toLocaleDateString()}</p>
-              </div>
-              <div class="tx-amount ${tx.type === 'LOAN_REPAYMENT' ? 'credit' : 'debit'}">
-                ${formatUSD(tx.amount)}
-                <div style="font-size:0.7rem; color:${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'};">${tx.status}</div>
-              </div>
-            </div>
-          `).join('');
-        }
-      } catch (err) { console.error(err); }
+      loanTxs.forEach(tx => {
+        if (tx.type === 'LOAN_APPLICATION' && tx.status === 'Approved') totalBorrowed += parseFloat(tx.amount);
+        if (tx.type === 'LOAN_REPAYMENT' && tx.status === 'Approved') totalRepaid += parseFloat(tx.amount);
+      });
+
+      document.getElementById('total-approved').textContent = formatUSD(totalBorrowed);
+      document.getElementById('loan-balance').textContent = formatUSD(loanBalance);
+      
+      // Outstanding debt is what they still owe (Total Borrowed - Total Repaid)
+      const outstandingDebt = totalBorrowed - totalRepaid;
+      document.getElementById('total-debt').textContent = formatUSD(outstandingDebt > 0 ? outstandingDebt : 0);
+
+      document.getElementById('history-list').innerHTML = loanTxs.map(tx => `
+        <div class="tx-item">
+          <div class="tx-info">
+            <h4>${tx.type.replace('_', ' ')}</h4>
+            <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+          </div>
+          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'}">
+            ${formatUSD(tx.amount)}
+            <div style="font-size:0.7rem; color:var(--muted);">${tx.status}</div>
+          </div>
+        </div>
+      `).join('') || '<p>No loan history.</p>';
     }
 
-    // --- MODAL CONTROLS ---
-    function openModal(type) {
-      document.getElementById(`modal-${type}`).classList.add('open');
-      if (type === 'apply') loadAdminDetails();
-    }
-    function closeModal() {
-      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open'));
-    }
+    function openModal(type) { document.getElementById(`modal-${type}`).style.display = 'flex'; }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
 
-    // --- APPLY LOAN ---
-    function calcDeposit() {
-      const amt = parseFloat(document.getElementById('apply-amount').value) || 0;
-      document.getElementById('deposit-req').textContent = formatUSD(amt * 0.15);
-    }
-
-    async function loadAdminDetails() {
-      const data = await (await fetch('/api/admin/settings')).json();
-      document.getElementById('admin-details-content').innerHTML = `
-        <strong>Bank:</strong> ${data.bank_name}<br>
-        <strong>Acct:</strong> ${data.bank_account}<br>
-        <strong>Routing:</strong> ${data.bank_routing}
-      `;
-    }
-
-    async function submitLoan() {
+    async function submitApply() {
       const amount = parseFloat(document.getElementById('apply-amount').value);
       const msg = document.getElementById('apply-msg');
-      if (!amount) return;
-
-      const res = await fetch('/api/loans/apply', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, amount, termMonths: 24, rate: 6.49 })
-      });
+      const res = await fetch('/api/loans/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadLoanData(); }, 1500);
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
     }
 
-    // --- TRANSFER FUNDS ---
     async function submitTransfer() {
       const amount = parseFloat(document.getElementById('transfer-amount').value);
-      const dest = document.getElementById('transfer-destination').value;
+      const dest = document.getElementById('transfer-dest').value;
       const msg = document.getElementById('transfer-msg');
-      
-      if (!amount || amount > currentLoanBalance) {
-        msg.textContent = "Invalid amount or insufficient loan balance."; msg.style.color = "red"; return;
-      }
-
-      const res = await fetch('/api/loans/transfer', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, amount, destination: dest })
-      });
+      const res = await fetch('/api/loans/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, destination: dest }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadLoanData(); }, 1500);
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
     }
 
-    // --- REPAY LOAN ---
     async function submitRepay() {
       const amount = parseFloat(document.getElementById('repay-amount').value);
       const msg = document.getElementById('repay-msg');
-      
-      if (!amount) { msg.textContent = "Enter a valid amount."; msg.style.color = "red"; return; }
-
-      const res = await fetch('/api/loans/repay', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, amount })
-      });
+      const res = await fetch('/api/loans/repay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadLoanData(); }, 1500);
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
     }
 
-    loadLoanData();
+    loadData();
   </script>
 </body>
 </html>

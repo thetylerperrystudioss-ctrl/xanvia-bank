@@ -6,225 +6,191 @@
   <title>Investments | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
-  
   <style>
     body { background-color: #F4F7F6; display: flex; justify-content: center; }
-    
-    .app-container {
-      width: 100%;
-      max-width: 600px;
-      background: #F4F7F6;
-      min-height: 100vh;
-      position: relative;
-      box-shadow: 0 0 20px rgba(0,0,0,0.05);
-    }
-
-    .app-header { 
-      background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); 
-      color: white; 
-      padding: 30px 20px 60px; 
-      border-radius: 0 0 30px 30px; 
-      position: relative;
-    }
-
+    .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
+    .invest-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
-    
     .invest-summary { text-align: center; }
     .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
     .invest-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
-    
-    .yield-badge { 
-      display: inline-block; background: rgba(16, 185, 129, 0.2); 
-      color: #34D399; padding: 6px 12px; border-radius: 20px; 
-      font-size: 0.8rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    .stats-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-      margin: -40px 20px 20px; position: relative; z-index: 10;
-    }
-    .stat-card {
-      background: white; padding: 20px 15px; border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center;
-    }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
+    .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
     .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
     .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
     .stat-card h3.profit { color: var(--emerald); }
-
+    .countdown-box { background: white; padding: 20px; border-radius: 16px; margin: 0 20px 20px; text-align: center; border: 1px solid var(--border); }
+    .countdown-box h4 { color: var(--deep-green); margin-bottom: 10px; }
+    .countdown-timer { font-size: 1.8rem; font-weight: 700; color: var(--danger); font-family: monospace; }
     .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
-    .action-btn {
-      flex: 1; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1rem;
-      text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
-    }
+    .action-btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1rem; text-align: center; border: none; cursor: pointer; }
     .btn-deposit { background: var(--emerald); color: white; }
     .btn-withdraw { background: white; color: var(--text); border: 1px solid var(--border); }
-    .btn-withdraw:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .lock-alert {
-      margin: 0 20px 20px; padding: 15px; border-radius: 12px;
-      background: #FEF3C7; color: #92400E; font-size: 0.85rem; font-weight: 600;
-      display: flex; align-items: center; gap: 10px; border: 1px solid #F59E0B;
-    }
-
-    .history-panel { padding: 0 20px 80px; }
-    .history-panel h3 { font-size: 1.1rem; color: var(--deep-green); margin-bottom: 15px; }
-    .tx-item {
-      background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
-      border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
-    }
-    .tx-info h4 { font-size: 0.95rem; color: var(--text); margin-bottom: 4px; }
+    .history-panel { padding: 0 20px 30px; }
+    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .tx-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
     .tx-info p { font-size: 0.75rem; color: var(--muted); }
-    .tx-amount { font-weight: 700; font-size: 1rem; text-align: right; }
-    .tx-amount.credit { color: var(--emerald); }
+    .tx-amount { font-weight: 700; text-align: right; }
   </style>
 </head>
 <body>
-
   <div class="app-container">
-    <header class="app-header">
+    <header class="invest-header">
       <div class="header-top">
         <a href="hub.html">←</a>
         <div class="logo" style="color: white; font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
         <div style="width: 24px;"></div>
       </div>
-      
       <div class="invest-summary">
-        <p>Total Portfolio Value</p>
-        <h2 id="total-portfolio-val">$0.00</h2>
-        <div class="yield-badge" id="yield-status">Loading...</div>
+        <p>Total Investment Value</p>
+        <h2 id="total-val">$0.00</h2>
       </div>
     </header>
 
     <main>
       <div class="stats-grid">
         <div class="stat-card">
-          <p>Deposited Balance</p>
-          <h3 id="deposited-bal">$0.00</h3>
+          <p>Deposited Capital</p>
+          <h3 id="capital-val">$0.00</h3>
         </div>
         <div class="stat-card">
-          <p>Profit Yield</p>
-          <h3 class="profit" id="profit-yield">+$0.00</h3>
+          <p>Accumulated Profit</p>
+          <h3 class="profit" id="profit-val">+$0.00</h3>
         </div>
-        <div class="stat-card">
-          <p>Total Withdrawn</p>
-          <h3 id="withdrawn-bal">$0.00</h3>
-        </div>
-        <div class="stat-card">
-          <p>Active Days</p>
-          <h3 id="active-days">0 Days</h3>
-        </div>
+      </div>
+
+      <div class="countdown-box" id="countdown-container" style="display:none;">
+        <h4>Investment Matures In</h4>
+        <div class="countdown-timer" id="countdown-timer">00d 00h 00m 00s</div>
       </div>
 
       <div class="action-grid">
-        <a href="deposit.html?target=brokerage" class="action-btn btn-deposit">
-          <span>⬇️</span> Deposit
-        </a>
-        <button id="withdraw-btn" class="action-btn btn-withdraw" onclick="handleWithdraw()" disabled>
-          <span>⬆️</span> Withdraw
-        </button>
-      </div>
-
-      <div id="lock-alert" class="lock-alert" style="display:none;">
-        🔒 Withdrawals are locked for 7 days. Your funds will unlock soon.
+        <button class="action-btn btn-deposit" onclick="openModal('deposit')">Deposit</button>
+        <button class="action-btn btn-withdraw" onclick="openModal('withdraw')">Withdraw</button>
       </div>
 
       <div class="history-panel">
-        <h3>Investment History</h3>
+        <h3 style="color: var(--deep-green); margin-bottom: 15px;">Investment History</h3>
         <div id="history-list"></div>
       </div>
     </main>
   </div>
 
+  <!-- MODALS -->
+  <div id="modal-deposit" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Invest Funds</h2>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <button onclick="submitDeposit()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit</button>
+      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+      <div id="dep-msg" style="margin-top:10px; text-align:center;"></div>
+    </div>
+  </div>
+
+  <div id="modal-withdraw" class="modal-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+    <div style="background:white; padding:30px; border-radius:20px; width:90%; max-width:400px;">
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Withdraw Funds</h2>
+      <div class="form-group"><label>Amount ($)</label><input type="number" id="wd-amount" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <div class="form-group"><label>Bank Details</label><input type="text" id="wd-bank" placeholder="Bank Name, Acct Number" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;"></div>
+      <button onclick="submitWithdraw()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Request Withdrawal</button>
+      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+      <div id="wd-msg" style="margin-top:10px; text-align:center;"></div>
+    </div>
+  </div>
+
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if(!user) window.location.replace("../index.html");
-
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-    let canWithdraw = false;
 
-    async function loadInvestments() {
-      try {
-        const res = await fetch(`/api/accounts/${user.id}`);
-        const data = await res.json();
-        
-        // The initial deposit from the database
-        const initialDep = data.brokerage || 0;
-        
-        // The time the deposit was approved
-        const createdAt = data.brokerage_created_at ? new Date(data.brokerage_created_at) : new Date();
-        const now = new Date();
-        
-        // Calculate days elapsed
-        const diffTime = Math.abs(now - createdAt);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        
-        // Yield Calculation (1.5% per day)
-        const dailyYield = 0.015; 
-        const yieldAmount = initialDep * dailyYield * diffDays;
-        const totalVal = initialDep + yieldAmount;
+    let countdownInterval;
 
-        const txRes = await fetch(`/api/transactions/${user.id}`);
-        const txs = await txRes.json();
-        
-        let totalWithdrawn = 0;
-        const investTxs = txs.filter(tx => tx.reference === 'brokerage' || tx.type.includes('INVEST'));
+    async function loadData() {
+      const res = await fetch(`/api/accounts/${user.id}`);
+      const data = await res.json();
 
-        investTxs.forEach(tx => {
-          if (tx.type === 'WITHDRAWAL' && tx.status === 'Approved') {
-            totalWithdrawn += parseFloat(tx.amount);
-          }
-        });
+      const totalCapital = data.brokerage || 0;
+      const startDate = data.brokerage_created_at ? new Date(data.brokerage_created_at) : null;
 
-        // Update UI
-        document.getElementById('total-portfolio-val').textContent = formatUSD(totalVal);
-        document.getElementById('deposited-bal').textContent = formatUSD(initialDep);
-        document.getElementById('profit-yield').textContent = `+${formatUSD(yieldAmount)}`;
-        document.getElementById('withdrawn-bal').textContent = formatUSD(totalWithdrawn);
-        document.getElementById('active-days').textContent = `${diffDays} Days`;
-
-        // Lock Logic
-        if (diffDays >= 7 || initialDep === 0) {
-          document.getElementById('yield-status').textContent = initialDep === 0 ? "No Active Deposit" : "Active Yield";
-          document.getElementById('withdraw-btn').disabled = initialDep === 0;
-          canWithdraw = initialDep > 0;
-          document.getElementById('lock-alert').style.display = 'none';
-        } else {
-          document.getElementById('yield-status').textContent = `Locked (${7 - diffDays} days left)`;
-          document.getElementById('withdraw-btn').disabled = true;
-          canWithdraw = false;
-          document.getElementById('lock-alert').style.display = 'flex';
-        }
-
-        // History
-        const historyList = document.getElementById('history-list');
-        if (investTxs.length === 0) {
-          historyList.innerHTML = `<p style="text-align:center; color:var(--muted); font-size:0.9rem;">No investment history yet.</p>`;
-        } else {
-          historyList.innerHTML = investTxs.map(tx => `
-            <div class="tx-item">
-              <div class="tx-info">
-                <h4>${tx.type.replace('_', ' ')}</h4>
-                <p>${new Date(tx.created_at).toLocaleDateString()}</p>
-              </div>
-              <div class="tx-amount ${tx.type === 'DEPOSIT' ? 'credit' : ''}">
-                ${tx.type === 'DEPOSIT' ? '+' : '-'}${formatUSD(tx.amount)}
-              </div>
-            </div>
-          `).join('');
-        }
-
-      } catch (err) {
-        console.error(err);
+      let profit = 0;
+      if (startDate && totalCapital > 0) {
+        const days = Math.floor((new Date() - startDate) / (1000 * 60 * 60 * 24));
+        profit = totalCapital * 0.015 * days; // 1.5% daily
       }
+
+      document.getElementById('capital-val').textContent = formatUSD(totalCapital);
+      document.getElementById('profit-val').textContent = `+${formatUSD(profit)}`;
+      document.getElementById('total-val').textContent = formatUSD(totalCapital + profit);
+
+      if (startDate && totalCapital > 0) {
+        document.getElementById('countdown-container').style.display = 'block';
+        startCountdown(startDate);
+      }
+
+      const txRes = await fetch(`/api/transactions/${user.id}`);
+      const txs = await txRes.json();
+      const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
+
+      document.getElementById('history-list').innerHTML = investTxs.map(tx => `
+        <div class="tx-item">
+          <div class="tx-info">
+            <h4>${tx.type.replace('_', ' ')}</h4>
+            <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+          </div>
+          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'}">
+            ${formatUSD(tx.amount)}
+            <div style="font-size:0.7rem; color:var(--muted);">${tx.status}</div>
+          </div>
+        </div>
+      `).join('') || '<p>No investment history.</p>';
     }
 
-    function handleWithdraw() {
-      if (!canWithdraw) return;
-      window.location.href = "withdraw.html?type=brokerage";
+    function startCountdown(start) {
+      if (countdownInterval) clearInterval(countdownInterval);
+      const maturity = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      countdownInterval = setInterval(() => {
+        const diff = maturity - new Date();
+        if (diff <= 0) {
+          clearInterval(countdownInterval);
+          document.getElementById('countdown-timer').textContent = "Matured!";
+          document.getElementById('countdown-timer').style.color = "var(--emerald)";
+          return;
+        }
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const m = Math.floor((diff / 1000 / 60) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+        document.getElementById('countdown-timer').textContent = `${d}d ${h}h ${m}m ${s}s`;
+      }, 1000);
     }
 
-    loadInvestments();
+    function openModal(type) { document.getElementById(`modal-${type}`).style.display = 'flex'; }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display = 'none'); }
+
+    async function submitDeposit() {
+      const amount = parseFloat(document.getElementById('dep-amount').value);
+      const ref = document.getElementById('dep-ref').value;
+      const msg = document.getElementById('dep-msg');
+      const res = await fetch('/api/investments/deposit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, reference: ref }) });
+      const data = await res.json();
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
+    }
+
+    async function submitWithdraw() {
+      const amount = parseFloat(document.getElementById('wd-amount').value);
+      const bank = document.getElementById('wd-bank').value;
+      const msg = document.getElementById('wd-msg');
+      const res = await fetch('/api/investments/withdraw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, bankDetails: bank }) });
+      const data = await res.json();
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
+    }
+
+    loadData();
   </script>
 </body>
 </html>
