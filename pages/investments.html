@@ -6,125 +6,45 @@
   <title>Investments | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
-  
   <style>
-    /* Reset and Force Mobile App Layout */
-    body { 
-      background-color: #F4F7F6; 
-      margin: 0; 
-      display: flex; 
-      justify-content: center; 
-      min-height: 100vh;
-    }
-    
-    .app-container { 
-      width: 100%; 
-      max-width: 600px; 
-      background: #F4F7F6; 
-      min-height: 100vh; 
-      position: relative; 
-      overflow-x: hidden;
-    }
-
-    /* Header */
-    .invest-header { 
-      background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); 
-      color: white; 
-      padding: 30px 20px 50px; 
-      border-radius: 0 0 30px 30px; 
-      position: relative; 
-    }
+    body { background-color: #F4F7F6; display: flex; justify-content: center; }
+    .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; }
+    .invest-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
-    .logo { font-family: var(--font-serif); font-weight: 700; font-size: 1.2rem; }
-    
     .invest-summary { text-align: center; }
-    .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin: 0; }
-    .invest-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
-
-    /* Stats Grid */
-    .stats-grid { 
-      display: grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap: 15px; 
-      margin: -30px 20px 20px; 
-      position: relative; 
-      z-index: 10; 
-    }
-    .stat-card { 
-      background: white; 
-      padding: 20px 15px; 
-      border-radius: 16px; 
-      box-shadow: 0 8px 20px rgba(0,0,0,0.05); 
-      text-align: center; 
-    }
-    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin: 0 0 8px; }
-    .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; margin: 0; }
+    .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; margin: 0; }
+    .invest-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; }
+    
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
+    .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
+    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
     .stat-card h3.profit { color: var(--emerald); }
-
-    /* Actions */
+    
     .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
-    .action-btn { 
-      flex: 1; 
-      padding: 16px; 
-      border-radius: 12px; 
-      font-weight: 600; 
-      font-size: 1rem; 
-      text-align: center; 
-      border: none; 
-      cursor: pointer; 
-    }
+    .action-btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1rem; text-align: center; border: none; cursor: pointer; }
     .btn-deposit { background: var(--emerald); color: white; }
     .btn-withdraw { background: white; color: var(--text); border: 1px solid var(--border); }
-
-    /* History */
+    
     .history-panel { padding: 0 20px 30px; }
-    .history-panel h3 { font-size: 1.1rem; color: var(--deep-green); margin-bottom: 15px; }
-    .tx-item { 
-      background: white; 
-      padding: 15px; 
-      border-radius: 12px; 
-      margin-bottom: 10px; 
-      border: 1px solid var(--border); 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-    }
-    .tx-info h4 { font-size: 0.95rem; margin-bottom: 4px; color: var(--text); }
-    .tx-info p { font-size: 0.75rem; color: var(--muted); margin: 0; }
-    .tx-amount { font-weight: 700; text-align: right; }
-
-    /* Modals */
+    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-content h2 { color: var(--deep-green); margin-bottom: 15px; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; }
-    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
-
-    /* Payment Details Box */
-    .payment-details-box {
-      background: #F4F7F6;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      font-size: 0.85rem;
-      border: 1px solid var(--border);
-    }
-    .payment-details-box p { margin: 0 0 8px; font-weight: 600; color: var(--deep-green); }
-    .payment-details-box div { margin-bottom: 4px; color: var(--text); }
-    .payment-details-box span { font-weight: 600; }
+    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; }
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
   </style>
 </head>
 <body>
-
   <div class="app-container">
     <header class="invest-header">
       <div class="header-top">
         <a href="hub.html">←</a>
-        <div class="logo">Xanvia</div>
+        <div class="logo" style="font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
         <div style="width: 24px;"></div>
       </div>
       <div class="invest-summary">
@@ -151,10 +71,8 @@
       </div>
 
       <div class="history-panel">
-        <h3>Investment History</h3>
-        <div id="history-list">
-          <p style="color: var(--muted); font-size: 0.9rem;">Loading...</p>
-        </div>
+        <h3 style="color: var(--deep-green); margin-bottom: 15px;">Investment History</h3>
+        <div id="history-list"></div>
       </div>
     </main>
   </div>
@@ -163,109 +81,79 @@
   <div id="modal-deposit" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
-      <h2>Invest Funds</h2>
+      <h2 style="color:var(--deep-green); margin-bottom:15px;">Invest Funds</h2>
       
-      <!-- Updated Payment Details Box to include Bitcoin -->
-      <div class="payment-details-box">
-        <p>Send payment to:</p>
-        <div>🏦 <strong>Bank:</strong> <span id="adm-bank">Loading...</span></div>
-        <div>📄 <strong>Acct:</strong> <span id="adm-acc">Loading...</span></div>
-        <div>🔢 <strong>Routing:</strong> <span id="adm-rout">Loading...</span></div>
+      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
+        <p style="margin: 0 0 5px; font-weight: 600;">Send payment to:</p>
+        <div>Bank: <span id="adm-bank">Loading...</span></div>
+        <div>Acct: <span id="adm-acc">Loading...</span></div>
+        <div>Routing: <span id="adm-rout">Loading...</span></div>
         <hr style="border:none; border-top:1px solid #ddd; margin:10px 0;">
-        <div>₿ <strong>Bitcoin Wallet:</strong></div>
-        <div style="word-break: break-all; font-family: monospace; font-size: 0.8rem; margin-top: 3px;">
-          <span id="adm-btc">Loading...</span>
-        </div>
+        <div>₿ <strong>Bitcoin:</strong> <span id="adm-btc" style="word-break:break-all;">Loading...</span></div>
       </div>
 
       <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" placeholder="0.00"></div>
-      <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID or Bank Ref"></div>
+      <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID"></div>
       <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*"></div>
       
-      <button onclick="submitDeposit()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit</button>
-      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px; cursor:pointer;">Cancel</button>
+      <button onclick="submitDeposit()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Submit</button>
       <div id="dep-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
-    </div>
-  </div>
-
-  <!-- WITHDRAW MODAL -->
-  <div id="modal-withdraw" class="modal-overlay">
-    <div class="modal-content">
-      <button class="close-modal" onclick="closeModal()">×</button>
-      <h2>Withdraw Funds</h2>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="wd-amount" placeholder="0.00"></div>
-      <div class="form-group"><label>Bank Details</label><input type="text" id="wd-bank" placeholder="Bank Name, Acct Number"></div>
-      <button onclick="submitWithdraw()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Request Withdrawal</button>
-      <button onclick="closeModal()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px; cursor:pointer;">Cancel</button>
-      <div id="wd-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if(!user) window.location.replace("../index.html");
-    
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
     async function loadData() {
-      try {
-        // Fetch Admin Details (Bank + BTC)
-        const setRes = await fetch('/api/admin/settings');
-        const settings = await setRes.json();
-        
-        document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
-        document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
-        document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
-        document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
+      // Load Admin Details for Deposit
+      const setRes = await fetch('/api/admin/settings');
+      const settings = await setRes.json();
+      document.getElementById('adm-bank').textContent = settings.bank_name;
+      document.getElementById('adm-acc').textContent = settings.bank_account;
+      document.getElementById('adm-rout').textContent = settings.bank_routing;
+      document.getElementById('adm-btc').textContent = settings.btc_address;
 
-        // Fetch Investments
-        const res = await fetch(`/api/investments/${user.id}`);
-        const data = await res.json();
+      // Load Investments
+      const res = await fetch(`/api/investments/${user.id}`);
+      const data = await res.json();
 
-        let totalCapital = 0;
-        let totalProfit = 0;
+      let totalCapital = 0;
+      let totalProfit = 0;
 
-        data.forEach(inv => {
-          if (inv.status === 'Active') {
-            totalCapital += parseFloat(inv.amount);
-            totalProfit += parseFloat(inv.profit);
-          }
-        });
-
-        document.getElementById('capital-val').textContent = formatUSD(totalCapital);
-        document.getElementById('profit-val').textContent = `+${formatUSD(totalProfit)}`;
-        document.getElementById('total-val').textContent = formatUSD(totalCapital + totalProfit);
-
-        // Render History
-        const historyList = document.getElementById('history-list');
-        if (data.length === 0) {
-          historyList.innerHTML = `<p style="color: var(--muted); font-size: 0.9rem; text-align:center; padding:20px;">No investment history yet.</p>`;
-        } else {
-          historyList.innerHTML = data.map(inv => `
-            <div class="tx-item">
-              <div class="tx-info">
-                <h4>Investment</h4>
-                <p>Status: <span style="color:${inv.status === 'Active' ? 'var(--emerald)' : 'var(--warning)'}">${inv.status}</span></p>
-              </div>
-              <div class="tx-amount">
-                ${formatUSD(inv.amount)}
-                <div style="font-size:0.7rem; color:var(--emerald);">+${formatUSD(inv.profit)}</div>
-              </div>
-            </div>
-          `).join('');
+      data.forEach(inv => {
+        if (inv.status === 'Active') {
+          totalCapital += parseFloat(inv.amount);
+          totalProfit += parseFloat(inv.profit);
         }
-      } catch (err) {
-        console.error("Error loading investments:", err);
-      }
+      });
+
+      document.getElementById('capital-val').textContent = formatUSD(totalCapital);
+      document.getElementById('profit-val').textContent = `+${formatUSD(totalProfit)}`;
+      document.getElementById('total-val').textContent = formatUSD(totalCapital + totalProfit);
+
+      // FILTER: Show only investment transactions
+      const txRes = await fetch(`/api/transactions/${user.id}`);
+      const txs = await txRes.json();
+      const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
+
+      document.getElementById('history-list').innerHTML = investTxs.length > 0 ? investTxs.map(tx => `
+        <div class="tx-item">
+          <div>
+            <h4 style="margin:0 0 4px; font-size:0.9rem;">${tx.type.replace('_', ' ')}</h4>
+            <p style="margin:0; font-size:0.75rem; color:var(--muted);">${new Date(tx.created_at).toLocaleDateString()}</p>
+          </div>
+          <div style="text-align:right;">
+            <strong style="color:${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'}">${formatUSD(tx.amount)}</strong>
+            <div style="font-size:0.7rem; color:var(--muted);">${tx.status}</div>
+          </div>
+        </div>
+      `).join('') : '<p style="color: var(--muted); font-size: 0.9rem;">No investment history.</p>';
     }
 
-    function openModal(type) { 
-      document.getElementById(`modal-${type}`).classList.add('open'); 
-    }
-    
-    function closeModal() { 
-      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); 
-    }
+    function openModal(type) { document.getElementById(`modal-${type}`).classList.add('open'); }
+    function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
 
     async function submitDeposit() {
       const amount = parseFloat(document.getElementById('dep-amount').value);
@@ -273,11 +161,7 @@
       const file = document.getElementById('dep-screenshot').files[0];
       const msg = document.getElementById('dep-msg');
 
-      if (!amount || !file) { 
-        msg.textContent = "Please enter an amount and upload a receipt."; 
-        msg.style.color = "red"; 
-        return; 
-      }
+      if (!amount || !file) { msg.textContent = "Enter amount and upload receipt."; msg.style.color = "red"; return; }
 
       const formData = new FormData();
       formData.append('userId', user.id);
@@ -285,53 +169,11 @@
       formData.append('reference', ref);
       formData.append('screenshot', file);
 
-      msg.textContent = "Processing...";
-      msg.style.color = "var(--emerald)";
-
-      try {
-        const res = await fetch('/api/investments/deposit', { method: 'POST', body: formData });
-        const data = await res.json();
-        
-        msg.textContent = data.message || data.error; 
-        msg.style.color = data.success ? "var(--emerald)" : "red";
-        
-        if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
-      } catch (err) {
-        msg.textContent = "Upload failed."; 
-        msg.style.color = "red";
-      }
-    }
-
-    async function submitWithdraw() {
-      const amount = parseFloat(document.getElementById('wd-amount').value);
-      const bank = document.getElementById('wd-bank').value;
-      const msg = document.getElementById('wd-msg');
-
-      if (!amount || !bank) { 
-        msg.textContent = "Please fill all fields."; 
-        msg.style.color = "red"; 
-        return; 
-      }
-
-      msg.textContent = "Processing...";
-      msg.style.color = "var(--emerald)";
-
-      try {
-        const res = await fetch('/api/investments/withdraw', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ userId: user.id, amount, bankDetails: bank }) 
-        });
-        const data = await res.json();
-        
-        msg.textContent = data.message || data.error; 
-        msg.style.color = data.success ? "var(--emerald)" : "red";
-        
-        if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
-      } catch (err) {
-        msg.textContent = "Request failed."; 
-        msg.style.color = "red";
-      }
+      const res = await fetch('/api/investments/deposit', { method: 'POST', body: formData });
+      const data = await res.json();
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
     }
 
     loadData();

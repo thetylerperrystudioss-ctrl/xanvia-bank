@@ -10,14 +10,17 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
 
+// Configure Multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
+// Database Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
@@ -240,20 +243,24 @@ app.post('/api/admin/approve', async (req, res) => {
       const now = new Date();
       const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
+      // 1. INVESTMENT DEPOSIT
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, 
           [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'brokerage'`, [tx.amount, tx.user_id]);
       }
+      // 2. LOAN APPLICATION
       else if (tx.type === 'LOAN_APPLICATION') {
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
       }
+      // 3. LOAN TRANSFER
       else if (tx.type === 'LOAN_TRANSFER') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
         if (tx.details === 'checking') {
           await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
         }
       }
+      // 4. LOAN REPAYMENT
       else if (tx.type === 'LOAN_REPAYMENT') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
@@ -277,11 +284,19 @@ app.post('/api/admin/approve', async (req, res) => {
 app.get('/api/admin/users', async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT u.*, (SELECT COUNT(*) FROM accounts WHERE user_id = u.id) as account_count
-      FROM users u WHERE u.deleted = false ORDER BY u.created_at DESC
+      SELECT id, name, COALESCE(username, 'N/A') as username, email, status, last_login, created_at 
+      FROM users 
+      WHERE deleted = false 
+      ORDER BY created_at DESC
     `);
+    
+    console.log(`✅ Admin fetched ${result.rows.length} users.`);
     res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
+    
+  } catch (err) { 
+    console.error("❌ ERROR FETCHING USERS:", err.message);
+    res.status(500).json({ error: 'Database error: ' + err.message }); 
+  }
 });
 
 app.post('/api/admin/freeze', async (req, res) => {

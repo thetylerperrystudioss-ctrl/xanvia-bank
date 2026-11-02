@@ -22,14 +22,6 @@
     .action-btn { background: white; border: none; border-radius: 16px; padding: 15px 10px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
     .icon-circle { width: 36px; height: 36px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .action-btn span { font-size: 0.8rem; font-weight: 600; }
-    
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.open { display: flex; }
-    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; font-family: inherit; }
-    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
   </style>
 </head>
 <body class="mobile-app-body">
@@ -46,7 +38,7 @@
     </div>
     <div class="balance-section">
       <h1 class="balance-amount" id="total-balance">$0.00</h1>
-      <p class="balance-label">Available Balance</p>
+      <p class="balance-label">Available Checking Balance</p>
     </div>
     <div class="quick-actions">
       <a href="hub.html" class="action-btn"><div class="icon-circle">⚙️</div><span>Manage</span></a>
@@ -61,60 +53,8 @@
       <input type="text" placeholder="Search Transactions">
     </div>
 
-    <div class="category-filters">
-      <button class="filter-btn active">All</button>
-      <button class="filter-btn">Food</button>
-      <button class="filter-btn">Entertainment</button>
-    </div>
-
     <div class="transaction-container" id="transaction-list"></div>
-
-    <!-- Complaint Button -->
-    <div style="padding: 20px; margin-top: 20px;">
-      <h3 style="color: var(--deep-green); margin-bottom: 10px;">Support Center</h3>
-      <button onclick="openComplaint()" style="width:100%; padding:14px; background:white; border:1px solid #ddd; border-radius:10px; font-weight:600; color:var(--danger);">Lodge a Complaint</button>
-    </div>
   </main>
-
-  <!-- COMPLAINT MODAL -->
-  <div id="complaint-modal" class="modal-overlay">
-    <div class="modal-content">
-      <button class="close-modal" onclick="document.getElementById('complaint-modal').classList.remove('open')">×</button>
-      <h2 style="color:var(--deep-green); margin-bottom:15px;">Lodge a Complaint</h2>
-      
-      <div class="form-group">
-        <label>Category</label>
-        <select id="cmp-category">
-          <option>Deposit Issues</option>
-          <option>Withdrawal Issues</option>
-          <option>Investment Issues</option>
-          <option>Loan Issues</option>
-          <option>Account Restrictions</option>
-          <option>Login Problems</option>
-          <option>Transfers</option>
-          <option>Other Issues</option>
-        </select>
-      </div>
-      
-      <div class="form-group">
-        <label>Subject</label>
-        <input type="text" id="cmp-subject" placeholder="Brief summary">
-      </div>
-      
-      <div class="form-group">
-        <label>Description</label>
-        <textarea id="cmp-message" rows="4" placeholder="Explain your issue..."></textarea>
-      </div>
-
-      <div class="form-group">
-        <label>Attachment (Optional)</label>
-        <input type="file" id="cmp-file" accept="image/*">
-      </div>
-
-      <button onclick="submitComplaint()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit Complaint</button>
-      <div id="cmp-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
-    </div>
-  </div>
 
   <nav class="bottom-nav">
     <a href="#" class="nav-item"><span class="icon">💳</span><span class="label">Payments</span></a>
@@ -132,50 +72,29 @@
       window.location.replace("../index.html");
     }
 
-    function openComplaint() { document.getElementById('complaint-modal').classList.add('open'); }
-
-    async function submitComplaint() {
-      const category = document.getElementById('cmp-category').value;
-      const subject = document.getElementById('cmp-subject').value;
-      const message = document.getElementById('cmp-message').value;
-      const file = document.getElementById('cmp-file').files[0];
-      const msg = document.getElementById('cmp-msg');
-
-      if (!subject || !message) { msg.textContent = "Please fill all fields."; msg.style.color = "red"; return; }
-
-      const formData = new FormData();
-      formData.append('userId', user.id);
-      formData.append('category', category);
-      formData.append('subject', subject);
-      formData.append('message', message);
-      if (file) formData.append('attachment', file);
-
-      const res = await fetch('/api/complaints', { method: 'POST', body: formData });
-      const data = await res.json();
-      
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
-      if(data.success) setTimeout(() => { document.getElementById('complaint-modal').classList.remove('open'); }, 2000);
-    }
+    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
     async function loadDashboard() {
       try {
+        // Load Main Checking Balance ONLY
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
         const checking = data.checking || 0;
-        const savings = data.savings || 0;
-        document.getElementById('total-balance').textContent = formatUSD(checking + savings);
+        document.getElementById('total-balance').textContent = formatUSD(checking);
 
+        // Filter out INVESTMENT transactions completely
         const txRes = await fetch(`/api/transactions/${user.id}`);
-        const txs = await txRes.json();
+        const allTxs = await txRes.json();
+        const mainTxs = allTxs.filter(tx => !tx.type.includes('INVESTMENT'));
+
         const container = document.getElementById('transaction-list');
         
-        if (!txs || txs.length === 0) {
-          container.innerHTML = `<p style="text-align:center; color:var(--muted); padding: 20px;">No transactions yet.</p>`;
+        if (!mainTxs || mainTxs.length === 0) {
+          container.innerHTML = `<p style="text-align:center; color:var(--muted); padding: 20px;">No main banking transactions yet.</p>`;
           return;
         }
 
-        container.innerHTML = txs.map(tx => `
+        container.innerHTML = mainTxs.map(tx => `
           <div class="tx-item">
             <div class="tx-icon">🔄</div>
             <div class="tx-details">
@@ -190,8 +109,6 @@
         `).join('');
       } catch (err) { console.error(err); }
     }
-
-    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
     loadDashboard();
   </script>
 </body>

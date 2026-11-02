@@ -59,8 +59,8 @@
     
     /* Buttons */
     .btn-approve { background: var(--emerald); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
-    .btn-reject { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
-    .btn-outline { background: white; border: 1px solid var(--border); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--text); flex: 1;}
+    .btn-reject { background: var(--danger); color: white; border: none; padding: 10px; border-radius <: 6px; cursor: pointer; font-weight: div600; font-size: 0. id8rem; flex: 1; }
+    .="btn-outline { background: white; border: 1reqpx solid var(--border); padding: 10-listpx; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--text); flex: 1;}
 
     /* User List */
     .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
@@ -73,7 +73,7 @@
     .user-actions { display: flex; gap: 8px; }
     
     /* Loading Spinner */
-    .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--emerald); animation: spin 1s ease-in-out infinite; }
+    .spinner { display: inline-block; width: 20px"><; height: 20pxdiv; border: 3px solid rgba(0 class,0,0,0.1="); border-radius: 50%;sp border-top-color: var(--emeraldinner); animation: spin 1s ease-in-out infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
@@ -108,7 +108,7 @@
     <div id="view-requests" class="view-section active">
       <div class="panel">
         <h2>Pending Approvals</h2>
-        <div id="req-list"><div class="spinner"></div></div>
+       "></div></div>
       </div>
     </div>
 
@@ -136,8 +136,6 @@
       if (pass === "@@@@") {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('dashboard-area').style.display = 'block';
-        
-        // Load initial data
         loadRequests();
       } else {
         document.getElementById('login-error').style.display = 'block';
@@ -145,22 +143,18 @@
       }
     }
 
-    // Allow pressing "Enter" in the passcode box
     document.getElementById('admin-pass').addEventListener('keypress', function (e) {
       if (e.key === 'Enter') verifyPasscode();
     });
 
     // --- TAB SWITCHING ---
     function switchTab(tabName) {
-      // 1. Update active tab style
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
       
-      // 2. Hide all views, show selected view
       document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
       document.getElementById(`view-${tabName}`).classList.add('active');
 
-      // 3. Load data for that specific tab
       if (tabName === 'requests') loadRequests();
       if (tabName === 'users') loadUsers();
       if (tabName === 'complaints') loadComplaints();
@@ -190,7 +184,7 @@
           </div>
         `).join('') : '<p style="color:var(--muted); text-align:center;">No pending requests.</p>';
       } catch (err) {
-        container.innerHTML = '<p style="color:var(--danger); text-align:center;">Failed to load requests. Check server.</p>';
+        container.innerHTML = '<p style="color:var(--danger); text-align:center;">Failed to load requests.</p>';
       }
     }
 
@@ -200,12 +194,20 @@
       
       try {
         const res = await fetch('/api/admin/users');
-        const users = await res.json();
+        const data = await res.json();
+        
+        // Check if the backend returned an error
+        if (data.error) {
+          container.innerHTML = `<p style="color:var(--danger); text-align:center; font-size:0.9rem; padding: 10px; background: #FEE2E2; border-radius: 8px;">${data.error}</p>`;
+          return;
+        }
+
+        const users = data;
         
         container.innerHTML = users.length > 0 ? users.map(u => `
           <div class="user-row">
             <div class="user-info">
-              <h4>${u.name} (@${u.username || 'N/A'})</h4>
+              <h4>${u.name} (@${u.username})</h4>
               <p>${u.email}</p>
               <span class="user-status ${u.status === 'Active' ? 'active' : 'frozen'}">${u.status}</span>
             </div>
@@ -216,7 +218,7 @@
           </div>
         `).join('') : '<p style="color:var(--muted); text-align:center;">No users found.</p>';
       } catch (err) {
-        container.innerHTML = '<p style="color:var(--danger); text-align:center;">Failed to load users.</p>';
+        container.innerHTML = '<p style="color:var(--danger); text-align:center;">Failed to load users. Network error.</p>';
       }
     }
 
@@ -236,7 +238,6 @@
               <p><strong>Category:</strong> ${c.category}</p>
               <p style="margin-top:5px; font-style:italic;">"${c.message}"</p>
               <p style="margin-top:5px;"><strong>Status:</strong> <span style="color:${c.status === 'Resolved' ? 'var(--emerald)' : 'var(--warning)'}">${c.status}</span></p>
-              ${c.admin_response ? `<p style="margin-top:10px; background:#E6F4EE; padding:10px; border-radius:6px;"><strong>Admin Reply:</strong> ${c.admin_response}</p>` : ''}
             </div>
             ${c.status !== 'Resolved' ? `
             <div style="margin-top: 10px; display: flex; gap: 10px;">
