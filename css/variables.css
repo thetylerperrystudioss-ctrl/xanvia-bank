@@ -1,0 +1,14 @@
+:root {
+  --emerald: #0F8A5F;
+  --emerald-dark: #0A5F42;
+  --emerald-light: #E6F4EE;
+  --deep-green: #0B2E23;
+  --gold: #C9A24B;
+  --bg-color: #F8F9FA;
+  --text-main: #1A1A1A;
+  --text-muted: #4A5D56;
+  --white: #FFFFFF;
+  --border: #E2E8F0;
+  --font-sans: "Inter", sans-serif;
+  --font-serif: "Merriweather", Georgia, serif;
+}

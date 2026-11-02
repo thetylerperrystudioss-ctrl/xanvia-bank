@@ -1,0 +1,13 @@
+.auth-shell { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg-color); padding: 24px; }
+.auth-card { background: var(--white); width: 100%; max-width: 440px; padding: 48px; border-radius: 16px; box-shadow: 0 20px 40px rgba(11,46,35,0.08); border: 1px solid var(--border); }
+.auth-card h2 { font-family: var(--font-serif); font-size: 2rem; color: var(--deep-green); margin-bottom: 8px; }
+.auth-card p { color: var(--text-muted); margin-bottom: 32px; font-size: 0.95rem; }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+.form-group input { width: 100%; padding: 16px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; font-family: var(--font-sans); outline: none; transition: border 0.2s; }
+.form-group input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px var(--emerald-light); }
+.auth-switch { text-align: center; margin-top: 24px; font-size: 0.9rem; color: var(--text-muted); }
+.auth-switch a { color: var(--emerald); font-weight: 600; }
+.auth-msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
+.auth-msg.error { display: block; background: #FEE2E2; color: #991B1B; }
+.auth-msg.success { display: block; background: var(--emerald-light); color: var(--emerald-dark); }

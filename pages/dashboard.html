@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard | Xanvia Bank</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/dashboard.css">
+</head>
+<body>
+  <div class="dash-layout">
+    
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <a href="../index.html" class="logo">Xanvia</a>
+      <ul class="side-nav">
+        <li><a class="active">Overview</a></li>
+        <li><a>Banking</a></li>
+        <li><a>Loans</a></li>
+        <li><a>Investments</a></li>
+        <li><a>Transfers</a></li>
+      </ul>
+      <button id="logout-btn" class="btn btn-outline" style="margin-top: auto; color: white; border-color: rgba(255,255,255,0.2); width: 100%;">Log Out</button>
+    </aside>
+
+    <!-- MAIN DASHBOARD AREA -->
+    <main class="dash-main">
+      
+      <!-- HEADER -->
+      <div class="dash-header">
+        <h1>Unified Dashboard</h1>
+        <div style="font-weight: 600; font-size: 1.1rem;">
+          Welcome, <span id="user-name">User</span>
+        </div>
+      </div>
+
+      <!-- STATE B: NET WORTH RIBBON -->
+      <div class="net-worth-ribbon">
+        <p>Total Net Worth</p>
+        <h2 id="net-worth">$0.00</h2>
+        <div style="display: flex; gap: 40px; margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px;">
+          <div>
+            <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Cash</span>
+            <div style="font-size: 1.2rem; font-weight: 600;" id="cash-val">$0.00</div>
+          </div>
+          <div>
+            <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Equities</span>
+            <div style="font-size: 1.2rem; font-weight: 600;" id="equity-val">$0.00</div>
+          </div>
+          <div>
+            <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Liabilities</span>
+            <div style="font-size: 1.2rem; font-weight: 600; color: #FCA5A5;" id="liability-val">$0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEDGER GRID -->
+      <div class="ledger-grid">
+        
+        <!-- ACCOUNTS PANEL -->
+        <div class="panel">
+          <h3>Your Accounts</h3>
+          <div id="accounts-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- QUICK ACTIONS & RECENT ACTIVITY -->
+        <div class="panel">
+          <h3>Quick Actions</h3>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
+            <button class="btn btn-primary" style="width: 100%;">Transfer Money</button>
+            <button class="btn btn-outline" style="width: 100%;">Pay a Bill</button>
+            <button class="btn btn-outline" style="width: 100%;">Trade Stocks</button>
+          </div>
+
+          <h3>Recent Activity</h3>
+          <div id="tx-list">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <script src="../js/dashboard.js" type="module"></script>
+</body>
+</html>

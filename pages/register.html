@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Account | Xanvia Bank</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/variables.css">
+  <link rel="stylesheet" href="../css/base.css">
+  <link rel="stylesheet" href="../css/auth.css">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <a href="../index.html" class="logo" style="display:block; margin-bottom: 24px;">Xanvia</a>
+      <h2>Open Account</h2>
+      <p>Join Xanvia in under a minute.</p>
+      <div id="auth-msg" class="auth-msg"></div>
+      <form id="register-form">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="name" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="email" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Create Account</button>
+      </form>
+      <div class="auth-switch">
+        Already have an account? <a href="login.html">Log In</a>
+      </div>
+    </div>
+  </div>
+  <script src="../js/register.js" type="module"></script>
+</body>
+</html>
