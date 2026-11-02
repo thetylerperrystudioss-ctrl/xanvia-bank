@@ -5,138 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Admin Control | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
   <style>
-    :root {
-      --emerald: #0F8A5F;
-      --emerald-dark: #0A5F42;
-      --deep-green: #0B2E23;
-      --bg-base: #F4F7F6;
-      --panel-bg: rgba(255, 255, 255, 0.95);
-      --text-dark: #1A1A1A;
-      --text-muted: #6B7280;
-      --border: rgba(255, 255, 255, 0.4);
-      --sidebar-w: 260px;
-      --danger: #EF4444;
-      --warning: #F59E0B;
-    }
-
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; --warning: #F59E0B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    
-    body { 
-      background-color: var(--bg-base);
-      background-image: radial-gradient(circle at 10% 20%, rgba(15, 138, 95, 0.15) 0%, transparent 40%),
-                        radial-gradient(circle at 90% 80%, rgba(11, 46, 35, 0.1) 0%, transparent 40%);
-      color: var(--text-dark); 
-      min-height: 100vh;
-      display: flex;
-    }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* SECURE LOGIN OVERLAY */
-    #login-overlay {
-      position: fixed; inset: 0; background: var(--deep-green); z-index: 9999;
-      display: flex; align-items: center; justify-content: center; flex-direction: column;
-    }
-    .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); }
-    .login-box h2 { color: var(--deep-green); margin-bottom: 10px; font-size: 1.8rem; }
-    .login-box p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.95rem; }
-    .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; background: #FAFAFA; }
-    .login-box input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
-    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
-    .login-box button:hover { background: var(--emerald-dark); }
-    .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: 600; }
+    /* LOGIN OVERLAY */
+    #login-overlay { position: fixed; inset: 0; background: var(--deep-green); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+    .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; }
+    .login-box h2 { color: var(--deep-green); margin-bottom: 10px; }
+    .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; }
+    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; }
 
-    /* SIDEBAR */
-    .sidebar { 
-      width: var(--sidebar-w); 
-      background: linear-gradient(180deg, #0B2E23 0%, #0A5F42 100%);
-      color: white; 
-      position: fixed; top: 0; bottom: 0; left: -280px;
-      display: flex; flex-direction: column; z-index: 1000; transition: left 0.3s ease;
-      border-right: 1px solid rgba(255,255,255,0.05);
-    }
+    /* LAYOUT */
+    .layout { display: flex; min-height: 100vh; }
+    .sidebar { width: 260px; background: #0B2E23; color: white; padding: 20px 0; display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: -280px; z-index: 1000; transition: left 0.3s; }
     .sidebar.open { left: 0; }
-    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; backdrop-filter: blur(4px); }
+    .brand { font-size: 1.4rem; font-weight: 700; padding: 0 20px; margin-bottom: 30px; display: flex; align-items: center; gap: 8px; }
+    .brand span { background: var(--emerald); padding: 4px 8px; border-radius: 4px; font-size: 1rem; }
+    .nav-item { padding: 12px 20px; color: #A7C4B7; font-size: 0.9rem; cursor: pointer; }
+    .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left: 3px solid var(--emerald); }
+    .logout-btn { margin: auto 20px 20px; padding: 12px; background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 8px; cursor: pointer; font-weight: 600; }
+
+    .main-content { flex: 1; padding: 20px; margin-left: 0; }
+    .top-bar { background: white; padding: 15px 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .mobile-menu-btn { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+    .top-bar h1 { font-size: 1.2rem; color: var(--deep-green); }
+
+    /* CARDS & PANELS */
+    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+    .kpi-card { background: white; padding: 20px; border-radius: 12px; border-left: 4px solid var(--emerald); }
+    .kpi-title { font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
+    .kpi-value { font-size: 1.6rem; font-weight: 700; color: var(--deep-green); margin-top: 5px; }
+
+    .panel { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .panel-title { font-size: 1.1rem; font-weight: 700; color: var(--deep-green); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+    
+    /* FORMS & LISTS */
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; }
+    .btn-save { background: var(--emerald); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 10px; }
+
+    .req-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: #FAFAFA; }
+    .req-info h4 { font-size: 0.95rem; margin-bottom: 5px; }
+    .req-info p { font-size: 0.85rem; color: var(--muted); }
+    .btn-approve { background: var(--emerald); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; margin-right: 5px; }
+    .btn-reject { background: var(--danger); color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 12px; color: var(--muted); border-bottom: 1px solid var(--border); }
+    td { padding: 12px; border-bottom: 1px solid var(--border); }
+    .status-active { color: var(--emerald); font-weight: 600; }
+    .status-flagged { color: var(--danger); font-weight: 600; }
+    .btn-flag { background: var(--warning); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
     .sidebar-overlay.open { display: block; }
-
-    .brand { font-size: 1.6rem; font-weight: 800; padding: 30px 24px; letter-spacing: 1px; color: white; display: flex; align-items: center; gap: 10px; }
-    .brand span { background: var(--emerald); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-    
-    .nav-menu { list-style: none; padding: 0 15px; flex: 1; }
-    .nav-menu li { margin-bottom: 8px; }
-    .nav-menu a {
-      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 10px;
-      color: #A7C4B7; font-size: 0.95rem; font-weight: 500; text-decoration: none; cursor: pointer; transition: 0.2s;
-    }
-    .nav-menu a:hover, .nav-menu a.active { 
-      background: rgba(255,255,255,0.1); color: white; box-shadow: inset 3px 0 0 var(--emerald); 
-    }
-    .admin-profile { padding: 24px; border-top: 1px solid rgba(255,255,255,0.1); }
-    .logout-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-    .logout-btn:hover { background: var(--danger); border-color: var(--danger); }
-
-    /* MAIN CONTENT */
-    .main-content { margin-left: 0; flex: 1; padding: 20px; display: flex; flex-direction: column; width: 100%; overflow-x: hidden; }
-    
-    .top-bar { 
-      background: var(--panel-bg); backdrop-filter: blur(12px); 
-      padding: 15px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
-      margin-bottom: 25px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-    }
-    .top-bar h1 { font-size: 1.2rem; color: var(--deep-green); font-weight: 700; display: flex; align-items: center; gap: 15px; }
-    .mobile-menu-btn { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--deep-green); }
-    
-    /* View Sections (Hidden by default) */
-    .view-section { display: none; animation: fadeIn 0.3s ease; }
-    .view-section.active { display: block; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* KPI GRID */
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-    .kpi-card { 
-      background: var(--panel-bg); backdrop-filter: blur(12px); border-radius: 16px; padding: 20px; 
-      border: 1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.03); position: relative; overflow: hidden;
-    }
-    .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: var(--emerald); }
-    .kpi-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-    .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--deep-green); margin-top: 8px; }
-
-    /* PANELS */
-    .panel { 
-      background: var(--panel-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); 
-      border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.03);
-    }
-    .panel-title { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); margin-bottom: 20px; }
-
-    /* FORMS */
-    .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; outline: none; background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
-    .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; margin-top: 10px; }
-
-    /* LISTS & TABLES */
-    .req-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; background: white; }
-    .req-info h4 { color: var(--text-dark); font-size: 1rem; margin-bottom: 5px; }
-    .req-info p { color: var(--text-muted); font-size: 0.85rem; }
-    .req-actions { display: flex; gap: 10px; }
-    .btn-approve { background: var(--emerald); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-    .btn-reject { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; }
-
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid #eee; }
-    .data-table td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .status-active { background: #D1FAE5; color: #065F46; }
-    .status-flagged { background: #FEE2E2; color: #991B1B; }
-    .btn-flag { background: var(--warning); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
 
     @media (min-width: 1024px) {
       .sidebar { left: 0; }
-      .main-content { margin-left: var(--sidebar-w); padding: 30px; }
+      .main-content { margin-left: 260px; padding: 30px; }
       .mobile-menu-btn { display: none; }
       .kpi-grid { grid-template-columns: repeat(4, 1fr); }
-      .form-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -145,48 +76,38 @@
   <div id="login-overlay">
     <div class="login-box">
       <h2>Admin Access</h2>
-      <p>Enter the 4-digit security passcode.</p>
-      <div id="login-error" class="error-msg">Invalid Passcode. Access Denied.</div>
-      <input type="password" id="admin-pass" maxlength="4" placeholder="••••" autocomplete="off">
-      <button onclick="verifyPasscode()">Unlock Dashboard</button>
+      <input type="password" id="admin-pass" maxlength="4" placeholder="••••">
+      <button onclick="verifyPasscode()">Unlock</button>
     </div>
   </div>
 
   <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar" id="sidebar">
-    <div class="brand"><span>X</span> Xanvia</div>
-    <ul class="nav-menu">
-      <li><a class="active" onclick="switchTab('dashboard', this)"><span class="icon">📊</span> Dashboard</a></li>
-      <li><a onclick="switchTab('requests', this)"><span class="icon">💸</span> Pending Requests</a></li>
-      <li><a onclick="switchTab('users', this)"><span class="icon">👥</span> User Management</a></li>
-      <li><a onclick="switchTab('cards', this)"><span class="icon">💳</span> Card Requests</a></li>
-      <li><a onclick="switchTab('settings', this)"><span class="icon">⚙️</span> Payment Settings</a></li>
-    </ul>
-    <div class="admin-profile">
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><span>X</span> Xanvia</div>
+      <div class="nav-item active">Dashboard</div>
+      <div class="nav-item">Pending Requests</div>
+      <div class="nav-item">User Management</div>
+      <div class="nav-item">Card Requests</div>
+      <div class="nav-item">Payment Settings</div>
       <button class="logout-btn" onclick="logoutAdmin()">Secure Logout</button>
-    </div>
-  </aside>
+    </aside>
 
-  <!-- MAIN CONTENT -->
-  <main class="main-content">
-    <header class="top-bar">
-      <h1>
+    <main class="main-content">
+      <header class="top-bar">
         <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
-        <span id="page-title">Admin Dashboard</span>
-      </h1>
-    </header>
+        <h1>Admin Portal</h1>
+      </header>
 
-    <!-- VIEW 1: OVERVIEW -->
-    <div id="view-dashboard" class="view-section active">
+      <!-- KPI STATS -->
       <div class="kpi-grid">
         <div class="kpi-card">
           <div class="kpi-title">Total Users</div>
           <div class="kpi-value" id="kpi-users">0</div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-title">Pending Approvals</div>
+          <div class="kpi-title">Pending Requests</div>
           <div class="kpi-value" id="kpi-pending">0</div>
         </div>
         <div class="kpi-card">
@@ -198,163 +119,116 @@
           <div class="kpi-value" style="color: var(--emerald);">Online</div>
         </div>
       </div>
-    </div>
 
-    <!-- VIEW 2: PENDING REQUESTS -->
-    <div id="view-requests" class="view-section">
+      <!-- PAYMENT SETTINGS -->
       <div class="panel">
-        <div class="panel-title">Deposit & Loan Requests</div>
-        <div id="req-list">Loading...</div>
-      </div>
-    </div>
-
-    <!-- VIEW 3: USER MANAGEMENT -->
-    <div id="view-users" class="view-section">
-      <div class="panel">
-        <div class="panel-title">Manage Users</div>
-        <table class="data-table">
-          <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
-          <tbody id="user-list"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- VIEW 4: CARD REQUESTS -->
-    <div id="view-cards" class="view-section">
-      <div class="panel">
-        <div class="panel-title">Pending Card Requests</div>
-        <div id="card-requests-list">Loading...</div>
-      </div>
-    </div>
-
-    <!-- VIEW 5: PAYMENT SETTINGS -->
-    <div id="view-settings" class="view-section">
-      <div class="panel">
-        <div class="panel-title">Update Payment Details</div>
-        <div class="form-grid">
+        <div class="panel-title">Payment Settings</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
           <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name"></div>
           <div class="form-group"><label>Account Number</label><input type="text" id="bank-account"></div>
           <div class="form-group"><label>Routing Number</label><input type="text" id="bank-routing"></div>
           <div class="form-group"><label>Bitcoin Address</label><input type="text" id="btc-address"></div>
         </div>
-        <button class="btn-primary" onclick="saveSettings()">Save Details</button>
-        <div id="set-msg" style="color: var(--emerald); margin-top: 10px; font-weight: 600; text-align: center;"></div>
+        <button class="btn-save" onclick="saveSettings()">Save Settings</button>
       </div>
-    </div>
 
-  </main>
+      <!-- PENDING REQUESTS -->
+      <div class="panel">
+        <div class="panel-title">Pending Requests (Deposits/Loans)</div>
+        <div id="req-list">Loading...</div>
+      </div>
+
+      <!-- CARD REQUESTS -->
+      <div class="panel">
+        <div class="panel-title">Pending Card Requests</div>
+        <div id="card-list">Loading...</div>
+      </div>
+
+      <!-- USER MANAGEMENT -->
+      <div class="panel">
+        <div class="panel-title">User Management</div>
+        <table>
+          <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="user-list"></tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
 
   <script>
-    function toggleMenu() { 
-      document.getElementById('sidebar').classList.toggle('open'); 
-      document.getElementById('overlay').classList.toggle('open');
-    }
-
-    function switchTab(tabName, element) {
-      // 1. Hide all views
-      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-      
-      // 2. Show selected view
-      document.getElementById(`view-${tabName}`).classList.add('active');
-      
-      // 3. Update sidebar active state
-      document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
-      element.classList.add('active');
-
-      // 4. Update Header Title
-      const titles = {
-        dashboard: "Admin Overview",
-        requests: "Pending Requests",
-        users: "User Management",
-        cards: "Card Requests",
-        settings: "Payment Settings"
-      };
-      document.getElementById('page-title').textContent = titles[tabName];
-
-      // 5. Close mobile menu
-      toggleMenu();
-    }
-
+    function toggleMenu() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
+    
     function verifyPasscode() {
-      const pass = document.getElementById('admin-pass').value;
-      if (pass === "@@@@") {
+      if (document.getElementById('admin-pass').value === "@@@@") {
         document.getElementById('login-overlay').style.display = 'none';
         loadData();
-      } else {
-        document.getElementById('login-error').style.display = 'block';
-      }
+      } else { alert("Access Denied"); }
     }
-
-    function logoutAdmin() {
-      document.getElementById('login-overlay').style.display = 'flex';
-      document.getElementById('admin-pass').value = "";
-    }
+    function logoutAdmin() { document.getElementById('login-overlay').style.display = 'flex'; }
 
     async function loadData() {
+      // 1. Settings
       try {
-        // 1. Load KPI Stats
-        const userRes = await fetch('/api/admin/users');
-        const users = await userRes.json();
-        document.getElementById('kpi-users').textContent = users.length;
-        document.getElementById('kpi-flagged').textContent = users.filter(u => u.status === 'Flagged').length;
-        
-        document.getElementById('user-list').innerHTML = users.map(u => `
-          <tr>
-            <td><strong>${u.name}</strong><br><small style="color:#666;">${u.email}</small></td>
-            <td><span class="status-badge ${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
-            <td>
-              <button class="btn-flag" style="${u.status === 'Active' ? '' : 'background:var(--emerald);'}" onclick="flag(${u.id}, '${u.status}')">
-                ${u.status === 'Active' ? 'Flag' : 'Unflag'}
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        const settings = await (await fetch('/api/admin/settings')).json();
+        document.getElementById('bank-name').value = settings.bank_name || '';
+        document.getElementById('bank-account').value = settings.bank_account || '';
+        document.getElementById('bank-routing').value = settings.bank_routing || '';
+        document.getElementById('btc-address').value = settings.btc_address || '';
+      } catch(e) {}
 
-        // 2. Load Pending Requests
-        const reqRes = await fetch('/api/admin/requests');
-        const requests = await reqRes.json();
+      // 2. Requests
+      try {
+        const requests = await (await fetch('/api/admin/requests')).json();
         document.getElementById('kpi-pending').textContent = requests.length;
-        
         document.getElementById('req-list').innerHTML = requests.map(tx => `
           <div class="req-item">
             <div class="req-info">
-              <h4>${tx.name} <span style="font-size:0.8rem; font-weight:400; color:#666;">(${tx.email})</span></h4>
-              <p><strong>Type:</strong> ${tx.type} | <strong>Amount:</strong> $${parseFloat(tx.amount).toFixed(2)}</p>
-              ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" style="height: 60px; border-radius: 6px; margin-top: 10px; border: 1px solid #ddd;"></a>` : ''}
+              <h4>${tx.name} (${tx.email})</h4>
+              <p><strong>${tx.type}</strong> - $${parseFloat(tx.amount).toFixed(2)}</p>
+              ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" style="height: 50px; border-radius: 4px; margin-top: 5px;"></a>` : ''}
             </div>
-            <div class="req-actions">
+            <div>
               <button class="btn-approve" onclick="approve(${tx.id}, 'approve')">Approve</button>
               <button class="btn-reject" onclick="approve(${tx.id}, 'reject')">Reject</button>
             </div>
           </div>
-        `).join('') || '<p style="text-align:center; color:#666;">No pending requests.</p>';
+        `).join('') || '<p style="color:var(--muted);">No pending requests.</p>';
+      } catch(e) {}
 
-        // 3. Load Card Requests
-        const cardRes = await fetch('/api/admin/card-requests');
-        const cards = await cardRes.json();
-        document.getElementById('card-requests-list').innerHTML = cards.map(c => `
+      // 3. Card Requests
+      try {
+        const cards = await (await fetch('/api/admin/card-requests')).json();
+        document.getElementById('card-list').innerHTML = cards.map(c => `
           <div class="req-item">
             <div class="req-info">
               <h4>${c.name}</h4>
               <p>Requested: ${c.card_type}</p>
             </div>
-            <div class="req-actions">
+            <div>
               <button class="btn-approve" onclick="approveCard(${c.id})">Approve</button>
             </div>
           </div>
-        `).join('') || '<p style="text-align:center; color:#666;">No pending card requests.</p>';
+        `).join('') || '<p style="color:var(--muted);">No pending card requests.</p>';
+      } catch(e) {}
 
-        // 4. Load Settings
-        const settingsRes = await fetch('/api/admin/settings');
-        const settings = await settingsRes.json();
-        document.getElementById('bank-name').value = settings.bank_name || '';
-        document.getElementById('bank-account').value = settings.bank_account || '';
-        document.getElementById('bank-routing').value = settings.bank_routing || '';
-        document.getElementById('btc-address').value = settings.btc_address || '';
-
-      } catch (err) {
-        console.error("Admin load error:", err);
-      }
+      // 4. Users
+      try {
+        const users = await (await fetch('/api/admin/users')).json();
+        document.getElementById('kpi-users').textContent = users.length;
+        document.getElementById('kpi-flagged').textContent = users.filter(u => u.status === 'Flagged').length;
+        document.getElementById('user-list').innerHTML = users.map(u => `
+          <tr>
+            <td><strong>${u.name}</strong><br><small style="color:var(--muted);">${u.email}</small></td>
+            <td><span class="${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
+            <td>
+              <button class="btn-flag" onclick="flag(${u.id}, '${u.status}')">
+                ${u.status === 'Active' ? 'Flag' : 'Unflag'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch(e) {}
     }
 
     async function saveSettings() {
@@ -367,8 +241,7 @@
           btc_address: document.getElementById('btc-address').value
         })
       });
-      document.getElementById('set-msg').textContent = "Settings saved successfully.";
-      setTimeout(() => document.getElementById('set-msg').textContent = "", 3000);
+      alert("Settings Saved!");
     }
 
     async function approve(id, action) {
@@ -376,7 +249,7 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txId: id, action })
       });
-      loadData(); // Refresh data
+      loadData();
     }
 
     async function approveCard(id) {

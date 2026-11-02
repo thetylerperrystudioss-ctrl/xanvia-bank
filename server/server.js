@@ -10,21 +10,24 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
 
+// Configure Multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
+// Database Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
 // ==========================================
-// 1. DATABASE SETUP & AUTO-FIX
+// 1. DATABASE SETUP
 // ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
@@ -55,7 +58,7 @@ pool.connect((err, client, release) => {
     `, (err) => {
       if (err) console.error('Table Error:', err.message);
       
-      // FORCE ADD MISSING COLUMNS
+      // FORCE ADD MISSING COLUMNS (Fixes the crash)
       client.query(`
         ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
@@ -130,13 +133,12 @@ app.post('/api/complete-onboarding', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     await pool.query('ROLLBACK');
-    console.error("ONBOARDING ERROR:", err.message);
     res.status(500).json({ error: 'Failed to complete application.' });
   }
 });
 
 // ==========================================
-// 4. DASHBOARD & TRANSACTIONS
+// 4. USER DATA & TRANSACTIONS
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
@@ -159,15 +161,9 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
   if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
   const imagePath = `/uploads/${req.file.filename}`;
   try {
-    await pool.query(
-      `INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, 
-      [userId, amount, imagePath]
-    );
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, [userId, amount, imagePath]);
     res.json({ success: true, message: 'Deposit sent. Pending Admin verification.' });
-  } catch (err) { 
-    console.error("DEPOSIT ERROR:", err.message);
-    res.status(500).json({ error: 'Request failed.' }); 
-  }
+  } catch (err) { res.status(500).json({ error: 'Request failed.' }); }
 });
 
 app.post('/api/withdraw/request', async (req, res) => {
@@ -184,7 +180,7 @@ app.post('/api/withdraw/request', async (req, res) => {
 });
 
 // ==========================================
-// 5. LOANS
+// 5. LOANS & INVESTMENTS
 // ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount, termMonths, rate } = req.body;
@@ -206,25 +202,7 @@ app.get('/api/loans/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 6. CARDS
-// ==========================================
-app.post('/api/cards/request', async (req, res) => {
-  const { userId, cardType } = req.body;
-  try {
-    await pool.query(`INSERT INTO cards (user_id, card_type) VALUES ($1, $2)`, [userId, cardType]);
-    res.json({ success: true, message: 'Card request submitted.' });
-  } catch (err) { res.status(500).json({ error: 'Failed to request card.' }); }
-});
-
-app.get('/api/cards/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch cards.' }); }
-});
-
-// ==========================================
-// 7. ADMIN
+// 6. ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
