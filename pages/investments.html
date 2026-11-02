@@ -2,60 +2,152 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Investments | Xanvia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Investments | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
+  
   <style>
-    .invest-card { background: var(--deep-green); color: white ; padding: 25px; border-radius: 2020px; margin-bottom: 20px; }
-   px .yield-badge { background: rgba(;">
-16, 185, 129, 0.2   ); color: #34D399; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    /* Specific Investment Dashboard Styles */
+    body { background-color: #F4F7F6; }
+    
+    .app-header { 
+      background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); 
+      color: white; 
+      padding: 20px 20px 40px; 
+      border-radius: 0 0 30px 30px; 
+      position: relative;
+      box-shadow: 0 10px 30px rgba(11, 46, 35, 0.15);
+    }
+
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
+    
+    .invest-summary { text-align: center; }
+    .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
+    .invest-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
+    
+    .yield-badge { 
+      display: inline-block; background: rgba(16, 185, 129, 0.2); 
+      color: #34D399; padding: 6px 12px; border-radius: 20px; 
+      font-size: 0.8rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+      margin: -25px 20px 20px; position: relative; z-index: 10;
+    }
+    .stat-card {
+      background: white; padding: 15px; border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center;
+    }
+    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
+    .stat-card h3 { font-size: 1.2rem; color: var(--deep-green); font-weight: 700; }
+    .stat-card h3.profit { color: var(--emerald); }
+
+    /* Action Buttons */
+    .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
+    .action-btn {
+      flex: 1; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1rem;
+      text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 12px rgba(15,138,95,0.3); }
+    .btn-withdraw { background: white; color: var(--text); border: 1px solid var(--border); }
+    .btn-withdraw:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Lock Alert */
+    .lock-alert {
+      margin: 0 20px 20px; padding: 15px; border-radius: 12px;
+      background: #FEF3C7; color: #92400E; font-size: 0.85rem; font-weight: 600;
+      display: flex; align-items: center; gap: 10px; border: 1px solid #F59E0B;
+    }
+
+    /* History List */
+    .history-panel { padding: 0 20px 30px; }
+    .history-panel h3 { font-size: 1.1rem; color: var(--deep-green); margin-bottom: 15px; }
+    .tx-item {
+      background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
+      border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+    }
+    .tx-info h4 { font-size: 0.95rem; color: var(--text); margin-bottom: 4px; }
+    .tx-info p { font-size: 0.75rem; color: var(--muted); }
+    .tx-amount { font-weight: 700; font-size: 1rem; text-align: right; }
+    .tx-amount.credit { color: var(--emerald); }
+    .tx-amount.debit { color: var(--text); }
+    .tx-status { font-size: 0.7rem; font-weight: 500; color: var(--muted); display: block; margin-top: 2px; }
   </style>
 </head>
 <body class="mobile-app-body">
 
-  <header class="app-header" style="padding-bottom: 20px; border-radius: 0 0 20px <div style="text-align: left; width: 100%;">
-      <h1 style="font-size: 1.5rem; margin-bottom: 5px;">Investments</h1>
-      <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Grow your portfolio with automated yield.</p>
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-top">
+      <a href="hub.html">←</a>
+      <div class="logo" style="color: white; font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
+      <div style="width: 24px;"></div>
+    </div>
+    
+    <div class="invest-summary">
+      <p>Total Portfolio Value</p>
+      <h2 id="total-portfolio-val">$0.00</h2>
+      <div class="yield-badge" id="yield-status">Calculating...</div>
     </div>
   </header>
 
-  <main class="app-main" style="padding-top: 20px;">
+  <main style="padding-top: 10px;">
     
-    <div class="invest-card">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-        <span>Total Portfolio Value</span>
-        <span class="yield-badge" id="yield-status">Computing...</span>
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <p>Deposited Balance</p>
+        <h3 id="deposited-bal">$0.00</h3>
       </div>
-      <h2 style="font-size: 2.5rem; margin: 10px 0;" id="total-val">$0.00</h2>
-      
-      <div style="display: flex; gap: 20px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
-        <div>
-          <p style="font-size: 0.75rem; opacity: 0.7;">Deposited Balance</p>
-          <p style="font-weight: 600;" id="initial-dep">$0.00</p>
-        </div>
-        <div>
-          <p style="font-size: 0.75rem; opacity: 0.7;">Profit Yield</p>
-          <p style="font-weight: 600; color: #34D399;" id="profit-yield">+$0.00</p>
-        </div>
+      <div class="stat-card">
+        <p>Profit Yield</p>
+        <h3 class="profit" id="profit-yield">+$0.00</h3>
+      </div>
+      <div class="stat-card">
+        <p>Total Withdrawn</p>
+        <h3 id="withdrawn-bal">$0.00</h3>
+      </div>
+      <div class="stat-card">
+        <p>Active Days</p>
+        <h3 id="active-days">0 Days</h3>
       </div>
     </div>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <a href="deposit.html?target=brokerage" class="btn-submit" style="background: var(--emerald); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: 600; text-align: center; flex: 1;">Deposit to Portfolio</a>
-      <button class="btn-submit" id="withdraw-btn" onclick="handleWithdraw()" style="background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-weight: 600; flex: 1;">Withdraw</button>
+    <!-- ACTIONS -->
+    <div class="action-grid">
+      <a href="deposit.html?target=brokerage" class="action-btn btn-deposit">
+        <span>⬇️</span> Deposit
+      </a>
+      <button id="withdraw-btn" class="action-btn btn-withdraw" onclick="handleWithdraw()" disabled>
+        <span>⬆️</span> Withdraw
+      </button>
     </div>
 
-    <div id="lock-alert" class="alert-box" style="display:none; background:#FEF3C7; color:#92400E; padding:15px; border-radius:12px; margin-bottom:20px; font-size:0.85rem; font-weight:600; border:1px solid #F59E0B;">
-      🔒 Withdrawal is locked. You can only withdraw after 7 days of depositing.
+    <!-- LOCK ALERT -->
+    <div id="lock-alert" class="lock-alert" style="display:none;">
+      🔒 Withdrawals are locked for 7 days. Your funds will unlock soon.
     </div>
 
-    <div class="panel" style="background:white; padding:20px; border-radius:16px; border:1px solid var(--border);">
-      <h3 style="margin-bottom: 15px; color: var(--deep-green);">Investment History</h3>
-      <div id="tx-list"></div>
+    <!-- HISTORY -->
+    <div class="history-panel">
+      <h3>Investment History</h3>
+      <div id="history-list">
+        <p style="text-align:center; color:var(--muted); font-size:0.9rem;">Loading...</p>
+      </div>
     </div>
 
   </main>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <a href="dashboard.html" class="nav-item"><span class="icon">🏠</span><span class="label">Home</span></a>
+    <a href="investments.html" class="nav-item active"><span class="icon">📈</span><span class="label">Invest</span></a>
+    <a href="cards.html" class="nav-item"><span class="icon">💳</span><span class="label">Cards</span></a>
+  </nav>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
@@ -65,46 +157,78 @@
     let canWithdraw = false;
 
     async function loadInvestments() {
-      const res = await fetch(`/api/accounts/${user.id}`);
-      const data = await res.json();
-      
-      const initialDep = data.brokerage || 0;
-      const createdAt = data.brokerage_created_at ? new Date(data.brokerage_created_at) : new Date();
-      const now = new Date();
-      
-      const diffTime = Math.abs(now - createdAt);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      const dailyYield = 0.015; // 1.5% daily
-      const yieldAmount = initialDep * dailyYield * diffDays;
-      const totalVal = initialDep + yieldAmount;
+      try {
+        // 1. Fetch Account Balances
+        const res = await fetch(`/api/accounts/${user.id}`);
+        const data = await res.json();
+        
+        const initialDep = data.brokerage || 0;
+        const createdAt = data.brokerage_created_at ? new Date(data.brokerage_created_at) : new Date();
+        const now = new Date();
+        
+        // 2. Calculate Days and Yield
+        const diffTime = Math.abs(now - createdAt);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        const dailyYield = 0.015; // 1.5% daily
+        const yieldAmount = initialDep * dailyYield * diffDays;
+        const totalVal = initialDep + yieldAmount;
 
-      document.getElementById('initial-dep').textContent = formatUSD(initialDep);
-      document.getElementById('profit-yield').textContent = `+${formatUSD(yieldAmount)}`;
-      document.getElementById('total-val').textContent = formatUSD(totalVal);
+        // 3. Fetch Transactions for Withdrawal and History
+        const txRes = await fetch(`/api/transactions/${user.id}`);
+        const txs = await txRes.json();
+        
+        let totalWithdrawn = 0;
+        const investTxs = txs.filter(tx => tx.reference === 'brokerage' || tx.type.includes('INVEST'));
 
-      if (diffDays >= 7) {
-        document.getElementById('yield-status').textContent = "Unlocked";
-        canWithdraw = true;
-      } else {
-        document.getElementById('yield-status').textContent = `Locked (${7 - diffDays} days left)`;
-        canWithdraw = false;
-        document.getElementById('lock-alert').style.display = 'block';
+        investTxs.forEach(tx => {
+          if (tx.type === 'WITHDRAWAL' && tx.status === 'Approved') {
+            totalWithdrawn += parseFloat(tx.amount);
+          }
+        });
+
+        // 4. Update UI elements
+        document.getElementById('total-portfolio-val').textContent = formatUSD(totalVal);
+        document.getElementById('deposited-bal').textContent = formatUSD(initialDep);
+        document.getElementById('profit-yield').textContent = `+${formatUSD(yieldAmount)}`;
+        document.getElementById('withdrawn-bal').textContent = formatUSD(totalWithdrawn);
+        document.getElementById('active-days').textContent = `${diffDays} Days`;
+
+        // 5. Lock/Unlock Logic
+        if (diffDays >= 7) {
+          document.getElementById('yield-status').textContent = "Active Yield";
+          document.getElementById('withdraw-btn').disabled = false;
+          canWithdraw = true;
+          document.getElementById('lock-alert').style.display = 'none';
+        } else {
+          document.getElementById('yield-status').textContent = `Locked (${7 - diffDays} days left)`;
+          document.getElementById('withdraw-btn').disabled = true;
+          canWithdraw = false;
+          document.getElementById('lock-alert').style.display = 'flex';
+        }
+
+        // 6. Render History
+        const historyList = document.getElementById('history-list');
+        if (investTxs.length === 0) {
+          historyList.innerHTML = `<p style="text-align:center; color:var(--muted); font-size:0.9rem;">No investment history yet.</p>`;
+        } else {
+          historyList.innerHTML = investTxs.map(tx => `
+            <div class="tx-item">
+              <div class="tx-info">
+                <h4>${tx.type.replace('_', ' ')}</h4>
+                <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+              </div>
+              <div class="tx-amount ${tx.type === 'DEPOSIT' ? 'credit' : 'debit'}">
+                ${tx.type === 'DEPOSIT' ? '+' : '-'}${formatUSD(tx.amount)}
+                <span class="tx-status">${tx.status}</span>
+              </div>
+            </div>
+          `).join('');
+        }
+
+      } catch (err) {
+        console.error(err);
       }
-
-      const txRes = await fetch(`/api/transactions/${user.id}`);
-      const txs = await txRes.json();
-      const investTxs = txs.filter(tx => tx.reference === 'brokerage');
-
-      document.getElementById('tx-list').innerHTML = investTxs.map(tx => `
-        <div class="tx-item" style="padding: 10px 0; border-bottom: 1px solid #eee;">
-          <div class="tx-details">
-            <h4>${tx.type}</h4>
-            <p>${new Date(tx.created_at).toLocaleDateString()}</p>
-          </div>
-          <div class="tx-amount ${tx.type === 'DEPOSIT' ? 'credit' : 'debit'}">${formatUSD(tx.amount)}</div>
-        </div>
-      `).join('') || `<p style="color:var(--muted);">No investment history.</p>`;
     }
 
     function handleWithdraw() {
