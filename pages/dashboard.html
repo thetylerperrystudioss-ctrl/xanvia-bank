@@ -22,6 +22,20 @@
     .action-btn { background: white; border: none; border-radius: 16px; padding: 15px 10px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
     .icon-circle { width: 36px; height: 36px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
     .action-btn span { font-size: 0.8rem; font-weight: 600; }
+
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+    
+    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+    .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; }
+    .msg.user { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg.admin { background: white; color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
   </style>
 </head>
 <body class="mobile-app-body">
@@ -29,10 +43,7 @@
     <div class="top-nav">
       <div class="logo">
         <div class="logo-icon">X</div>
-        <div class="logo-text">
-          <span class="logo-title">Xanvia</span>
-          <span class="logo-subtitle">Credit Union</span>
-        </div>
+        <div class="logo-text"><span class="logo-title">Xanvia</span><span class="logo-subtitle">Credit Union</span></div>
       </div>
       <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
@@ -43,70 +54,122 @@
     <div class="quick-actions">
       <a href="hub.html" class="action-btn"><div class="icon-circle">⚙️</div><span>Manage</span></a>
       <a href="withdraw.html" class="action-btn"><div class="icon-circle">↗</div><span>Transfer</span></a>
-      <a href="deposit.html?target=checking" class="action-btn"><div class="icon-circle">+</div><span>Deposit</span></a>
+      <a href="#" class="action-btn" onclick="openSupport()"><div class="icon-circle">🎧</div><span>Support</span></a>
     </div>
   </header>
 
   <main class="app-main" style="padding-top: 50px;">
-    <div class="search-bar">
-      <span>🔍</span>
-      <input type="text" placeholder="Search Transactions">
-    </div>
-
+    <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search Transactions"></div>
     <div class="transaction-container" id="transaction-list"></div>
   </main>
 
   <nav class="bottom-nav">
-    <a href="#" class="nav-item"><span class="icon">💳</span><span class="label">Payments</span></a>
-    <a href="#" class="nav-item"><span class="icon">📊</span><span class="label">Spending</span></a>
-    <a href="dashboard.html" class="nav-item active"><span class="icon">🏠</span><span class="label">Home</span></a>
-    <a href="cards.html" class="nav-item"><span class="icon">💳</span><span class="label">Cards</span></a>
+    <a href="#" class="nav-item active"><span class="icon">🏠</span><span class="label">Home</span></a>
+    <a href="#" class="nav-item"><span class="icon">💳</span><span class="label">Cards</span></a>
   </nav>
+
+  <!-- SUPPORT CENTER MODAL -->
+  <div id="modal-support" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="document.getElementById('modal-support').classList.remove('open')">×</button>
+      
+      <div id="support-list-view">
+        <h2 style="color:var(--deep-green); margin-bottom:15px;">Support Center</h2>
+        <div id="user-complaints" style="margin-bottom: 20px;">Loading...</div>
+        <button onclick="document.getElementById('support-list-view').style.display='none'; document.getElementById('support-form-view').style.display='block';" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Open New Ticket</button>
+      </div>
+
+      <div id="support-form-view" style="display: none;">
+        <h2 style="color:var(--deep-green); margin-bottom:15px;">Submit a Complaint</h2>
+        <div class="form-group"><label>Category</label><select id="sup-category"><option>Deposit Issue</option><option>Withdrawal Issue</option><option>Login Problem</option><option>Other</option></select></div>
+        <div class="form-group"><label>Subject</label><input type="text" id="sup-subject" placeholder="Brief summary"></div>
+        <div class="form-group"><label>Message</label><textarea id="sup-message" rows="3" placeholder="Explain your issue..."></textarea></div>
+        <div class="form-group"><label>Attachment (Optional)</label><input type="file" id="sup-file" accept="image/*"></div>
+        <button onclick="submitComplaint()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Submit Ticket</button>
+        <button onclick="document.getElementById('support-form-view').style.display='none'; document.getElementById('support-list-view').style.display='block';" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+        <div id="sup-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
+      </div>
+    </div>
+  </div>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
+    function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
+    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-    function logout() {
-      localStorage.removeItem("xanvia_user");
-      window.location.replace("../index.html");
+    function openSupport() {
+      document.getElementById('modal-support').classList.add('open');
+      loadComplaints();
     }
 
-    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    async function loadComplaints() {
+      const container = document.getElementById('user-complaints');
+      container.innerHTML = '<p>Loading...</p>';
+      try {
+        const res = await fetch(`/api/complaints/${user.id}`);
+        const data = await res.json();
+        
+        container.innerHTML = data.length > 0 ? data.map(c => `
+          <div style="background:#F4F7F6; padding:15px; border-radius:10px; margin-bottom:10px; border:1px solid var(--border);">
+            <h4 style="color:var(--deep-green); font-size:0.95rem;">${c.subject}</h4>
+            <p style="font-size:0.8rem; color:var(--muted); margin-bottom:10px;">Ref: ${c.ref_number} | Status: <strong>${c.status}</strong></p>
+            <div class="chat-box">
+              <div class="msg user">${c.message}<span class="msg-time">${new Date(c.created_at).toLocaleDateString()}</span></div>
+              ${c.admin_response ? `<div class="msg admin">${c.admin_response}<span class="msg-time">Admin Response</span></div>` : ''}
+            </div>
+          </div>
+        `).join('') : '<p style="color:var(--muted); font-size:0.9rem;">No active tickets.</p>';
+      } catch (err) { container.innerHTML = '<p style="color:red;">Failed to load.</p>'; }
+    }
+
+    async function submitComplaint() {
+      const category = document.getElementById('sup-category').value;
+      const subject = document.getElementById('sup-subject').value;
+      const message = document.getElementById('sup-message').value;
+      const file = document.getElementById('sup-file').files[0];
+      const msg = document.getElementById('sup-msg');
+
+      if (!subject || !message) { msg.textContent = "Fill all fields."; msg.style.color = "red"; return; }
+
+      const formData = new FormData();
+      formData.append('userId', user.id);
+      formData.append('category', category);
+      formData.append('subject', subject);
+      formData.append('message', message);
+      if (file) formData.append('attachment', file);
+
+      const res = await fetch('/api/complaints', { method: 'POST', body: formData });
+      const data = await res.json();
+      
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) {
+        setTimeout(() => {
+          document.getElementById('support-form-view').style.display = 'none';
+          document.getElementById('support-list-view').style.display = 'block';
+          loadComplaints();
+        }, 1500);
+      }
+    }
 
     async function loadDashboard() {
       try {
-        // Load Main Checking Balance ONLY
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
-        const checking = data.checking || 0;
-        document.getElementById('total-balance').textContent = formatUSD(checking);
-
-        // Filter out INVESTMENT transactions completely
-        const txRes = await fetch(`/api/transactions/${user.id}`);
-        const allTxs = await txRes.json();
-        const mainTxs = allTxs.filter(tx => !tx.type.includes('INVESTMENT'));
-
-        const container = document.getElementById('transaction-list');
+        document.getElementById('total-balance').textContent = formatUSD(data.checking || 0);
         
-        if (!mainTxs || mainTxs.length === 0) {
-          container.innerHTML = `<p style="text-align:center; color:var(--muted); padding: 20px;">No main banking transactions yet.</p>`;
-          return;
-        }
+        const txRes = await fetch(`/api/transactions/${user.id}`);
+        const txs = await txRes.json();
+        const mainTxs = txs.filter(tx => !tx.type.includes('INVESTMENT'));
 
-        container.innerHTML = mainTxs.map(tx => `
+        document.getElementById('transaction-list').innerHTML = mainTxs.length > 0 ? mainTxs.map(tx => `
           <div class="tx-item">
             <div class="tx-icon">🔄</div>
-            <div class="tx-details">
-              <h4>${tx.type.replace('_', ' ')}</h4>
-              <p>${new Date(tx.created_at).toLocaleDateString()}</p>
-            </div>
-            <div class="tx-amount ${tx.type.includes('DEPOSIT') ? 'credit' : 'debit'}">
-              ${formatUSD(parseFloat(tx.amount))}
-              <span class="tx-status">${tx.status}</span>
-            </div>
+            <div class="tx-details"><h4>${tx.type.replace('_', ' ')}</h4><p>${new Date(tx.created_at).toLocaleDateString()}</p></div>
+            <div class="tx-amount ${tx.type.includes('DEPOSIT') ? 'credit' : 'debit'}">${formatUSD(parseFloat(tx.amount))}</div>
           </div>
-        `).join('');
+        `).join('') : '<p style="text-align:center; color:var(--muted); padding:20px;">No transactions.</p>';
       } catch (err) { console.error(err); }
     }
     loadDashboard();

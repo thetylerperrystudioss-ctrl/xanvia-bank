@@ -24,94 +24,71 @@ const pool = new Pool({
 });
 
 // ==========================================
-// 1. BULLETPROOF DATABASE SETUP
+// 1. DATABASE SETUP & AUTO-FIX
 // ==========================================
 pool.connect((err, client, release) => {
-  if (err) {
-    console.error('❌ FATAL DB ERROR:', err.message);
-    return;
-  }
-  
-  console.log('🔄 Upgrading Database...');
-  
-  // Step 1: Create tables if they don't exist
-  client.query(`
-    CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY);
-    CREATE TABLE IF NOT EXISTS accounts (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS investments (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS audit_logs (id SERIAL PRIMARY KEY);
-    CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
-  `, async (err) => {
-    if (err) console.error('❌ Create Table Error:', err.message);
+  if (err) console.error('DB Error:', err.message);
+  else {
+    client.query(`
+      CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS accounts (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS investments (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
+    `, async (err) => {
+      if (err) console.error('Create Table Error:', err.message);
 
-    // Step 2: Force add EVERY missing column one by one
-    const alterQueries = [
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
-      
-      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
-      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
-      
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active'",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS message TEXT",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_response TEXT",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      
-      "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS admin_action VARCHAR(100)",
-      "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS details TEXT",
-      "ALTER TABLE audit_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+      const alterQueries = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
+        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
+        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active'",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS message TEXT",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_response TEXT",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT"
+      ];
 
-      "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT"
-    ];
+      for (let q of alterQueries) {
+        try { await client.query(q); } catch (e) { }
+      }
 
-    // Run all ALTER TABLE commands sequentially
-    for (let q of alterQueries) {
-      try { await client.query(q); } catch (e) { console.error("Alter Error:", e.message); }
-    }
-
-    // Step 3: Insert default settings
-    try {
       await client.query(`INSERT INTO system_settings (key, value) VALUES 
-        ('btc_address', 'bc1q...xanvia'), 
-        ('bank_name', 'Chase Bank'), 
-        ('bank_account', '123456789'), 
-        ('bank_routing', '021000021') 
+        ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') 
         ON CONFLICT (key) DO NOTHING`);
-    } catch (e) { console.error("Settings Insert Error:", e.message); }
-
-    release();
-    console.log('✅ Database fully upgraded and ready.');
-  });
+      
+      release();
+      console.log('✅ Database ready.');
+    });
+  }
 });
 
 // ==========================================
@@ -121,8 +98,7 @@ app.post('/api/register', async (req, res) => {
   const { name, username, email, password } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (name, username, email, password) VALUES ($1, $2, $3, $4)', 
-      [name, username.toLowerCase(), email.toLowerCase(), hashedPassword]);
+    await pool.query('INSERT INTO users (name, username, email, password) VALUES ($1, $2, $3, $4)', [name, username.toLowerCase(), email.toLowerCase(), hashedPassword]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Username or email already exists.' }); }
 });
@@ -130,10 +106,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body; 
   try {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE (email = $1 OR username = $1) AND deleted = false', 
-      [identifier.toLowerCase()]
-    );
+    const result = await pool.query('SELECT * FROM users WHERE (email = $1 OR username = $1) AND deleted = false', [identifier.toLowerCase()]);
     const user = result.rows[0];
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
@@ -165,37 +138,28 @@ app.get('/api/accounts/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 3. COMPLAINTS
+// 3. SUPPORT / COMPLAINTS
 // ==========================================
 app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
   const { userId, category, subject, message } = req.body;
   const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
   const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
-  
   try {
     await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message, attachment) VALUES ($1, $2, $3, $4, $5, $6)`, 
       [userId, refNum, category, subject, message, attachmentPath]);
-    res.json({ success: true, ref: refNum, message: 'Complaint submitted. Ref: ' + refNum });
+    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.get('/api/admin/complaints', async (req, res) => {
+app.get('/api/complaints/:userId', async (req, res) => {
   try {
-    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
+    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.post('/api/admin/complaints/:id', async (req, res) => {
-  const { status, response } = req.body;
-  try {
-    await pool.query(`UPDATE complaints SET status = $1, admin_response = $2 WHERE id = $3`, [status, response, req.params.id]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
 // ==========================================
-// 4. INVESTMENT & LOAN REQUESTS
+// 4. INVESTMENTS & LOANS
 // ==========================================
 app.post('/api/investments/deposit', upload.single('screenshot'), async (req, res) => {
   const { userId, amount, reference } = req.body;
@@ -245,7 +209,7 @@ app.post('/api/loans/repay', async (req, res) => {
 });
 
 // ==========================================
-// 5. ADMIN APPROVAL
+// 5. ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
@@ -267,8 +231,7 @@ app.post('/api/admin/approve', async (req, res) => {
       const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
       if (tx.type === 'INVESTMENT_DEPOSIT') {
-        await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, 
-          [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
+        await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'brokerage'`, [tx.amount, tx.user_id]);
       }
       else if (tx.type === 'LOAN_APPLICATION') {
@@ -290,22 +253,11 @@ app.post('/api/admin/approve', async (req, res) => {
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ==========================================
-// 6. ADMIN USER MANAGEMENT
-// ==========================================
 app.get('/api/admin/users', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id, name, COALESCE(username, 'N/A') as username, email, status, last_login, created_at 
-      FROM users 
-      WHERE deleted = false 
-      ORDER BY created_at DESC
-    `);
+    const result = await pool.query(`SELECT id, name, COALESCE(username, 'N/A') as username, email, status, created_at FROM users WHERE deleted = false ORDER BY created_at DESC`);
     res.json(result.rows);
-  } catch (err) { 
-    console.error("ADMIN USERS ERROR:", err.message);
-    res.status(500).json({ error: 'Database error: ' + err.message }); 
-  }
+  } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
 });
 
 app.post('/api/admin/freeze', async (req, res) => {
@@ -316,9 +268,17 @@ app.post('/api/admin/freeze', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.delete('/api/admin/users/:id', async (req, res) => {
+app.get('/api/admin/complaints', async (req, res) => {
   try {
-    await pool.query(`UPDATE users SET deleted = true WHERE id = $1`, [req.params.id]);
+    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/complaints/:id', async (req, res) => {
+  const { status, response } = req.body;
+  try {
+    await pool.query(`UPDATE complaints SET status = $1, admin_response = $2 WHERE id = $3`, [status, response, req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
