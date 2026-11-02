@@ -2,90 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard | Xanvia Bank</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Dashboard | Xanvia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/variables.css">
-  <link rel="stylesheet" href="../css/base.css">
   <link rel="stylesheet" href="../css/dashboard.css">
 </head>
 <body>
-  <div class="dash-layout">
-    
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-      <a href="../index.html" class="logo">Xanvia</a>
-      <ul class="side-nav">
-        <li><a class="active">Overview</a></li>
-        <li><a>Banking</a></li>
-        <li><a>Loans</a></li>
-        <li><a>Investments</a></li>
-        <li><a>Transfers</a></li>
-      </ul>
-      <button id="logout-btn" class="btn btn-outline" style="margin-top: auto; color: white; border-color: rgba(255,255,255,0.2); width: 100%;">Log Out</button>
-    </aside>
+  <header class="mobile-topbar">
+    <button class="hamburger" id="menu-btn">☰</button>
+    <h2>Xanvia</h2>
+    <div style="width: 24px;"></div>
+  </header>
 
-    <!-- MAIN DASHBOARD AREA -->
-    <main class="dash-main">
-      
-      <!-- HEADER -->
-      <div class="dash-header">
-        <h1>Unified Dashboard</h1>
-        <div style="font-weight: 600; font-size: 1.1rem;">
-          Welcome, <span id="user-name">User</span>
-        </div>
-      </div>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-      <!-- STATE B: NET WORTH RIBBON -->
+  <aside class="sidebar" id="sidebar">
+    <div class="logo">Xanvia</div>
+    <ul class="side-nav">
+      <li><a class="active" onclick="showView('overview')">Overview</a></li>
+      <li><a onclick="showView('transfer')">Transfers</a></li>
+      <li><a onclick="showView('loans')">Loans</a></li>
+      <li><a style="color: #FCA5A5; margin-top: 20px;" id="logout-btn">Log Out</a></li>
+    </ul>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-header">
+      <h1 id="page-title">Unified Dashboard</h1>
+      <p>Welcome, <span id="user-name">Loading...</span></p>
+    </div>
+
+    <!-- OVERVIEW VIEW -->
+    <div id="view-overview">
       <div class="net-worth-ribbon">
-        <p>Total Net Worth</p>
+        <p style="margin: 0; font-size: 0.9rem; text-transform: uppercase; opacity: 0.9;">Total Net Worth</p>
         <h2 id="net-worth">$0.00</h2>
-        <div style="display: flex; gap: 40px; margin-top: 24px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px;">
-          <div>
-            <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Cash</span>
-            <div style="font-size: 1.2rem; font-weight: 600;" id="cash-val">$0.00</div>
-          </div>
-          <div>
-            <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Equities</span>
-            <div style="font-size: 1.2rem; font-weight: 600;" id="equity-val">$0.00</div>
-          </div>
-          <div>
-            <span style="font-size: 0.8rem; opacity: 0.8; text-transform: uppercase;">Liabilities</span>
-            <div style="font-size: 1.2rem; font-weight: 600; color: #FCA5A5;" id="liability-val">$0.00</div>
-          </div>
+        <div class="ribbon-stats">
+          <div><span>Cash</span><strong id="cash-val">$0.00</strong></div>
+          <div><span>Equities</span><strong id="equity-val">$0.00</strong></div>
+          <div><span>Liabilities</span><strong id="loan-val" style="color: #FCA5A5;">$0.00</strong></div>
         </div>
       </div>
 
-      <!-- LEDGER GRID -->
-      <div class="ledger-grid">
-        
-        <!-- ACCOUNTS PANEL -->
-        <div class="panel">
-          <h3>Your Accounts</h3>
-          <div id="accounts-list">
-            <!-- Injected by JS -->
-          </div>
-        </div>
-
-        <!-- QUICK ACTIONS & RECENT ACTIVITY -->
-        <div class="panel">
-          <h3>Quick Actions</h3>
-          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px;">
-            <button class="btn btn-primary" style="width: 100%;">Transfer Money</button>
-            <button class="btn btn-outline" style="width: 100%;">Pay a Bill</button>
-            <button class="btn btn-outline" style="width: 100%;">Trade Stocks</button>
-          </div>
-
-          <h3>Recent Activity</h3>
-          <div id="tx-list">
-            <!-- Injected by JS -->
-          </div>
-        </div>
-
+      <div class="panel">
+        <h3>Your Accounts</h3>
+        <div id="accounts-list"></div>
       </div>
-    </main>
-  </div>
+    </div>
 
-  <script src="../js/dashboard.js" type="module"></script>
+    <!-- TRANSFER VIEW -->
+    <div id="view-transfer" style="display: none;">
+      <div class="panel">
+        <h3>Send Money</h3>
+        <div id="transfer-msg" style="margin-bottom: 10px; color: #0F8A5F; font-weight: bold;"></div>
+        <form id="transfer-form">
+          <div style="margin-bottom: 15px;">
+            <label>From Account</label>
+            <select id="from-acc" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;">
+              <option value="checking">Checking</option>
+              <option value="savings">Savings</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 15px;">
+            <label>To Account</label>
+            <select id="to-acc" style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;">
+              <option value="savings">Savings</option>
+              <option value="checking">Checking</option>
+            </select>
+          </div>
+          <div style="margin-bottom: 20px;">
+            <label>Amount ($)</label>
+            <input type="number" id="transfer-amt" required style="width: 100%; padding: 10px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc;">
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; background: #0F8A5F; color: white; border: none; border-radius: 6px; font-weight: bold;">Transfer Funds</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- LOANS VIEW -->
+    <div id="view-loans" style="display: none;">
+      <div class="panel">
+        <h3>Active Loan</h3>
+        <p style="font-size: 2rem; color: #0B2E23; margin: 10px 0;">$5,000.00</p>
+        <p style="color: #666;">Remaining Balance</p>
+        <div style="height: 8px; background: #E2E8F0; border-radius: 4px; margin: 15px 0;">
+          <div style="height: 100%; width: 100%; background: #0F8A5F; border-radius: 4px;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../js/dashboard.js"></script>
 </body>
 </html>

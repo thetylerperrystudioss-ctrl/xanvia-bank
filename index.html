@@ -4,13 +4,108 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Xanvia Bank | Modern US Banking</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/layout.css">
-  <link rel="stylesheet" href="css/landing.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ================= CSS COMBINED ================= */
+    :root {
+      --emerald: #0F8A5F;
+      --emerald-dark: #0A5F42;
+      --emerald-light: #E6F4EE;
+      --deep-green: #0B2E23;
+      --gold: #C9A24B;
+      --bg-color: #F8F9FA;
+      --text-main: #1A1A1A;
+      --text-muted: #4A5D56;
+      --white: #FFFFFF;
+      --border: #E2E8F0;
+      --font-sans: "Inter", sans-serif;
+      --font-serif: "Merriweather", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font-sans); background: var(--bg-color); color: var(--text-main); -webkit-font-smoothing: antialiased; }
+    a { text-decoration: none; color: inherit; }
+    
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .btn { padding: 12px 24px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; font-size: 1rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { background: var(--emerald); color: var(--white); }
+    .btn-primary:hover { background: var(--emerald-dark); }
+    .btn-outline { background: transparent; color: var(--emerald); border: 1px solid var(--emerald); }
+    .btn-outline:hover { background: var(--emerald-light); }
+    .btn-large { padding: 16px 32px; font-size: 1.05rem; }
+
+    /* Header */
+    .top-banner { background: var(--deep-green); color: var(--white); text-align: center; padding: 12px; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.02em; }
+    .top-banner a { color: var(--gold); text-decoration: underline; margin-left: 8px; cursor: pointer; }
+    
+    .global-header { background: var(--white); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .header-inner { display: flex; justify-content: space-between; align-items: center; height: 76px; }
+    .logo { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 900; color: var(--emerald); letter-spacing: -0.02em; cursor: pointer; }
+    .nav-links { display: flex; gap: 28px; align-items: center; height: 100%; }
+    .nav-item { position: relative; height: 100%; display: flex; align-items: center; cursor: pointer; font-weight: 500; font-size: 0.95rem; color: var(--text-muted); }
+    .nav-item:hover { color: var(--emerald); }
+    .header-actions { display: flex; gap: 16px; align-items: center; }
+
+    /* Hero */
+    .hero { padding: 100px 0 80px; background: var(--white); border-bottom: 1px solid var(--border); }
+    .hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .hero-content h1 { font-family: var(--font-serif); font-size: 3.4rem; font-weight: 900; line-height: 1.1; color: var(--deep-green); margin-bottom: 24px; letter-spacing: -0.02em; }
+    .hero-content p { font-size: 1.15rem; color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; max-width: 500px; }
+    .hero-rate { display: inline-block; background: var(--emerald-light); color: var(--emerald-dark); padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 0.95rem; margin-bottom: 24px; }
+    .hero-ctas { display: flex; gap: 16px; flex-wrap: wrap; }
+    
+    .hero-visual { background: linear-gradient(135deg, var(--emerald-light) 0%, #d4e9e0 100%); border-radius: 24px; padding: 40px; position: relative; overflow: hidden; border: 1px solid var(--border); }
+    .hero-visual::after { content: ""; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: var(--gold); opacity: 0.1; border-radius: 50%; }
+    .hero-card { background: var(--white); border-radius: 16px; padding: 30px; box-shadow: 0 20px 40px rgba(11,46,35,0.08); position: relative; z-index: 1; }
+    .hero-card-label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+    .hero-card-value { font-family: var(--font-serif); font-size: 2.8rem; font-weight: 700; color: var(--deep-green); margin-bottom: 16px; }
+    .hero-card-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 16px; }
+    
+    /* Goals Section */
+    .goals-section { padding: 80px 0; background: var(--bg-color); }
+    .section-header { text-align: center; margin-bottom: 48px; }
+    .section-header h2 { font-family: var(--font-serif); font-size: 2.2rem; font-weight: 700; color: var(--deep-green); margin-bottom: 12px; }
+    .section-header p { color: var(--text-muted); font-size: 1.05rem; max-width: 600px; margin: 0 auto; }
+    .goals-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+    .goal-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 32px 24px; text-align: center; transition: all 0.2s; cursor: pointer; }
+    .goal-card:hover { border-color: var(--emerald); box-shadow: 0 10px 20px rgba(15,138,95,0.08); transform: translateY(-4px); }
+    .goal-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
+    .goal-card h3 { font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+    .goal-card span { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Pillars Section */
+    .pillars-section { padding: 80px 0; background: var(--white); }
+    .pillars-grid { display: grid; grid-template-columns: 4fr 3fr 3fr; gap: 24px; }
+    .pillar-card { border: 1px solid var(--border); border-radius: 12px; padding: 40px; background: var(--white); transition: box-shadow 0.3s; }
+    .pillar-card:hover { box-shadow: 0 15px 30px rgba(11,46,35,0.06); }
+    .pillar-icon { font-size: 2.2rem; margin-bottom: 20px; }
+    .pillar-card h3 { font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 20px; color: var(--deep-green); }
+    .pillar-card ul { list-style: none; margin-bottom: 28px; }
+    .pillar-card ul li { position: relative; padding-left: 24px; margin-bottom: 12px; color: var(--text-muted); font-size: 0.95rem; }
+    .pillar-card ul li::before { content: "✓"; position: absolute; left: 0; color: var(--emerald); font-weight: bold; }
+    .pillar-link { color: var(--emerald); font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.95rem; cursor: pointer; }
+    .pillar-link:hover { color: var(--emerald-dark); }
+
+    /* Footer */
+    .global-footer { background: #061a13; color: #A7C4B7; padding: 60px 0 40px; font-size: 0.9rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 48px; }
+    .footer-col h4 { color: var(--white); font-size: 0.95rem; margin-bottom: 20px; font-weight: 600; }
+    .footer-col a { display: block; margin-bottom: 10px; color: #A7C4B7; font-size: 0.85rem; }
+    .footer-col a:hover { color: var(--white); text-decoration: underline; }
+    .footer-disclosures { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 32px; font-size: 0.75rem; line-height: 1.8; color: #6A8A7D; }
+
+    @media (max-width: 1024px) {
+      .hero-grid, .pillars-grid { grid-template-columns: 1fr; }
+      .goals-grid { grid-template-columns: 1fr 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .nav-links { display: none; }
+    }
+    @media (max-width: 768px) {
+      .hero-content h1 { font-size: 2.4rem; }
+      .goals-grid { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
 
@@ -27,7 +122,6 @@
         <div class="nav-item">Investments</div>
       </nav>
       <div class="header-actions">
-        <span class="search-icon">🔍</span>
         <a href="pages/login.html" class="btn btn-primary">Log In</a>
       </div>
     </div>
@@ -41,7 +135,7 @@
         <p>Save with confidence, borrow without surprises, and invest in your future—all from one secure, US-based platform.</p>
         <div class="hero-ctas">
           <a href="pages/register.html" class="btn btn-primary btn-large">Open Account</a>
-          <a href="pages/login.html" class="btn btn-outline btn-large">Check Rates</a>
+          <a href="pages/login.html" class="btn btn-outline btn-large">Log In</a>
         </div>
       </div>
       <div class="hero-visual">
@@ -123,15 +217,6 @@
     </div>
   </section>
 
-  <section class="trust-bar">
-    <div class="container trust-inner">
-      <div class="trust-item"><span>🔒</span> 256-Bit Encryption</div>
-      <div class="trust-item"><span>🛡️</span> MFA Shield</div>
-      <div class="trust-item"><span>💳</span> Zero Liability</div>
-      <div class="trust-item"><span>🏛️</span> Member FDIC</div>
-    </div>
-  </section>
-
   <footer class="global-footer">
     <div class="container">
       <div class="footer-grid">
@@ -162,8 +247,11 @@
           <a href="#">Disclosures</a>
           <a href="#">Privacy Policy</a>
           <a href="#">Terms of Service</a>
+          <!-- HIDDEN ADMIN BUTTON -->
+          <a href="pages/admin.html" style="opacity: 0.4; font-size: 0.75rem; margin-top: 10px;">Admin Portal</a>
         </div>
       </div>
+
       <div class="footer-disclosures">
         <p><strong>Disclosures:</strong> Banking products and services are offered by Xanvia Bank, N.A. Member FDIC.</p>
         <p>Investment products are offered via Xanvia Securities LLC, member FINRA / SIPC.</p>
@@ -172,6 +260,5 @@
       </div>
     </div>
   </footer>
-  <script src="js/app.js" type="module"></script>
 </body>
 </html>
