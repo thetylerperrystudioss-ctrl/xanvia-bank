@@ -32,7 +32,7 @@
       display: flex;
     }
 
-    /* ================= SECURE LOGIN OVERLAY ================= */
+    /* SECURE LOGIN OVERLAY */
     #login-overlay {
       position: fixed; inset: 0; background: var(--deep-green); z-index: 9999;
       display: flex; align-items: center; justify-content: center; flex-direction: column;
@@ -44,9 +44,9 @@
     .login-box input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
     .login-box button:hover { background: var(--emerald-dark); }
-    .error-msg { color: var(--danger); font;-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: 600; }
+    .error-msg { color: var(--danger); font-size: 0.85rem; margin-bottom: 15px; display: none; font-weight: 600; }
 
-    /* ================= SIDEBAR ================= */
+    /* SIDEBAR */
     .sidebar { 
       width: var(--sidebar-w); 
       background: linear-gradient(180deg, #0B2E23 0%, #0A5F42 100%);
@@ -55,7 +55,7 @@
       display: flex; flex-direction: column; z-index: 1000; transition: left 0.3s ease;
       border-right: 1px solid rgba(255,255,255,0.05);
     }
-    .sidebar.open { left: 0 }
+    .sidebar.open { left: 0; }
     .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; backdrop-filter: blur(4px); }
     .sidebar-overlay.open { display: block; }
 
@@ -75,10 +75,9 @@
     .logout-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); color: white; width: 100%; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s; }
     .logout-btn:hover { background: var(--danger); border-color: var(--danger); }
 
-    /* ================= MAIN CONTENT ================= */
+    /* MAIN CONTENT */
     .main-content { margin-left: 0; flex: 1; padding: 20px; display: flex; flex-direction: column; }
     
-    /* Top Bar */
     .top-bar { 
       background: var(--panel-bg); backdrop-filter: blur(12px); 
       padding: 15px 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; 
@@ -96,7 +95,6 @@
     .kpi-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--deep-green); margin-top: 8px; }
 
-    /* Panels */
     .panel { 
       background: var(--panel-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); 
       border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.03);
@@ -105,13 +103,12 @@
 
     /* Forms */
     .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-    .form-group { margin-bottom: 0; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
     .form-group input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; outline: none; background: #FAFAFA; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
-    .btn-primary { background: var(--emerald); color: white; border: none ; padding: 14px; border-radius:15 10px; font-weight: 600; cursor: pointer;px width: 100%; font-size: 1rem;; margin-top: 10px; }
+    .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; margin-top: 10px; }
 
-    /* color Requests Feed */
+    /* Requests */
     .req-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; background: white; }
     .req-info h4 { color: var(--text-dark); font-size: 1rem; margin-bottom: 5px; }
     .req-info p { color: var(--text-muted); font-size: 0.85rem; }
@@ -121,14 +118,13 @@
 
     /* Table */
     .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th { text-align: left; padding:: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid #eee; }
+    .data-table th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid #eee; }
     .data-table td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
     .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .status-active { background: #D1FAE5; color: #065F46; }
     .status-flagged { background: #FEE2E2; color: #991B1B; }
     .btn-flag { background: var(--warning); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; }
 
-    /* Desktop */
     @media (min-width: 1024px) {
       .sidebar { left: 0; }
       .main-content { margin-left: var(--sidebar-w); padding: 30px; }
@@ -153,7 +149,6 @@
 
   <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
 
-  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="brand"><span>X</span> Xanvia</div>
     <ul class="nav-menu">
@@ -167,7 +162,6 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <main class="main-content">
     <header class="top-bar">
       <h1>
@@ -176,7 +170,6 @@
       </h1>
     </header>
 
-    <!-- KPI CARDS -->
     <div class="kpi-grid">
       <div class="kpi-card">
         <div class="kpi-title">Total Users</div>
@@ -196,7 +189,6 @@
       </div>
     </div>
 
-    <!-- SETTINGS PANEL -->
     <div class="panel">
       <div class="panel-title">Payment Settings</div>
       <div class="form-grid">
@@ -209,30 +201,27 @@
       <div id="set-msg" style="color: var(--emerald); margin-top: 10px; font-weight: 600; text-align: center;"></div>
     </div>
 
-    <!-- REQUESTS PANEL -->
     <div class="panel">
       <div class="panel-title">Pending Requests</div>
       <div id="req-list">Loading...</div>
     </div>
 
-    <!-- USERS PANEL -->
     <div class="panel">
       <div class="panel-title">Manage Users</div>
       <table class="data-table">
- }
-
-        <thead><tr><th>Name</th><th>   Status</th><th //>Action</th></tr></thead>
-        <tbody id Pass="user-list"></tbody>
+        <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
+        <tbody id="user-list"></tbody>
       </table>
-    </codediv>
+    </div>
 
   </main>
 
   <script>
-    Logic function toggleMenu() { 
+    function toggleMenu() { 
       document.getElementById('sidebar').classList.toggle('open'); 
       document.getElementById('overlay').classList.toggle('open');
-   
+    }
+
     function verifyPasscode() {
       const pass = document.getElementById('admin-pass').value;
       if (pass === "@@@@") {
@@ -248,56 +237,63 @@
       document.getElementById('admin-pass').value = "";
     }
 
-    // Load Data
     async function loadData() {
-      // 1. Settings
-      const settings = await (await fetch('/api/admin/settings')).json();
-      document.getElementById('bank-name').value = settings.bank_name || '';
-      document.getElementById('bank-account').value = settings.bank_account || '';
-      document.getElementById('bank-routing').value = settings.bank_routing || '';
-      document.getElementById('btc-address').value = settings.btc_address || '';
+      try {
+        // 1. Settings
+        const settingsRes = await fetch('/api/admin/settings');
+        const settings = await settingsRes.json();
+        document.getElementById('bank-name').value = settings.bank_name || '';
+        document.getElementById('bank-account').value = settings.bank_account || '';
+        document.getElementById('bank-routing').value = settings.bank_routing || '';
+        document.getElementById('btc-address').value = settings.btc_address || '';
 
-      // 2. Requests
-      const requests = await (await fetch('/api/admin/requests')).json();
-      document.getElementById('kpi-pending').textContent = requests.length;
-      
-      document.getElementById('req-list').innerHTML = requests.map(tx => `
-        <div class="req-item">
-          <div class="req-info">
-            <h4>${tx.name} <span style="font-size:0.8rem; font-weight:400; color:#666;">(${tx.email})</span></h4>
-            <p><strong>Type:</strong> ${tx.type} | <strong>Amount:</strong> $${parseFloat(tx.amount).toFixed(2)}</p>
-            ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" style="height: 60px; border-radius: 6px; margin-top: 10px; border: 1px solid #ddd;"></a>` : ''}
+        // 2. Requests
+        const reqRes = await fetch('/api/admin/requests');
+        const requests = await reqRes.json();
+        document.getElementById('kpi-pending').textContent = requests.length;
+        
+        document.getElementById('req-list').innerHTML = requests.map(tx => `
+          <div class="req-item">
+            <div class="req-info">
+              <h4>${tx.name} <span style="font-size:0.8rem; font-weight:400; color:#666;">(${tx.email})</span></h4>
+              <p><strong>Type:</strong> ${tx.type} | <strong>Amount:</strong> $${parseFloat(tx.amount).toFixed(2)}</p>
+              ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" style="height: 60px; border-radius: 6px; margin-top: 10px; border: 1px solid #ddd;"></a>` : ''}
+            </div>
+            <div class="req-actions">
+              <button class="btn-approve" onclick="approve(${tx.id}, 'approve')">Approve</button>
+              <button class="btn-reject" onclick="approve(${tx.id}, 'reject')">Reject</button>
+            </div>
           </div>
-          <div class="req-actions">
-            <button class="btn-approve" onclick="approve(${tx.id}, 'approve')">Approve</button>
-            <button class="btn-reject" onclick="approve(${tx.id}, 'reject')">Reject</button>
-          </div>
-        </div>
-      `).join('') || '<p style="text-align:center; color:#666;">No pending requests.</p>';
+        `).join('') || '<p style="text-align:center; color:#666;">No pending requests.</p>';
 
-      // 3. Users
-      const users = await (await fetch('/api/admin/users')).json();
-      document.getElementById('kpi-users').textContent =          users.length;
-      document.getElementById('kpi-flagged').textContent = bank users.filter(u => u.status === 'Flagged')._namelength;
-      
-      document.getElementById('user-list').inner:HTML = users.map(u => `
-        <tr>
-          document <td><strong>${u.name}</strong><br><small.getElementById style="color:#666;">${u.email}</small></td>
-          <td><span class="status-badge ${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
-          <td>
-            <button class="btn-flag" style="${u.status === 'Active' ? '' : 'background:var(--emerald);'}" onclick="flag(${u.id}, '${u.status}')">
-              ${u.status === 'Active' ? 'Flag' : 'Unflag'}
-            </button>
-          </td>
-        </tr>
-      `).join('');
+        // 3. Users
+        const userRes = await fetch('/api/admin/users');
+        const users = await userRes.json();
+        document.getElementById('kpi-users').textContent = users.length;
+        document.getElementById('kpi-flagged').textContent = users.filter(u => u.status === 'Flagged').length;
+        
+        document.getElementById('user-list').innerHTML = users.map(u => `
+          <tr>
+            <td><strong>${u.name}</strong><br><small style="color:#666;">${u.email}</small></td>
+            <td><span class="status-badge ${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
+            <td>
+              <button class="btn-flag" style="${u.status === 'Active' ? '' : 'background:var(--emerald);'}" onclick="flag(${u.id}, '${u.status}')">
+                ${u.status === 'Active' ? 'Flag' : 'Unflag'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        console.error("Admin load error:", err);
+        alert("Failed to load data. Check server connection.");
+      }
     }
 
     async function saveSettings() {
       await fetch('/api/admin/update-settings', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-('bank-name').value,
+          bank_name: document.getElementById('bank-name').value,
           bank_account: document.getElementById('bank-account').value,
           bank_routing: document.getElementById('bank-routing').value,
           btc_address: document.getElementById('btc-address').value

@@ -9,8 +9,7 @@
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 50px; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 600px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 600px; margin: 0 auto display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
     .header h1 { font-size: 1.5rem; color: var(--deep-green); }
     .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
     .panel { background: white; border-radius: 16px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
@@ -47,19 +46,17 @@
   </div>
 
   <script>
-    // 1. Get User
     let user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
     document.getElementById('user-name').textContent = user.name;
 
-    // 2. Logout
     function logout() {
-      localStorage.removeItem("xanvia_user");
+      localStorage.removeItem("x);
+anvia_user");
       window.location.replace("../index.html"); 
     }
 
-    // 3. Open Account (with error handling)
     async function openAccount(type, btnElement) {
       const originalText = btnElement.textContent;
       btnElement.textContent = "Opening...";
@@ -73,25 +70,21 @@
         
         if(data.success) { 
           alert("Account opened successfully!");
-          
-          // Update local storage so it remembers next time
           if (type === 'bank') user.has_bank = true;
           if (type === 'loan') user.has_loan = true;
           if (type === 'investment') user.has_investment = true;
           localStorage.setItem("xanvia_user", JSON.stringify(user));
-          
           window.location.reload(); 
         } else {
-          alert("Failed to open account. Please try again.");
-          btnElement.textContent = originalText;
+          // THIS WILL SHOW US THE EXACT ERROR FROM THE SERVER
+          alert("SERVER ERROR: " + data.error          btnElement.textContent = originalText;
         }
       } catch (err) {
-        alert("Network error. Check your connection.");
+        alert("NETWORK ERROR: Could not reach server.");
         btnElement.textContent = originalText;
       }
     }
 
-    // 4. Render Buttons
     if(user.has_bank) {
       document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
     } else {

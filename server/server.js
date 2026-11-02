@@ -69,7 +69,6 @@ app.post('/api/register', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Email may already exist.' }); }
 });
 
-// UPDATED LOGIN TO ENSURE FLAGS EXIST
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
@@ -83,7 +82,6 @@ app.post('/api/login', async (req, res) => {
       return res.status(403).json({ error: 'Account flagged.' });
     }
 
-    // Ensure boolean flags are sent as true/false
     user.has_bank = user.has_bank || false;
     user.has_loan = user.has_loan || false;
     user.has_investment = user.has_investment || false;
@@ -92,13 +90,12 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// OPEN ACCOUNTS
+// OPEN ACCOUNTS (SAFE & DUPLICATE-PROOF)
 app.post('/api/open-account', async (req, res) => {
   const { userId, type } = req.body;
   try {
     if (type === 'bank') {
       await pool.query(`UPDATE users SET has_bank = true WHERE id = $1`, [userId]);
-      // Check if accounts already exist to prevent duplication
       const check = await pool.query(`SELECT * FROM accounts WHERE user_id = $1 AND type = 'checking'`, [userId]);
       if (check.rows.length === 0) {
         await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0.00), ($1, 'savings', 0.00)`, [userId]);
@@ -117,7 +114,10 @@ app.post('/api/open-account', async (req, res) => {
       }
     }
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Failed to open account.' }); }
+  } catch (err) { 
+    console.error("OPEN ACCOUNT ERROR:", err.message);
+    res.status(500).json({ error: 'Failed to open account. ' + err.message }); 
+  }
 });
 
 // GET ACCOUNTS & TRANSACTIONS
@@ -137,24 +137,23 @@ app.get('/api/transactions/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// DEPOSIT
+// DEPOSIT, WITHDRAW, LOANS, INVESTMENTS (UNCHANGED)
 app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
   const { userId, amount } = req.body;
   if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
   const imagePath = `/uploads/${req.file.filename}`;
   try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, [userId, amount, imagePath]);
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, [userId await, amount, imagePath]);
     res.json({ success: true, message: 'Deposit sent. Pending Admin verification.' });
   } catch (err) { res.status(500).json({ error: 'Request failed.' }); }
 });
 
-// WITHDRAW
 app.post('/api/withdraw/request', async (req, res) => {
   const { userId, amount, details } = req.body;
   try {
     const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'checking'`, [userId]);
     if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
-    await pool.query('BEGIN');
+    pool.query('BEGIN');
     await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [amount, userId]);
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
     await pool.query('COMMIT');
@@ -162,7 +161,6 @@ app.post('/api/withdraw/request', async (req, res) => {
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Request failed.' }); }
 });
 
-// LOANS
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount, termMonths, rate } = req.body;
   const depositReq = amount * 0.15;
@@ -182,7 +180,6 @@ app.get('/api/loans/:userId', async (req, res) => {
   catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// INVESTMENTS
 app.post('/api/investments/buy', async (req, res) => {
   const { userId, symbol, shares, price, accountType } = req.body;
   const totalCost = shares * price;
@@ -219,13 +216,14 @@ app.get('/api/admin/users', async (req, res) => {
 
 app.post('/api/admin/flag', async (req, res) => {
   const { userId, status } = req.body;
-  try { await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]); res.json({ success: true }); } 
-  catch (err) { res.status(500).json({ error: 'Error' }); }
+  try { await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]); res.json({ success: true });; } 
+  catch (err) { res.status( }
+500).json({ error: 'Error'    }); }
 });
 
-app.get('/api/admin/settings', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM system_settings');
+app.get('/api/admin ./settings', async (req, res) => {
+header  try {
+    const result = await pool.query('SELECT { * FROM system_settings');
     const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
     res.json(settings);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
