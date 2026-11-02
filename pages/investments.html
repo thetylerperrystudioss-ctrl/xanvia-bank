@@ -103,6 +103,19 @@
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
     .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; }
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+
+    /* Payment Details Box */
+    .payment-details-box {
+      background: #F4F7F6;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 0.85rem;
+      border: 1px solid var(--border);
+    }
+    .payment-details-box p { margin: 0 0 8px; font-weight: 600; color: var(--deep-green); }
+    .payment-details-box div { margin-bottom: 4px; color: var(--text); }
+    .payment-details-box span { font-weight: 600; }
   </style>
 </head>
 <body>
@@ -152,15 +165,21 @@
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2>Invest Funds</h2>
       
-      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
-        <p style="margin: 0 0 5px; font-weight: 600;">Send payment to:</p>
-        <div>Bank: <span id="adm-bank">Loading...</span></div>
-        <div>Acct: <span id="adm-acc">Loading...</span></div>
-        <div>Routing: <span id="adm-rout">Loading...</span></div>
+      <!-- Updated Payment Details Box to include Bitcoin -->
+      <div class="payment-details-box">
+        <p>Send payment to:</p>
+        <div>🏦 <strong>Bank:</strong> <span id="adm-bank">Loading...</span></div>
+        <div>📄 <strong>Acct:</strong> <span id="adm-acc">Loading...</span></div>
+        <div>🔢 <strong>Routing:</strong> <span id="adm-rout">Loading...</span></div>
+        <hr style="border:none; border-top:1px solid #ddd; margin:10px 0;">
+        <div>₿ <strong>Bitcoin Wallet:</strong></div>
+        <div style="word-break: break-all; font-family: monospace; font-size: 0.8rem; margin-top: 3px;">
+          <span id="adm-btc">Loading...</span>
+        </div>
       </div>
 
       <div class="form-group"><label>Amount ($)</label><input type="number" id="dep-amount" placeholder="0.00"></div>
-      <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID"></div>
+      <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID or Bank Ref"></div>
       <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*"></div>
       
       <button onclick="submitDeposit()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit</button>
@@ -190,12 +209,14 @@
 
     async function loadData() {
       try {
-        // Fetch Admin Details for modal
+        // Fetch Admin Details (Bank + BTC)
         const setRes = await fetch('/api/admin/settings');
         const settings = await setRes.json();
+        
         document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
         document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
         document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
+        document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
 
         // Fetch Investments
         const res = await fetch(`/api/investments/${user.id}`);

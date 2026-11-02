@@ -55,7 +55,7 @@ pool.connect((err, client, release) => {
     `, (err) => {
       if (err) console.error('Table Error:', err.message);
       
-      // FORCE ADD THE MISSING USERNAME COLUMN
+      // FORCE ADD MISSING COLUMNS
       client.query(`
         ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
@@ -71,7 +71,7 @@ pool.connect((err, client, release) => {
           pool.query(`INSERT INTO system_settings (key, value) VALUES 
             ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') 
             ON CONFLICT DO NOTHING`);
-          console.log('✅ Database upgraded and ready.');
+          console.log('✅ Database ready.');
         }
       });
     });
@@ -114,7 +114,6 @@ app.post('/api/login', async (req, res) => {
     res.json({ success: true, user });
     
   } catch (err) { 
-    console.error("LOGIN ERROR:", err.message);
     res.status(500).json({ error: 'Database error.' }); 
   }
 });
@@ -192,11 +191,14 @@ app.post('/api/loans/apply', async (req, res) => {
 });
 
 app.post('/api/loans/transfer', async (req, res) => {
-  const { userId, amount, destination } = req.body;
+  const { userId, amount, destination, bankDetails } = req.body;
   try {
     const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'loan'`, [userId]);
     if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient loan balance.' });
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, destination]);
+    
+    const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
+    
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
     res.json({ success: true, message: 'Transfer pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
@@ -208,6 +210,7 @@ app.post('/api/loans/repay', async (req, res) => {
     if (parseFloat(check.rows[0].balance) < amount) {
       return res.status(400).json({ error: 'Insufficient checking funds. Please deposit to your account first using the Admin details.' });
     }
+    
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
     res.json({ success: true, message: 'Repayment pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -247,7 +250,9 @@ app.post('/api/admin/approve', async (req, res) => {
       }
       else if (tx.type === 'LOAN_TRANSFER') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
-        if (tx.details === 'checking') await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
+        if (tx.details === 'checking') {
+          await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
+        }
       }
       else if (tx.type === 'LOAN_REPAYMENT') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);

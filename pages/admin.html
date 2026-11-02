@@ -6,44 +6,63 @@
   <title>Admin Portal | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; }
+    :root { 
+      --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; 
+      --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; 
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
+    
     .app-container { width: 100%; max-width: 600px; padding: 20px; padding-bottom: 80px; }
     
+    /* Header */
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header h1 { font-size: 1.5rem; color: var(--deep-green); }
-    .logout-btn { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; cursor: pointer; }
+    .logout-btn { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; color: var(--text); }
 
-    /* TABS */
+    /* Tabs */
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
-    .tab { background: white; border: 1px solid var(--border); padding: 10px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+    .tab { 
+      background: white; border: 1px solid var(--border); padding: 10px 16px; 
+      border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; 
+    }
     .tab.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
+    
     .view-section { display: none; }
     .view-section.active { display: block; }
 
-    /* PANELS */
+    /* Panels */
     .panel { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
     .panel h2 { font-size: 1.1rem; color: var(--deep-green); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
     
-    /* ITEMS */
+    /* Request Cards */
     .req-item { display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: #FAFAFA; }
     .req-info h4 { font-size: 0.95rem; margin-bottom: 5px; color: var(--deep-green); }
     .req-info p { font-size: 0.85rem; color: var(--text); margin-bottom: 4px; }
     .proof-img { max-width: 100px; border-radius: 6px; border: 1px solid #ddd; margin-top: 10px; display: block; }
     
-    /* BUTTONS */
-    .btn-approve { background: var(--emerald); color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
-    .btn-reject { background: var(--danger); color: white; border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
-    .btn-outline { background: white; border: 1px solid var(--border); padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--text); flex: 1;}
+    /* Buttons */
+    .btn-approve { background: var(--emerald); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
+    .btn-reject { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; flex: 1; }
+    .btn-outline { background: white; border: 1px solid var(--border); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--text); flex: 1;}
 
-    .user-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
-    .user-info h4 { font-size: 0.95rem; color: var(--deep-green); }
-    .user-info p { font-size: 0.8rem; color: var(--muted); }
-    .user-actions { display: flex; gap: 5px; }
+    /* User List */
+    .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+    .user-info h4 { font-size: 0.95rem; color: var(--deep-green); margin-bottom: 2px; }
+    .user-info p { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    .user-status { font-weight: 700; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    .user-status.active { background: #D1FAE5; color: #065F46; }
+    .user-status.frozen { background: #FEE2E2; color: #991B1B; }
+    
+    .user-actions { display: flex; gap: 8px; }
+    
+    /* Loading Spinner */
+    .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--emerald); animation: spin 1s ease-in-out infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+
   <div class="app-container">
     <div class="header">
       <h1>Admin Panel</h1>
@@ -61,7 +80,7 @@
     <div id="view-requests" class="view-section active">
       <div class="panel">
         <h2>Pending Approvals</h2>
-        <div id="req-list">Loading...</div>
+        <div id="req-list"><div class="spinner"></div></div>
       </div>
     </div>
 
@@ -69,7 +88,7 @@
     <div id="view-users" class="view-section">
       <div class="panel">
         <h2>Registered Users</h2>
-        <div id="user-list">Loading...</div>
+        <div id="user-list"><div class="spinner"></div></div>
       </div>
     </div>
 
@@ -77,75 +96,89 @@
     <div id="view-complaints" class="view-section">
       <div class="panel">
         <h2>Support Complaints</h2>
-        <div id="complaint-list">Loading...</div>
+        <div id="complaint-list"><div class="spinner"></div></div>
       </div>
-    </div>
+    </div class>
   </div>
 
   <script>
-    function switchTab(tabName, el) {
+    //=" Tab Switching
+    function switchTab(treqabName, el) {
       document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`view-${tabName}`).classList.add('active');
       el.classList.add('active');
     }
 
+    // Main Data Loader
     async function loadData() {
-      // 1. Pending Requests
-      const requests = await (await fetch('/api/admin/requests')).json();
-      document.getElementById('req-list').innerHTML = requests.map(tx => `
-        <div class="req-item">
-          <div class="req-info">
-            <h4>${tx.name} (${tx.email})</h4>
-            <p><strong>Type:</strong> ${tx.type}</p>
-            <p><strong>Amount:</strong> $${parseFloat(tx.amount).toFixed(2)}</p>
-            ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" class="proof-img"></a>` : ''}
+      try {
+        // 1. Load Pending Requests
+        const reqRes = await fetch('/api/admin/requests');
+        const requests = await reqRes.json();
+        
+        document.getElementById('req-list').innerHTML = requests.length > 0 ? requests.map(tx => `
+          <div-item">
+            <div class="req-info">
+              <h4>${tx.name} (${tx.email})</h4>
+              <p><strong>Type:</strong> ${tx.type.replace('_', ' ')}</p>
+              <p><strong>Amount:</strong> $${parseFloat(tx.amount).toFixed(2)}</p>
+              ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" class="proof-img"></a>` : ''}
+            </div>
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+              <button class="btn-approve" onclick="approveReq(${tx.id}, 'approve')">Approve</button>
+              <button class="btn-reject" onclick="approveReq(${tx.id}, 'reject')">Reject</button>
+            </div>
           </div>
-          <div style="display: flex; gap: 10px; margin-top: 15px;">
-            <button class="btn-approve" onclick="approveReq(${tx.id}, 'approve')">Approve</button>
-            <button class="btn-reject" onclick="approveReq(${tx.id}, 'reject')">Reject</button>
-          </div>
-        </div>
-      `).join('') || '<p style="color:var(--muted);">No pending requests.</p>';
+        `).join('') : '<p style="color:var(--muted); text-align:center;">No pending requests.</p>';
 
-      // 2. Users
-      const users = await (await fetch('/api/admin/users')).json();
-      document.getElementById('user-list').innerHTML = users.map(u => `
-        <div class="user-row">
-          <div class="user-info">
-            <h4>${u.name} (@${u.username})</h4>
-            <p>${u.email}</p>
-            <p style="color:${u.status === 'Active' ? 'var(--emerald)' : 'var(--danger)'}; font-weight:600;">${u.status}</p>
+        // 2. Load Users
+        const userRes = await fetch('/api/admin/users');
+        const users = await userRes.json();
+        
+        document.getElementById('user-list').innerHTML = users.length > 0 ? users.map(u => `
+          <div class="user-row">
+            <div class="user-info">
+              <h4>${u.name} (@${u.username || 'N/A'})</h4>
+              <p>${u.email}</p>
+              <span class="user-status ${u.status === 'Active' ? 'active' : 'frozen'}">${u.status}</span>
+            </div>
+            <div class="user-actions">
+              <button class="btn-outline" onclick="freezeUser(${u.id}, '${u.status}')">${u.status === 'Active' ? 'Freeze' : 'Unfreeze'}</button>
+              <button class="btn-reject" onclick="deleteUser(${u.id})">Delete</button>
+            </div>
           </div>
-          <div class="user-actions">
-            <button class="btn-outline" onclick="freezeUser(${u.id}, '${u.status}')">${u.status === 'Active' ? 'Freeze' : 'Unfreeze'}</button>
-            <button class="btn-reject" onclick="deleteUser(${u.id})">Delete</button>
-          </div>
-        </div>
-      `).join('');
+        `).join('') : '<p style="color:var(--muted); text-align:center;">No users found.</p>';
 
-      // 3. Complaints
-      const complaints = await (await fetch('/api/admin/complaints')).json();
-      document.getElementById('complaint-list').innerHTML = complaints.map(c => `
-        <div class="req-item">
-          <div class="req-info">
-            <h4>${c.subject} (${c.ref_number})</h4>
-            <p><strong>From:</strong> ${c.name} (${c.email})</p>
-            <p><strong>Category:</strong> ${c.category}</p>
-            <p style="margin-top:5px; font-style:italic;">"${c.message}"</p>
-            <p><strong>Status:</strong> <span style="color:var(--emerald);">${c.status}</span></p>
-            ${c.attachment ? `<a href="${c.attachment}" target="_blank"><img src="${c.attachment}" class="proof-img"></a>` : ''}
-            ${c.admin_response ? `<p style="margin-top:10px; background:#E6F4EE; padding:10px; border-radius:6px;"><strong>Your Reply:</strong> ${c.admin_response}</p>` : ''}
+        // 3. Load Complaints
+        const compRes = await fetch('/api/admin/complaints');
+        const complaints = await compRes.json();
+        
+        document.getElementById('complaint-list').innerHTML = complaints.length > 0 ? complaints.map(c => `
+          <div class="req-item">
+            <div class="req-info">
+              <h4>${c.subject} (${c.ref_number})</h4>
+              <p><strong>From:</strong> ${c.name}</p>
+              <p><strong>Category:</strong> ${c.category}</p>
+              <p style="margin-top:5px; font-style:italic;">"${c.message}"</p>
+              <p style="margin-top:5px;"><strong>Status:</strong> <span style="color:${c.status === 'Resolved' ? 'var(--emerald)' : 'var(--warning)'}">${c.status}</span></p>
+              ${c.admin_response ? `<p style="margin-top:10px; background:#E6F4EE; padding:10px; border-radius:6px;"><strong>Admin Reply:</strong> ${c.admin_response}</p>` : ''}
+            </div>
+            ${c.status !== 'Resolved' ? `
+            <div style="margin-top: 10px; display: flex; gap: 10px;">
+              <button class="btn-outline" onclick="respondComplaint(${c.id})">Respond & Resolve</button>
+            </div>
+            ` : ''}
           </div>
-          ${c.status !== 'Closed' ? `
-          <div style="margin-top: 10px; display: flex; gap: 10px;">
-            <button class="btn-outline" onclick="respondComplaint(${c.id}, 'Resolved')">Mark Resolved</button>
-          </div>
-          ` : ''}
-        </div>
-      `).join('') || '<p style="color:var(--muted);">No complaints.</p>';
+        `).join('') : '<p style="color:var(--muted); text-align:center;">No complaints.</p>';
+
+      } catch (err) {
+        console.error("Error loading admin data:", err);
+        alert("Failed to load data. Check console.");
+      }
     }
 
+    // Actions
     async function approveReq(id, action) {
       await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txId: id, action }) });
       loadData();
@@ -163,17 +196,18 @@
       loadData();
     }
 
-    async function respondComplaint(id, newStatus) {
+    async function respondComplaint(id) {
       const response = prompt("Enter your reply to this complaint:");
       if (response === null) return;
       
       await fetch(`/api/admin/complaints/${id}`, { 
         method: 'POST', headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ status: newStatus, response }) 
+        body: JSON.stringify({ status: 'Resolved', response }) 
       });
       loadData();
     }
 
+    // Run on load
     loadData();
   </script>
 </body>
