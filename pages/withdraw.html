@@ -2,39 +2,194 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Withdraw | Xanvia</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Withdraw Funds | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .withdraw-container { padding: 20px; max-width: 500px; margin: 0 auto; }
+    
+    .step-card { 
+      background: var(--white); 
+      border-radius: 16px; 
+      padding: 25px; 
+      margin-bottom: 20px; 
+      box-shadow: 0 8px 25px rgba(0,0,0,0.04); 
+      border: 1px solid var(--border); 
+    }
+    
+    .step-title { 
+      font-size: 1.1rem; 
+      color: var(--deep-green); 
+      font-weight: 700; 
+      margin-bottom: 20px; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+    }
+    .step-number { 
+      background: var(--emerald); 
+      color: white; 
+      width: 28px; 
+      height: 28px; 
+      border-radius: 50%; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 0.85rem; 
+      font-weight: bold;
+    }
+    
+    .input-group { margin-bottom: 20px; }
+    .input-group label { 
+      display: block; 
+      font-size: 0.9rem; 
+      font-weight: 600; 
+      color: var(--text); 
+      margin-bottom: 8px; 
+    }
+    .input-group input { 
+      width: 100%; 
+      padding: 16px; 
+      border: 1.5px solid var(--border); 
+      border-radius: 12px; 
+      font-size: 1rem; 
+      outline: none; 
+      background: #FAFAFA;
+      transition: 0.2s;
+    }
+    .input-group input:focus { 
+      border-color: var(--emerald); 
+      background: white; 
+      box-shadow: 0 0 0 4px rgba(15,138,95,0.1); 
+    }
+
+    .btn-submit { 
+      width: 100%; 
+      padding: 16px; 
+      background: var(--emerald); 
+      color: white; 
+      border: none; 
+      border-radius: 12px; 
+      font-weight: 600; 
+      font-size: 1rem; 
+      cursor: pointer; 
+      margin-top: 10px; 
+      transition: 0.2s;
+    }
+    .btn-submit:active { transform: scale(0.98); }
+    
+    .msg { 
+      display: none; 
+      padding: 15px; 
+      border-radius: 10px; 
+      margin-top: 15px; 
+      font-size: 0.9rem; 
+      font-weight: 500; 
+      text-align: center; 
+    }
+    .msg.success { display: block; background: #D1FAE5; color: #065F46; }
+    .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
+
+    .back-link { 
+      display: block; 
+      text-align: center; 
+      margin-top: 15px; 
+      color: var(--muted); 
+      text-decoration: none; 
+      font-size: 0.9rem; 
+      font-weight: 600;
+    }
+  </style>
 </head>
-<body>
-  <main class="main-content" style="margin-left: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh;">
-    <div class="panel" style="max-width: 500px; width: 100%;">
-      <h2 style="color: var(--deep-green); margin-bottom: 10px;">Withdraw Funds</h2>
-      <p style="color: var(--muted); margin-bottom: 20px; font-size: 0.9rem;">Funds are held until Admin processes the request.</p>
-      
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="amount"></div>
-      <div class="form-group"><label>Receiving Details (Bank / BTC)</label><input type="text" id="details" placeholder="Account number or BTC address"></div>
-      <button class="btn-primary" onclick="submitWithdraw()">Request</button>
-      <button class="btn-outline" onclick="window.location.href='dashboard.html'">Back</button>
-      <div id="msg" style="margin-top: 15px; font-weight: bold; text-align: center;"></div>
+<body class="mobile-app-body">
+
+  <!-- TOP BAR -->
+  <header class="app-header" style="padding-bottom: 25px; border-radius: 0 0 20px 20px;">
+    <div style="text-align: left; width: 100%; display: flex; align-items: center; gap: 15px;">
+      <a href="dashboard.html" style="color: white; text-decoration: none; font-size: 1.5rem;">←</a>
+      <div>
+        <h1 style="font-size: 1.4rem; margin-bottom: 5px;">Withdraw Funds</h1>
+        <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Transfer money out of your account.</p>
+      </div>
     </div>
-  </main>
+  </header>
+
+  <div class="withdraw-container">
+    
+    <div class="step-card">
+      <div class="step-title">
+        <span class="step-number">1</span> Enter Amount
+      </div>
+      
+      <form id="withdraw-form">
+        <div class="input-group">
+          <label>Amount ($)</label>
+          <input type="number" id="amount" placeholder="0.00" required min="1">
+        </div>
+
+        <div class="input-group">
+          <label>Receiving Details</label>
+          <input type="text" id="details" placeholder="Bank Account Number or BTC Address" required>
+        </div>
+
+        <button type="submit" class="btn-submit">Request Withdrawal</button>
+        <a href="dashboard.html" class="back-link">Cancel and return</a>
+      </form>
+
+      <div id="msg" class="msg"></div>
+    </div>
+
+  </div>
+
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
-    async function submitWithdraw() {
+    if (!user) window.location.replace("../index.html");
+
+    document.getElementById('withdraw-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
       const amount = parseFloat(document.getElementById('amount').value);
       const details = document.getElementById('details').value;
       const msg = document.getElementById('msg');
+      const btn = document.querySelector('.btn-submit');
 
-      const res = await fetch('/api/withdraw/request', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, amount, details })
-      });
-      const data = await res.json();
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
-    }
+      if (!amount || amount <= 0) {
+        msg.className = "msg error";
+        msg.textContent = "Please enter a valid amount.";
+        return;
+      }
+
+      btn.textContent = "Processing...";
+      btn.style.opacity = "0.7";
+
+      try {
+        const res = await fetch('/api/withdraw/request', {
+          method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, amount, details })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          msg.className = "msg success";
+          msg.textContent = data.message || "Withdrawal requested successfully!";
+          document.getElementById('withdraw-form').reset();
+          btn.textContent = "Request Sent";
+        } else {
+          msg.className = "msg error";
+          msg.textContent = data.error || "Request failed. Check your balance.";
+          btn.textContent = "Request Withdrawal";
+          btn.style.opacity = "1";
+        }
+      } catch (err) {
+        msg.className = "msg error";
+        msg.textContent = "Server connection error.";
+        btn.textContent = "Request Withdrawal";
+        btn.style.opacity = "1";
+      }
+    });
   </script>
 </body>
 </html>

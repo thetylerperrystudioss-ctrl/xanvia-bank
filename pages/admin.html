@@ -12,7 +12,7 @@
       --emerald-dark: #0A5F42;
       --deep-green: #0B2E23;
       --bg-base: #F4F7F6;
-      --panel-bg: rgba(255, 255, 255, 0.9);
+      --panel-bg: rgba(255, 255, 255, 0.95);
       --text-dark: #1A1A1A;
       --text-muted: #6B7280;
       --border: rgba(255, 255, 255, 0.4);
@@ -76,7 +76,7 @@
     .logout-btn:hover { background: var(--danger); border-color: var(--danger); }
 
     /* MAIN CONTENT */
-    .main-content { margin-left: 0; flex: 1; padding: 20px; display: flex; flex-direction: column; }
+    .main-content { margin-left: 0; flex: 1; padding: 20px; display: flex; flex-direction: column; width: 100%; overflow-x: hidden; }
     
     .top-bar { 
       background: var(--panel-bg); backdrop-filter: blur(12px); 
@@ -86,6 +86,12 @@
     .top-bar h1 { font-size: 1.2rem; color: var(--deep-green); font-weight: 700; display: flex; align-items: center; gap: 15px; }
     .mobile-menu-btn { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--deep-green); }
     
+    /* View Sections (Hidden by default) */
+    .view-section { display: none; animation: fadeIn 0.3s ease; }
+    .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* KPI GRID */
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
     .kpi-card { 
       background: var(--panel-bg); backdrop-filter: blur(12px); border-radius: 16px; padding: 20px; 
@@ -95,18 +101,21 @@
     .kpi-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
     .kpi-value { font-size: 1.8rem; font-weight: 700; color: var(--deep-green); margin-top: 8px; }
 
+    /* PANELS */
     .panel { 
       background: var(--panel-bg); backdrop-filter: blur(12px); border: 1px solid var(--border); 
       border-radius: 16px; padding: 25px; margin-bottom: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.03);
     }
-    .panel-title { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    .panel-title { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); margin-bottom: 20px; }
 
+    /* FORMS */
     .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
     .form-group input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; outline: none; background: #FAFAFA; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; margin-top: 10px; }
 
+    /* LISTS & TABLES */
     .req-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; background: white; }
     .req-info h4 { color: var(--text-dark); font-size: 1rem; margin-bottom: 5px; }
     .req-info p { color: var(--text-muted); font-size: 0.85rem; }
@@ -145,75 +154,92 @@
 
   <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
 
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="brand"><span>X</span> Xanvia</div>
     <ul class="nav-menu">
-      <li><a class="active"><span class="icon">📊</span> Dashboard</a></li>
-      <li><a><span class="icon">💸</span> Pending Requests</a></li>
-      <li><a><span class="icon">👥</span> User Management</a></li>
-      <li><a><span class="icon">💳</span> Card Requests</a></li>
-      <li><a><span class="icon">⚙️</span> Payment Settings</a></li>
+      <li><a class="active" onclick="switchTab('dashboard', this)"><span class="icon">📊</span> Dashboard</a></li>
+      <li><a onclick="switchTab('requests', this)"><span class="icon">💸</span> Pending Requests</a></li>
+      <li><a onclick="switchTab('users', this)"><span class="icon">👥</span> User Management</a></li>
+      <li><a onclick="switchTab('cards', this)"><span class="icon">💳</span> Card Requests</a></li>
+      <li><a onclick="switchTab('settings', this)"><span class="icon">⚙️</span> Payment Settings</a></li>
     </ul>
     <div class="admin-profile">
       <button class="logout-btn" onclick="logoutAdmin()">Secure Logout</button>
     </div>
   </aside>
 
+  <!-- MAIN CONTENT -->
   <main class="main-content">
     <header class="top-bar">
       <h1>
         <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
-        Admin Control Center
+        <span id="page-title">Admin Dashboard</span>
       </h1>
     </header>
 
-    <div class="kpi-grid">
-      <div class="kpi-card">
-        <div class="kpi-title">Total Users</div>
-        <div class="kpi-value" id="kpi-users">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Pending Approvals</div>
-        <div class="kpi-value" id="kpi-pending">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">Flagged Accounts</div>
-        <div class="kpi-value" id="kpi-flagged" style="color: var(--danger);">0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-title">System Status</div>
-        <div class="kpi-value" style="color: var(--emerald);">Online</div>
+    <!-- VIEW 1: OVERVIEW -->
+    <div id="view-dashboard" class="view-section active">
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-title">Total Users</div>
+          <div class="kpi-value" id="kpi-users">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Pending Approvals</div>
+          <div class="kpi-value" id="kpi-pending">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">Flagged Accounts</div>
+          <div class="kpi-value" id="kpi-flagged" style="color: var(--danger);">0</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-title">System Status</div>
+          <div class="kpi-value" style="color: var(--emerald);">Online</div>
+        </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-title">Payment Settings</div>
-      <div class="form-grid">
-        <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name"></div>
-        <div class="form-group"><label>Account Number</label><input type="text" id="bank-account"></div>
-        <div class="form-group"><label>Routing Number</label><input type="text" id="bank-routing"></div>
-        <div class="form-group"><label>Bitcoin Address</label><input type="text" id="btc-address"></div>
+    <!-- VIEW 2: PENDING REQUESTS -->
+    <div id="view-requests" class="view-section">
+      <div class="panel">
+        <div class="panel-title">Deposit & Loan Requests</div>
+        <div id="req-list">Loading...</div>
       </div>
-      <button class="btn-primary" onclick="saveSettings()">Save Details</button>
-      <div id="set-msg" style="color: var(--emerald); margin-top: 10px; font-weight: 600; text-align: center;"></div>
     </div>
 
-    <div class="panel">
-      <div class="panel-title">Pending Requests</div>
-      <div id="req-list">Loading...</div>
+    <!-- VIEW 3: USER MANAGEMENT -->
+    <div id="view-users" class="view-section">
+      <div class="panel">
+        <div class="panel-title">Manage Users</div>
+        <table class="data-table">
+          <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="user-list"></tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-title">Card Requests</div>
-      <div id="card-requests-list">Loading...</div>
+    <!-- VIEW 4: CARD REQUESTS -->
+    <div id="view-cards" class="view-section">
+      <div class="panel">
+        <div class="panel-title">Pending Card Requests</div>
+        <div id="card-requests-list">Loading...</div>
+      </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-title">Manage Users</div>
-      <table class="data-table">
-        <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
-        <tbody id="user-list"></tbody>
-      </table>
+    <!-- VIEW 5: PAYMENT SETTINGS -->
+    <div id="view-settings" class="view-section">
+      <div class="panel">
+        <div class="panel-title">Update Payment Details</div>
+        <div class="form-grid">
+          <div class="form-group"><label>Bank Name</label><input type="text" id="bank-name"></div>
+          <div class="form-group"><label>Account Number</label><input type="text" id="bank-account"></div>
+          <div class="form-group"><label>Routing Number</label><input type="text" id="bank-routing"></div>
+          <div class="form-group"><label>Bitcoin Address</label><input type="text" id="btc-address"></div>
+        </div>
+        <button class="btn-primary" onclick="saveSettings()">Save Details</button>
+        <div id="set-msg" style="color: var(--emerald); margin-top: 10px; font-weight: 600; text-align: center;"></div>
+      </div>
     </div>
 
   </main>
@@ -222,6 +248,31 @@
     function toggleMenu() { 
       document.getElementById('sidebar').classList.toggle('open'); 
       document.getElementById('overlay').classList.toggle('open');
+    }
+
+    function switchTab(tabName, element) {
+      // 1. Hide all views
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      
+      // 2. Show selected view
+      document.getElementById(`view-${tabName}`).classList.add('active');
+      
+      // 3. Update sidebar active state
+      document.querySelectorAll('.nav-menu a').forEach(a => a.classList.remove('active'));
+      element.classList.add('active');
+
+      // 4. Update Header Title
+      const titles = {
+        dashboard: "Admin Overview",
+        requests: "Pending Requests",
+        users: "User Management",
+        cards: "Card Requests",
+        settings: "Payment Settings"
+      };
+      document.getElementById('page-title').textContent = titles[tabName];
+
+      // 5. Close mobile menu
+      toggleMenu();
     }
 
     function verifyPasscode() {
@@ -241,15 +292,25 @@
 
     async function loadData() {
       try {
-        // Settings
-        const settingsRes = await fetch('/api/admin/settings');
-        const settings = await settingsRes.json();
-        document.getElementById('bank-name').value = settings.bank_name || '';
-        document.getElementById('bank-account').value = settings.bank_account || '';
-        document.getElementById('bank-routing').value = settings.bank_routing || '';
-        document.getElementById('btc-address').value = settings.btc_address || '';
+        // 1. Load KPI Stats
+        const userRes = await fetch('/api/admin/users');
+        const users = await userRes.json();
+        document.getElementById('kpi-users').textContent = users.length;
+        document.getElementById('kpi-flagged').textContent = users.filter(u => u.status === 'Flagged').length;
+        
+        document.getElementById('user-list').innerHTML = users.map(u => `
+          <tr>
+            <td><strong>${u.name}</strong><br><small style="color:#666;">${u.email}</small></td>
+            <td><span class="status-badge ${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
+            <td>
+              <button class="btn-flag" style="${u.status === 'Active' ? '' : 'background:var(--emerald);'}" onclick="flag(${u.id}, '${u.status}')">
+                ${u.status === 'Active' ? 'Flag' : 'Unflag'}
+              </button>
+            </td>
+          </tr>
+        `).join('');
 
-        // Requests
+        // 2. Load Pending Requests
         const reqRes = await fetch('/api/admin/requests');
         const requests = await reqRes.json();
         document.getElementById('kpi-pending').textContent = requests.length;
@@ -268,7 +329,7 @@
           </div>
         `).join('') || '<p style="text-align:center; color:#666;">No pending requests.</p>';
 
-        // Card Requests
+        // 3. Load Card Requests
         const cardRes = await fetch('/api/admin/card-requests');
         const cards = await cardRes.json();
         document.getElementById('card-requests-list').innerHTML = cards.map(c => `
@@ -283,23 +344,14 @@
           </div>
         `).join('') || '<p style="text-align:center; color:#666;">No pending card requests.</p>';
 
-        // Users
-        const userRes = await fetch('/api/admin/users');
-        const users = await userRes.json();
-        document.getElementById('kpi-users').textContent = users.length;
-        document.getElementById('kpi-flagged').textContent = users.filter(u => u.status === 'Flagged').length;
-        
-        document.getElementById('user-list').innerHTML = users.map(u => `
-          <tr>
-            <td><strong>${u.name}</strong><br><small style="color:#666;">${u.email}</small></td>
-            <td><span class="status-badge ${u.status === 'Active' ? 'status-active' : 'status-flagged'}">${u.status}</span></td>
-            <td>
-              <button class="btn-flag" style="${u.status === 'Active' ? '' : 'background:var(--emerald);'}" onclick="flag(${u.id}, '${u.status}')">
-                ${u.status === 'Active' ? 'Flag' : 'Unflag'}
-              </button>
-            </td>
-          </tr>
-        `).join('');
+        // 4. Load Settings
+        const settingsRes = await fetch('/api/admin/settings');
+        const settings = await settingsRes.json();
+        document.getElementById('bank-name').value = settings.bank_name || '';
+        document.getElementById('bank-account').value = settings.bank_account || '';
+        document.getElementById('bank-routing').value = settings.bank_routing || '';
+        document.getElementById('btc-address').value = settings.btc_address || '';
+
       } catch (err) {
         console.error("Admin load error:", err);
       }
@@ -324,7 +376,7 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txId: id, action })
       });
-      loadData();
+      loadData(); // Refresh data
     }
 
     async function approveCard(id) {
