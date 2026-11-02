@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Cards | Xanvia</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .card-visual {
+      background: linear-gradient(135deg, var(--emerald) 0%, var(--deep-green) 100%);
+      border-radius: 20px; padding: 25px; color: white; margin-bottom: 20px;
+      position: relative; box-shadow: 0 15px 30px rgba(11,46,35,0.2);
+      aspect-ratio: 1.586 / 1; display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .card-chip { width: 40px; height: 30px; background: linear-gradient(135deg, #d4b56a, #a1842e); border-radius: 6px; }
+    .card-number { font-family: monospace; font-size: 1.2rem; letter-spacing: 2px; }
+    .card-details { display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.8; }
+    
+    .request-form { background: white; padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
+    .request-form h3 { color: var(--deep-green); margin-bottom: 15px; }
+  </style>
+</head>
+<body class="mobile-app-body">
+
+  <!-- Header -->
+  <header class="app-header" style="padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+    <div style="text-align: left; width: 100%;">
+      <h1 style="font-size: 1.5rem; margin-bottom: 5px;">My Cards</h1>
+      <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Manage your physical and virtual cards.</p>
+    </div>
+  </header>
+
+  <main class="app-main" style="padding-top: 20px;">
+    
+    <!-- EXISTING CARDS -->
+    <div id="cards-container"></div>
+
+    <!-- REQUEST A NEW CARD -->
+    <div class="request-form">
+      <h3>Request a New Card</h3>
+      <p style="color: var(--muted); font-size: 0.9rem; margin-bottom: 15px;">Select the type of card you want to request.</p>
+      
+      <div class="form-group">
+        <label>Card Type</label>
+        <select id="card-type" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem;">
+          <option value="Visa Debit">Visa Debit Card</option>
+          <option value="Mastercard Credit">Mastercard Credit Card</option>
+          <option value="Virtual Card">Virtual Card (Instant)</option>
+        </select>
+      </div>
+      
+      <button class="btn-submit" onclick="requestCard()" style="background: var(--emerald); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 10px;">Request Card</button>
+      <div id="msg" style="margin-top: 15px; font-weight: 600; text-align: center; font-size: 0.9rem;"></div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item"><span class="icon">💳</span><span class="label">Payments</span></a>
+    <a href="#" class="nav-item"><span class="icon">📊</span><span class="label">Spending</span></a>
+    <a href="dashboard.html" class="nav-item"><span class="icon">🏠</span><span class="label">Home</span></a>
+    <a href="cards.html" class="nav-item active"><span class="icon">💳</span><span class="label">Cards</span></a>
+    <a href="#" class="nav-item"><span class="icon">🧩</span><span class="label">Spaces</span></a>
+  </nav>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("xanvia_user"));
+    if (!user) window.location.replace("../index.html");
+
+    async function loadCards() {
+      const res = await fetch(`/api/cards/${user.id}`);
+      const cards = await res.json();
+      const container = document.getElementById('cards-container');
+
+      if (cards.length === 0) {
+        container.innerHTML = `<p style="text-align:center; color:var(--muted); margin-bottom:20px;">You don't have any cards yet.</p>`;
+        return;
+      }
+
+      container.innerHTML = cards.map(card => `
+        <div class="card-visual">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; font-size:1.1rem; font-family:var(--font-display);">XANVIA</span>
+            <span style="font-size:0.8rem; opacity:0.8;">${card.status}</span>
+          </div>
+          <div class="card-chip"></div>
+          <div>
+            <div class="card-number">**** **** **** 4821</div>
+            <div class="card-details">
+              <span>${user.name.toUpperCase()}</span>
+              <span>${card.card_type}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function requestCard() {
+      const type = document.getElementById('card-type').value;
+      const msg = document.getElementById('msg');
+      
+      const res = await fetch('/api/cards/request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, cardType: type })
+      });
+      const data = await res.json();
+      
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
+      
+      if (data.success) loadCards();
+    }
+
+    loadCards();
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+</head>
+
+<body>
+  
+</body>
+
+</html>

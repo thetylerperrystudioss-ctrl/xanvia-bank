@@ -22,7 +22,6 @@
       <p class="balance-label">Available Balance</p>
     </div>
 
-    <!-- FLOATING ACTION BUTTONS -->
     <div class="quick-actions">
       <button class="action-btn" onclick="window.location.href='hub.html'">
         <div class="icon-circle">⚙️</div>
@@ -39,16 +38,12 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT (White area) -->
   <main class="app-main">
-    
-    <!-- SEARCH -->
     <div class="search-bar">
       <span>🔍</span>
       <input type="text" placeholder="Search Transactions">
     </div>
 
-    <!-- CATEGORY FILTERS -->
     <div class="category-filters">
       <button class="filter-btn active">All</button>
       <button class="filter-btn">Food</button>
@@ -57,11 +52,9 @@
       <button class="filter-btn">Income</button>
     </div>
 
-    <!-- TRANSACTIONS LIST -->
     <div class="transaction-container" id="transaction-list">
-      <!-- Transactions will be injected here by JS -->
+      <!-- Transactions injected here -->
     </div>
-
   </main>
 
   <!-- BOTTOM NAVIGATION -->
@@ -78,7 +71,7 @@
       <span class="icon">🏠</span>
       <span class="label">Home</span>
     </a>
-    <a href="#" class="nav-item">
+    <a href="cards.html" class="nav-item">
       <span class="icon">💳</span>
       <span class="label">Cards</span>
     </a>
@@ -90,25 +83,21 @@
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
-    if (!user) window.location.href = "login.html";
+    if (!user) window.location.replace("../index.html");
 
-    // Format currency
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-    // Load Data
     async function loadDashboard() {
       try {
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
         
-        // Calculate Total Available (Checking + Savings)
         const checking = data.checking || 0;
         const savings = data.savings || 0;
         const total = checking + savings;
 
         document.getElementById('total-balance').textContent = formatUSD(total);
 
-        // Fetch Transactions
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
         
@@ -125,7 +114,6 @@
         return;
       }
 
-      // Group by Month (Mocking it for this month)
       let html = `
         <div class="month-header">
           <span>Recent Activity</span>
@@ -139,7 +127,6 @@
         const sign = isCredit ? '+' : '-';
         const icon = tx.type === 'DEPOSIT' ? '⬇️' : tx.type === 'WITHDRAWAL' ? '⬆️' : '🔄';
         
-        // Date formatting
         const date = new Date(tx.created_at);
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         const dateStr = date.toLocaleDateString([], { month: '2-digit', day: '2-digit' });

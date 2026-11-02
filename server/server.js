@@ -24,7 +24,7 @@ const pool = new Pool({
 });
 
 // ==========================================
-// 1. DATABASE SETUP (WITH AUTO-FIX)
+// 1. DATABASE SETUP (AUTO-FIXES MISSING COLUMNS)
 // ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
@@ -43,6 +43,9 @@ pool.connect((err, client, release) => {
       CREATE TABLE IF NOT EXISTS investments (
         id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, symbol VARCHAR(10), shares DECIMAL(10,4), purchase_price DECIMAL(12,2), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
+      CREATE TABLE IF NOT EXISTS cards (
+        id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, card_type VARCHAR(50), status VARCHAR(20) DEFAULT 'Pending', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
       CREATE TABLE IF NOT EXISTS transactions (
         id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), amount DECIMAL(12,2), status VARCHAR(20) DEFAULT 'Pending', reference VARCHAR(100), details TEXT, proof_image TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
@@ -52,14 +55,10 @@ pool.connect((err, client, release) => {
     `, (err) => {
       if (err) console.error('Table Error:', err.message);
       
-      // FORCE ADD COLUMNS IF THEY DON'T EXIST (FIXES THE CRASH)
       client.query(`
         ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4);
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS has_bank BOOLEAN DEFAULT false;
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS has_loan BOOLEAN DEFAULT false;
-        ALTER TABLE users ADD COLUMN IF NOT EXISTS has_investment BOOLEAN DEFAULT false;
       `, (err2) => {
         release();
         if (err2) console.error('Alter Table Error:', err2.message);
@@ -67,7 +66,7 @@ pool.connect((err, client, release) => {
           pool.query(`INSERT INTO system_settings (key, value) VALUES 
             ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') 
             ON CONFLICT DO NOTHING`);
-          console.log('✅ Database upgraded and ready.');
+          console.log('✅ Database ready.');
         }
       });
     });
@@ -91,24 +90,21 @@ app.post('/api/login', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
     const user = result.rows[0];
-    
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
     if (user.status === 'Flagged') {
       return res.status(403).json({ error: 'Account flagged.' });
     }
-
     user.has_bank = user.has_bank || false;
     user.has_loan = user.has_loan || false;
     user.has_investment = user.has_investment || false;
-
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
 // ==========================================
-// 3. ONBOARDING
+// 3. ONBOARDING & ACCOUNTS
 // ==========================================
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
@@ -132,14 +128,10 @@ app.post('/api/complete-onboarding', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     await pool.query('ROLLBACK');
-    console.error("ONBOARDING ERROR:", err.message);
     res.status(500).json({ error: 'Failed to complete application.' });
   }
 });
 
-// ==========================================
-// 4. DASHBOARD DATA & TRANSACTIONS
-// ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
@@ -149,6 +141,27 @@ app.get('/api/accounts/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
+// ==========================================
+// 4. CARDS
+// ==========================================
+app.post('/api/cards/request', async (req, res) => {
+  const { userId, cardType } = req.body;
+  try {
+    await pool.query(`INSERT INTO cards (user_id, card_type) VALUES ($1, $2)`, [userId, cardType]);
+    res.json({ success: true, message: 'Card request submitted.' });
+  } catch (err) { res.status(500).json({ error: 'Failed to request card.' }); }
+});
+
+app.get('/api/cards/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch cards.' }); }
+});
+
+// ==========================================
+// 5. TRANSACTIONS, DEPOSITS & LOANS
+// ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -156,9 +169,6 @@ app.get('/api/transactions/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// ==========================================
-// 5. DEPOSITS & WITHDRAWALS
-// ==========================================
 app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
   const { userId, amount } = req.body;
   if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
@@ -182,9 +192,6 @@ app.post('/api/withdraw/request', async (req, res) => {
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Request failed.' }); }
 });
 
-// ==========================================
-// 6. LOANS & INVESTMENTS
-// ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount, termMonths, rate } = req.body;
   const depositReq = amount * 0.15;
@@ -195,7 +202,7 @@ app.post('/api/loans/apply', async (req, res) => {
     await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [depositReq, userId]);
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending', $3)`, [userId, amount, JSON.stringify({ termMonths, rate, depositPaid: depositReq })]);
     await pool.query('COMMIT');
-    res.json({ success: true, message: 'Loan application submitted. Deposit deducted.' });
+    res.json({ success: true, message: 'Loan application submitted.' });
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); }
 });
 
@@ -204,35 +211,28 @@ app.get('/api/loans/:userId', async (req, res) => {
   catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.post('/api/investments/buy', async (req, res) => {
-  const { userId, symbol, shares, price, accountType } = req.body;
-  const totalCost = shares * price;
-  const sourceAccount = 'checking'; 
-  try {
-    const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = '${sourceAccount}'`, [userId]);
-    if (parseFloat(check.rows[0].balance) < totalCost) return res.status(400).json({ error: 'Insufficient funds.' });
-    await pool.query('BEGIN');
-    await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = '${sourceAccount}'`, [totalCost, userId]);
-    await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = '${accountType}'`, [totalCost, userId]);
-    await pool.query(`INSERT INTO investments (user_id, symbol, shares, purchase_price) VALUES ($1, $2, $3, $4)`, [userId, symbol, shares, price]);
-    await pool.query('COMMIT');
-    res.json({ success: true });
-  } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Trade failed.' }); }
-});
-
-app.get('/api/investments/:userId', async (req, res) => {
-  try { res.json((await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId])).rows); }
-  catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
 // ==========================================
-// 7. ADMIN ROUTES
+// 6. ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
     const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status = 'Pending' ORDER BY t.created_at DESC`);
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+app.get('/api/admin/card-requests', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT c.*, u.name FROM cards c JOIN users u ON c.user_id = u.id WHERE c.status = 'Pending'`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/approve-card/:id', async (req, res) => {
+  try {
+    await pool.query(`UPDATE cards SET status = 'Active' WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/admin/users', async (req, res) => {
@@ -294,4 +294,4 @@ app.post('/api/admin/approve', async (req, res) => {
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running perfectly on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));

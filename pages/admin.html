@@ -101,14 +101,12 @@
     }
     .panel-title { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
 
-    /* Forms */
     .form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-dark); margin-bottom: 6px; }
     .form-group input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 10px; font-size: 0.95rem; outline: none; background: #FAFAFA; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; margin-top: 10px; }
 
-    /* Requests */
     .req-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px; border: 1px solid #eee; border-radius: 12px; margin-bottom: 10px; background: white; }
     .req-info h4 { color: var(--text-dark); font-size: 1rem; margin-bottom: 5px; }
     .req-info p { color: var(--text-muted); font-size: 0.85rem; }
@@ -116,7 +114,6 @@
     .btn-approve { background: var(--emerald); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; }
     .btn-reject { background: var(--danger); color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: 600; cursor: pointer; }
 
-    /* Table */
     .data-table { width: 100%; border-collapse: collapse; }
     .data-table th { text-align: left; padding: 15px; color: var(--text-muted); font-size: 0.85rem; border-bottom: 1px solid #eee; }
     .data-table td { padding: 15px; border-bottom: 1px solid #eee; font-size: 0.9rem; }
@@ -136,7 +133,6 @@
 </head>
 <body>
 
-  <!-- SECURE LOGIN -->
   <div id="login-overlay">
     <div class="login-box">
       <h2>Admin Access</h2>
@@ -155,6 +151,7 @@
       <li><a class="active"><span class="icon">📊</span> Dashboard</a></li>
       <li><a><span class="icon">💸</span> Pending Requests</a></li>
       <li><a><span class="icon">👥</span> User Management</a></li>
+      <li><a><span class="icon">💳</span> Card Requests</a></li>
       <li><a><span class="icon">⚙️</span> Payment Settings</a></li>
     </ul>
     <div class="admin-profile">
@@ -207,6 +204,11 @@
     </div>
 
     <div class="panel">
+      <div class="panel-title">Card Requests</div>
+      <div id="card-requests-list">Loading...</div>
+    </div>
+
+    <div class="panel">
       <div class="panel-title">Manage Users</div>
       <table class="data-table">
         <thead><tr><th>Name</th><th>Status</th><th>Action</th></tr></thead>
@@ -239,7 +241,7 @@
 
     async function loadData() {
       try {
-        // 1. Settings
+        // Settings
         const settingsRes = await fetch('/api/admin/settings');
         const settings = await settingsRes.json();
         document.getElementById('bank-name').value = settings.bank_name || '';
@@ -247,7 +249,7 @@
         document.getElementById('bank-routing').value = settings.bank_routing || '';
         document.getElementById('btc-address').value = settings.btc_address || '';
 
-        // 2. Requests
+        // Requests
         const reqRes = await fetch('/api/admin/requests');
         const requests = await reqRes.json();
         document.getElementById('kpi-pending').textContent = requests.length;
@@ -266,7 +268,22 @@
           </div>
         `).join('') || '<p style="text-align:center; color:#666;">No pending requests.</p>';
 
-        // 3. Users
+        // Card Requests
+        const cardRes = await fetch('/api/admin/card-requests');
+        const cards = await cardRes.json();
+        document.getElementById('card-requests-list').innerHTML = cards.map(c => `
+          <div class="req-item">
+            <div class="req-info">
+              <h4>${c.name}</h4>
+              <p>Requested: ${c.card_type}</p>
+            </div>
+            <div class="req-actions">
+              <button class="btn-approve" onclick="approveCard(${c.id})">Approve</button>
+            </div>
+          </div>
+        `).join('') || '<p style="text-align:center; color:#666;">No pending card requests.</p>';
+
+        // Users
         const userRes = await fetch('/api/admin/users');
         const users = await userRes.json();
         document.getElementById('kpi-users').textContent = users.length;
@@ -285,7 +302,6 @@
         `).join('');
       } catch (err) {
         console.error("Admin load error:", err);
-        alert("Failed to load data. Check server connection.");
       }
     }
 
@@ -308,6 +324,11 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ txId: id, action })
       });
+      loadData();
+    }
+
+    async function approveCard(id) {
+      await fetch(`/api/admin/approve-card/${id}`, { method: 'POST' });
       loadData();
     }
 

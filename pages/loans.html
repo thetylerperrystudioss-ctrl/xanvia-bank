@@ -24,7 +24,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
 
-    /* ================= SIDEBAR ================= */
+    /* SIDEBAR */
     .sidebar {
       width: var(--sidebar-w); background: #0D0D0D; color: var(--white);
       position: fixed; top: 0; bottom: 0; left: -280px;
@@ -44,9 +44,8 @@
     .nav-menu a:hover, .nav-menu a.active { background: var(--gold); color: var(--white); }
     .nav-menu a .icon { font-size: 1.1rem; }
 
-    /* ================= MAIN CONTENT ================= */
+    /* MAIN */
     .main-content { margin-left: 0; flex: 1; padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
-
     .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
     .top-header h1 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; display: flex; align-items: center; gap: 15px; }
     .mobile-menu-btn { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--deep-green); }
@@ -56,7 +55,7 @@
     .user-profile div p { font-size: 0.9rem; font-weight: 600; }
     .user-profile div small { font-size: 0.75rem; color: var(--muted); }
 
-    /* KPI Grid */
+    /* KPI */
     .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
     .kpi-card { border-radius: 16px; padding: 20px; color: var(--white); position: relative; overflow: hidden; }
     .kpi-card.orange { background: #F59E0B; }
@@ -71,7 +70,6 @@
     .banner-card p { font-size: 0.85rem; color: var(--muted); }
     .btn-dark { background: #111827; color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
 
-    /* Underwriter Card */
     .underwriter-card { background: var(--white); border-radius: 16px; padding: 25px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
     .underwriter-card img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
     .underwriter-info h2 { font-size: 1.3rem; color: var(--text); margin-bottom: 4px; }
@@ -79,7 +77,6 @@
     .underwriter-info p { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
     .btn-gold { background: var(--gold); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; margin-left: auto; }
 
-    /* Table */
     .table-container { background: var(--white); border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow-x: auto; }
     .table-header h3 { font-size: 1.1rem; color: var(--text); }
     .table-header p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
@@ -87,21 +84,24 @@
     table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
     th { color: var(--muted); font-weight: 600; padding: 12px 15px; border-bottom: 1px solid var(--border); white-space: nowrap; }
     td { padding: 15px; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 500; white-space: nowrap; }
-    
     .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
     .status-approved { background: #D1FAE5; color: #065F46; }
     .status-review { background: #FEF3C7; color: #92400E; }
 
-    /* Apply Modal */
+    /* MODAL */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
-    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; }
+    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
     .modal-content h2 { color: var(--deep-green); margin-bottom: 10px; }
     .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
+    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+    
+    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; }
+    .admin-details-box strong { color: var(--deep-green); }
+    .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
 
     @media (min-width: 1024px) {
       .sidebar { left: 0; }
@@ -141,7 +141,6 @@
       </div>
     </header>
 
-    <!-- KPI CARDS -->
     <div class="kpi-grid">
       <div class="kpi-card orange">
         <h4>Current Loans Pending</h4>
@@ -155,7 +154,6 @@
       </div>
     </div>
 
-    <!-- CTA BANNER -->
     <div class="banner-card">
       <div>
         <h3>Apply For Funding Today!</h3>
@@ -164,7 +162,6 @@
       <button class="btn-dark" onclick="openModal()">Next ></button>
     </div>
 
-    <!-- UNDERWRITER CARD -->
     <div class="underwriter-card">
       <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="Underwriter">
       <div class="underwriter-info">
@@ -176,7 +173,6 @@
       <button class="btn-gold">Contact</button>
     </div>
 
-    <!-- APPLIED LOANS TABLE -->
     <div class="table-container">
       <div class="table-header">
         <h3>Applied Loans</h3>
@@ -204,15 +200,27 @@
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2>Apply for Funding</h2>
-      <p>A 15% deposit is required upfront and deducted from your Checking account.</p>
+      
+      <!-- DYNAMIC ADMIN DETAILS -->
+      <div class="admin-details-box">
+        <strong>Step 1: Send your 15% deposit to:</strong>
+        <div id="admin-details-content" style="margin-top: 10px;">
+          Loading payment details...
+        </div>
+      </div>
+
+      <p><strong>Step 2:</strong> Fill out your loan request below.</p>
       
       <div class="form-group">
         <label>Loan Amount ($)</label>
-        <input type="number" id="loan-amount" placeholder="e.g. 10000">
+        <input type="number" id="loan-amount" placeholder="e.g. 10000" oninput="updateDepositReq()">
+      </div>
+      <div style="margin-bottom: 15px; font-weight: 600; color: var(--danger);">
+        Required 15% Deposit: <span id="dep-req-display">$0.00</span>
       </div>
       <div class="form-group">
         <label>Term</label>
-        <select id="loan-term" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
+        <select id="loan-term">
           <option value="12">12 Months</option>
           <option value="24">24 Months</option>
           <option value="36">36 Months</option>
@@ -235,8 +243,31 @@
       document.getElementById('overlay').classList.toggle('open');
     }
 
-    function openModal() { document.getElementById('apply-modal').classList.add('open'); }
+    async function openModal() { 
+      document.getElementById('apply-modal').classList.add('open'); 
+      
+      // Fetch Admin Settings when modal opens
+      try {
+        const res = await fetch('/api/admin/settings');
+        const data = await res.json();
+        document.getElementById('admin-details-content').innerHTML = `
+          <strong>Bank Name:</strong> ${data.bank_name || 'N/A'}<br>
+          <strong>Account Number:</strong> ${data.bank_account || 'N/A'}<br>
+          <strong>Routing Number:</strong> ${data.bank_routing || 'N/A'}<br>
+          <hr>
+          <strong>Bitcoin Address:</strong> ${data.btc_address || 'N/A'}
+        `;
+      } catch (err) {
+        document.getElementById('admin-details-content').textContent = "Failed to load payment details.";
+      }
+    }
+
     function closeModal() { document.getElementById('apply-modal').classList.remove('open'); }
+
+    function updateDepositReq() {
+      const amount = parseFloat(document.getElementById('loan-amount').value) || 0;
+      document.getElementById('dep-req-display').textContent = `$${(amount * 0.15).toFixed(2)}`;
+    }
 
     async function loadLoans() {
       try {
