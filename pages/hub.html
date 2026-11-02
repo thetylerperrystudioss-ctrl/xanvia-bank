@@ -6,101 +6,148 @@
   <title>My Accounts | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; }
+    :root { 
+      --emerald: #0F8A5F; 
+      --deep-green: #0B2E23; 
+      --bg: #F4F7F6; 
+      --text: #1A1A1A; 
+      --border: #E5E7EB; 
+      --muted: #6B7280; 
+      --white: #FFFFFF;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 50px; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 600px; margin: 0 auto display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .header h1 { font-size: 1.5rem; color: var(--deep-green); }
-    .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    .panel { background: white; border-radius: 16px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .panel h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 10px; }
-    .panel p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
-    .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; display: block; text-align: center; text-decoration: none; font-size: 0.95rem; }
+    
+    .container { max-width: 600px; margin: 0 auto; }
+    
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .header h1 { font-size: 1.5rem; color: var(--deep-green); font-weight: 700; }
+    .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.9rem; transition: 0.2s; }
+    .btn-logout:hover { background: #FEE2E2; color: #991B1B; border-color: #FEE2E2; }
+    
+    /* Service Cards */
+    .service-card { 
+      background: var(--white); 
+      border-radius: 20px; 
+      padding: 30px; 
+      margin-bottom: 20px; 
+      border: 1px solid var(--border); 
+      box-shadow: 0 10px 25px rgba(0,0,0,0.03); 
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      transition: transform 0.2s;
+    }
+    .service-card:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0,0,0,0.06); }
+    
+    .icon-box {
+      width: 60px; height: 60px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; flex-shrink: 0;
+    }
+    .icon-bank { background: #D1FAE5; color: #065F46; }
+    .icon-loan { background: #FEF3C7; color: #92400E; }
+    .icon-invest { background: #DBEAFE; color: #1E40AF; }
+    
+    .service-info { flex: 1; }
+    .service-info h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 5px; }
+    .service-info p { color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+    
+    /* Buttons */
+    .btn-action { 
+      display: block; 
+      width: 100%; 
+      padding: 16px; 
+      border-radius: 12px; 
+      font-weight: 600; 
+      text-align: center; 
+      text-decoration: none; 
+      font-size: 1rem;
+      margin-top: 20px;
+      transition: 0.2s;
+    }
+    .btn-open { background: var(--emerald); color: var(--white); }
+    .btn-open:hover { background: var(--deep-green); }
+    .btn-go { background: #F3F4F6; color: var(--text); border: 1px solid var(--border); }
+    .btn-go:hover { background: #E5E7EB; }
+    
+    /* Mobile Adjustments */
+    @media (max-width: 480px) {
+      .service-card { flex-direction: column; align-items: flex-start; }
+      .service-info { margin-bottom: 15px; }
+    }
   </style>
 </head>
 <body>
 
-  <div class="grid">
+  <div class="container">
     <div class="header">
       <h1>Welcome, <span id="user-name">User</span></h1>
       <button class="btn-logout" onclick="logout()">Log Out</button>
     </div>
 
-    <div class="panel">
-      <h2>🏦 Personal Banking</h2>
-      <p>Manage checking, savings, deposits, and transfers.</p>
-      <div id="bank-action"></div>
+    <!-- BANKING CARD -->
+    <div class="service-card">
+      <div class="icon-box icon-bank">🏦</div>
+      <div class="service-info">
+        <h2>Personal Banking</h2>
+        <p>Manage checking, savings, deposits, and transfers.</p>
+      </div>
+      <div id="bank-action" style="width: 100%;"></div>
     </div>
 
-    <div class="panel">
-      <h2>💳 Smart Lending</h2>
-      <p>Apply for personal loans and track repayments.</p>
-      <div id="loan-action"></div>
+    <!-- LOANS CARD -->
+    <div class="service-card">
+      <div class="icon-box icon-loan">💳</div>
+      <div class="service-info">
+        <h2>Smart Lending</h2>
+        <p>Apply for personal loans and track repayments.</p>
+      </div>
+      <div id="loan-action" style="width: 100%;"></div>
     </div>
 
-    <div class="panel">
-      <h2>📈 Wealth Management</h2>
-      <p>Trade stocks and buy Bitcoin.</p>
-      <div id="invest-action"></div>
+    <!-- INVESTMENTS CARD -->
+    <div class="service-card">
+      <div class="icon-box icon-invest">📈</div>
+      <div class="service-info">
+        <h2>Wealth Management</h2>
+        <p>Trade stocks and buy Bitcoin.</p>
+      </div>
+      <div id="invest-action" style="width: 100%;"></div>
     </div>
   </div>
 
   <script>
+    // 1. Get User
     let user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
     document.getElementById('user-name').textContent = user.name;
 
+    // 2. Logout
     function logout() {
-      localStorage.removeItem("x);
-anvia_user");
+      localStorage.removeItem("xanvia_user");
       window.location.replace("../index.html"); 
     }
 
-    async function openAccount(type, btnElement) {
-      const originalText = btnElement.textContent;
-      btnElement.textContent = "Opening...";
-      
-      try {
-        const res = await fetch('/api/open-account', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, type })
-        });
-        const data = await res.json();
-        
-        if(data.success) { 
-          alert("Account opened successfully!");
-          if (type === 'bank') user.has_bank = true;
-          if (type === 'loan') user.has_loan = true;
-          if (type === 'investment') user.has_investment = true;
-          localStorage.setItem("xanvia_user", JSON.stringify(user));
-          window.location.reload(); 
-        } else {
-          // THIS WILL SHOW US THE EXACT ERROR FROM THE SERVER
-          alert("SERVER ERROR: " + data.error          btnElement.textContent = originalText;
-        }
-      } catch (err) {
-        alert("NETWORK ERROR: Could not reach server.");
-        btnElement.textContent = originalText;
-      }
-    }
+    // 3. Render Buttons
+    // If user has the account, show "Go to Dashboard". If not, show "Apply Now".
 
     if(user.has_bank) {
-      document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
+      document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-action btn-go">Go to Bank Dashboard</a>`;
     } else {
-      document.getElementById('bank-action').innerHTML = `<button class="btn-primary" onclick="openAccount('bank', this)">Open Bank Account</button>`;
+      document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-action btn-open">Open Bank Account</a>`;
     }
 
     if(user.has_loan) {
-      document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
+      document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-action btn-go">Go to Loan Center</a>`;
     } else {
-      document.getElementById('loan-action').innerHTML = `<button class="btn-primary" onclick="openAccount('loan', this)">Open Loan Account</button>`;
+      document.getElementById('loan-action').innerHTML = `<a href="onboarding.html?type=loan" class="btn-action btn-open">Open Loan Account</a>`;
     }
 
     if(user.has_investment) {
-      document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
+      document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-action btn-go">Go to Investments</a>`;
     } else {
-      document.getElementById('invest-action').innerHTML = `<button class="btn-primary" onclick="openAccount('investment', this)">Open Investment Account</button>`;
+      document.getElementById('invest-action').innerHTML = `<a href="onboarding.html?type=investment" class="btn-action btn-open">Open Investment Account</a>`;
     }
   </script>
 </body>
