@@ -10,24 +10,21 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
 
-// Configure Multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
-// Database Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
 // ==========================================
-// 1. DATABASE SETUP & AUTO-FIX
+// 1. DATABASE SETUP (WITH AUTO-FIX)
 // ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
@@ -38,7 +35,7 @@ pool.connect((err, client, release) => {
         has_bank BOOLEAN DEFAULT false, has_loan BOOLEAN DEFAULT false, has_investment BOOLEAN DEFAULT false
       );
       CREATE TABLE IF NOT EXISTS accounts (
-        id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), balance DECIMAL(12,2) DEFAULT 0.00
+        id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), balance DECIMAL(12,2) DEFAULT 0.00, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
       CREATE TABLE IF NOT EXISTS loans (
         id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, amount DECIMAL(12,2), term_months INTEGER, interest_rate DECIMAL(5,2), status VARCHAR(50) DEFAULT 'Under Review', created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -58,11 +55,11 @@ pool.connect((err, client, release) => {
     `, (err) => {
       if (err) console.error('Table Error:', err.message);
       
-      // FORCE ADD MISSING COLUMNS (Fixes crashes if tables already exist)
       client.query(`
         ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4);
+        ALTER TABLE accounts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
         ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT;
       `, (err2) => {
         release();
@@ -144,7 +141,10 @@ app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
     const balances = {};
-    result.rows.forEach(acc => balances[acc.type] = parseFloat(acc.balance));
+    result.rows.forEach(acc => {
+      balances[acc.type] = parseFloat(acc.balance);
+      balances[`${acc.type}_created_at`] = acc.created_at; // Send timestamp for yield calculation
+    });
     res.json(balances);
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
@@ -167,18 +167,17 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
 });
 
 app.post('/api/withdraw/request', async (req, res) => {
-  const { userId, amount, details } = req.body;
+  const { userId, amount, details, accountType } = req.body; // Added accountType
   try {
-    const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'checking'`, [userId]);
+    const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = $2`, [userId, accountType]);
     if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
     
     await pool.query('BEGIN');
-    // Deduct immediately for withdrawal
-    await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [amount, userId]);
+    await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = $3`, [amount, userId, accountType]);
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
     await pool.query('COMMIT');
     
-    res.json({ success: true, message: 'Withdrawal requested. Pending Admin processing.' });
+    res.json({ success: true, message: 'Withdrawal pending Admin approval.' });
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Request failed.' }); }
 });
 
@@ -196,25 +195,13 @@ app.post('/api/loans/apply', async (req, res) => {
     }
 
     await pool.query('BEGIN');
-    // Deduct the 15% deposit
     await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [depositReq, userId]);
-    
-    // Record the transaction
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending', $3)`, 
       [userId, amount, JSON.stringify({ termMonths, rate, depositPaid: depositReq })]);
-      
-    // Insert into loans table
-    await pool.query(`INSERT INTO loans (user_id, amount, term_months, interest_rate) VALUES ($1, $2, $3, $4)`, 
-      [userId, amount, termMonths, rate]);
-
+    await pool.query(`INSERT INTO loans (user_id, amount, term_months, interest_rate) VALUES ($1, $2, $3, $4)`, [userId, amount, termMonths, rate]);
     await pool.query('COMMIT');
     res.json({ success: true, message: 'Loan application submitted. 15% deposit deducted.' });
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.get('/api/loans/:userId', async (req, res) => {
-  try { res.json((await pool.query('SELECT * FROM loans WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId])).rows); } 
-  catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 // ==========================================
@@ -304,20 +291,16 @@ app.post('/api/admin/approve', async (req, res) => {
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
       } 
       else if (tx.type === 'LOAN_APPLICATION') {
-        // Credit the full loan amount to checking, and add the debt to the loan account
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
       }
-      // Note: Withdrawals are already deducted on request, so approval just finalizes it.
     } else {
       await pool.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
       
-      // Refund held funds if rejected
       if (tx.type === 'WITHDRAWAL') {
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
       } 
       else if (tx.type === 'LOAN_APPLICATION') {
-        // Refund the 15% deposit if rejected
         const details = JSON.parse(tx.details);
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [details.depositPaid, tx.user_id]);
       }

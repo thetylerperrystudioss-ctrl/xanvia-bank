@@ -2,160 +2,69 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Investments | Xanvia</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/dashboard.css">
   <style>
-    :root {
-      --bg-dark: #1E232F;
-      --panel-dark: #2A303C;
-      --text-light: #F3F4F6;
-      --text-muted: #9CA3AF;
-      --green: #10B981;
-      --red: #EF4444;
-      --blue: #3B82F6;
-      --purple: #8B5CF6;
-      --gold: #F59E0B;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg-dark); color: var(--text-light); padding-bottom: 80px; }
-
-    /* Header */
-    .app-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .logo { font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; color: var(--green); display: flex; align-items: center; gap: 8px; }
-    .date-filter { font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.2); padding: 6px 12px; border-radius: 20px; }
-
-    /* KPI Grid */
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; }
-    .kpi-card { background: var(--panel-dark); border-radius: 12px; padding: 15px; }
-    .kpi-card h4 { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; margin-bottom: 8px; text-transform: uppercase; }
-    .kpi-card h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 8px; }
-    .kpi-delta { font-size: 0.75rem; font-weight: 500; }
-    .kpi-delta.positive { color: var(--green); }
-    .kpi-delta.negative { color: var(--red); }
-
-    /* Charts */
-    .chart-section { padding: 0 20px; margin-bottom: 20px; }
-    .chart-panel { background: var(--panel-dark); border-radius: 16px; padding: 20px; }
-    .chart-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 15px; display: flex; justify-content: space-between; }
-    
-    .pie-container { display: flex; justify-content: center; align-items: center; height: 150px; position: relative; }
-    .pie { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(var(--blue) 0% 25%, var(--green) 25% 50%, var(--gold) 50% 75%, var(--purple) 75% 100%); position: relative; }
-    .pie-center { position: absolute; width: 60px; height: 60px; background: var(--panel-dark); border-radius: 50%; }
-
-    .bar-container { height: 120px; display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; padding-top: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .bar { width: 100%; background: rgba(59, 130, 246, 0.3); border-top: 2px solid var(--blue); border-radius: 4px 4px 0 0; position: relative; }
-    .bar span { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; color: var(--text-muted); }
-
-    /* Action Buttons */
-    .action-row { display: flex; gap: 10px; padding: 0 20px 20px; }
-    .btn { flex: 1; padding: 14px; border-radius: 10px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; text-align: center; text-decoration: none; display: block; }
-    .btn-deposit { background: var(--green); color: white; }
-    .btn-withdraw { background: transparent; border: 1px solid var(--text-muted); color: var(--text-light); }
-
-    /* Trade List */
-    .trade-list { padding: 0 20px; }
-    .trade-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-    .trade-coin { display: flex; align-items: center; gap: 10px; }
-    .coin-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--panel-dark); display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
-    .trade-info h4 { font-size: 0.95rem; font-weight: 600; }
-    .trade-info p { font-size: 0.75rem; color: var(--text-muted); }
-    .trade-amount { text-align: right; }
-    .trade-amount h4 { font-size: 0.95rem; font-weight: 600; color: var(--green); }
-    .trade-amount p { font-size: 0.75rem; color: var(--text-muted); }
-
-    /* Bottom Nav */
-    .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--panel-dark); display: flex; justify-content: space-around; padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; }
-    .nav-item { color: var(--text-muted); text-decoration: none; font-size: 0.7rem; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .nav-item.active { color: var(--green); }
-    .nav-item .icon { font-size: 1.2rem; }
-
-    /* Modal */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.open { display: flex; }
-    .modal-box { background: var(--panel-dark); width: 100%; max-width: 400px; padding: 25px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); }
-    .modal-box h2 { font-size: 1.2rem; margin-bottom: 20px; color: var(--text-light); }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
-    .form-group input, .form-group select { width: 100%; padding: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 1rem; outline: none; }
-    .close-btn { background: transparent; border: none; color: var(--text-muted); position: absolute; right: 20px; top: 20px; font-size: 1.5rem; cursor: pointer; }
-    .msg { text-align: center; margin-top: 15px; font-weight: 600; font-size: 0.9rem; }
+    .invest-card { background: var(--deep-green); color: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; }
+    .invest-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
+    .invest-row strong { font-size: 1.1rem; }
+    .yield-badge { background: rgba(15,138,95,0.3); color: #34D399; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
   </style>
 </head>
-<body>
+<body class="mobile-app-body">
 
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="logo">₿ ZTRADE</div>
-    <div class="date-filter">Last 365 days ▾</div>
+  <header class="app-header" style="padding-bottom: 20px; border-radius: 0 0 20px 20px;">
+    <div style="text-align: left; width: 100%;">
+      <h1 style="font-size: 1.5rem; margin-bottom: 5px;">Investments</h1>
+      <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Grow your portfolio with automated yield.</p>
+    </div>
   </header>
 
-  <!-- KPI GRID -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <h4>Balance</h4>
-      <h2 id="kpi-balance">$0</h2>
-      <div class="kpi-delta positive" id="kpi-balance-delta">+0.0% ▲</div>
-    </div>
-    <div class="kpi-card">
-      <h4>Profit</h4>
-      <h2 id="kpi-profit">$0</h2>
-      <div class="kpi-delta positive" id="kpi-profit-delta">+0.0% ▲</div>
-    </div>
-    <div class="kpi-card">
-      <h4>Invested</h4>
-      <h2 id="kpi-invested">$0</h2>
-      <div class="kpi-delta positive">+0.0% ▲</div>
-    </div>
-    <div class="kpi-card">
-      <h4>ROI</h4>
-      <h2 id="kpi-roi">0.00%</h2>
-      <div class="kpi-delta positive" id="kpi-roi-delta">+0.0% ▲</div>
-    </div>
-  </div>
-
-  <!-- CHARTS -->
-  <div class="chart-section">
-    <div class="chart-panel">
-      <div class="chart-title">
-        <span>Asset Allocation</span>
-        <span>Total Invested: <span id="total-invested-chart">$0</span></span>
+  <main class="app-main" style="padding-top: 20px;">
+    
+    <div class="invest-card">
+      <div class="invest-row">
+        <span>Total Portfolio Value</span>
+        <span class="yield-badge" id="yield-status">Computing...</span>
       </div>
-      <div class="pie-container">
-        <div class="pie"><div class="pie-center"></div></div>
+      <h2 style="font-size: 2.5rem; margin: 10px 0;" id="total-val">$0.00</h2>
+      
+      <div style="display: flex; gap: 20px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
+        <div>
+          <p style="font-size: 0.75rem; opacity: 0.7;">Initial Deposit</p>
+          <p style="font-weight: 600;" id="initial-dep">$0.00</p>
+        </div>
+        <div>
+          <p style="font-size: 0.75rem; opacity: 0.7;">Profit Yield</p>
+          <p style="font-weight: 600; color: #34D399;" id="profit-yield">+$0.00</p>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="chart-section">
-    <div class="chart-panel">
-      <div class="chart-title">
-        <span>Trending Rates</span>
-        <span style="color:var(--text-muted); font-size:0.75rem;">Price — Market Cap —</span>
-      </div>
-      <div class="bar-container" id="chart-bars">
-        <!-- Bars injected by JS -->
-      </div>
+    <!-- Deposit / Withdraw Buttons -->
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+      <a href="deposit.html" class="btn-submit" style="background: var(--emerald); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: 600; text-align: center; flex: 1;">Deposit</a>
+      <button class="btn-submit" id="withdraw-btn" onclick="handleWithdraw()" style="background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-weight: 600; flex: 1;">Withdraw</button>
     </div>
-  </div>
 
-  <!-- ACTIONS -->
-  <div class="action-row">
-    <a href="deposit.html" class="btn btn-deposit">Deposit</a>
-    <a href="withdraw.html" class="btn btn-withdraw">Withdraw</a>
-  </div>
+    <!-- Locked Alert -->
+    <div id="lock-alert" class="alert-box" style="display:none; background:#FEF3C7; color:#92400E; padding:15px; border-radius:12px; margin-bottom:20px; font-size:0.85rem; font-weight:600; border:1px solid #F59E0B;">
+      🔒 Withdrawal is locked. You can only withdraw after 7 or 30 days of depositing.
+    </div>
 
-  <!-- HOLDINGS LIST -->
-  <div class="trade-list" id="holdings-container">
-    <!-- Injected by JS -->
-  </div>
+    <div class="panel" style="background:white; padding:20px; border-radius:16px; border:1px solid var(--border);">
+      <h3 style="margin-bottom: 15px; color: var(--deep-green);">Recent Activity</h3>
+      <div id="tx-list"></div>
+    </div>
 
-  <!-- BOTTOM NAV -->
+  </main>
+
   <nav class="bottom-nav">
-    <a href="hub.html" class="nav-item"><span class="icon">🏠</span> Home</a>
-    <a href="#" class="nav-item active"><span class="icon">📈</span> Invest</a>
-    <a href="#" class="nav-item"><span class="icon">💼</span> Portfolio</a>
-    <a href="#" class="nav-item"><span class="icon">⚙️</span> Settings</a>
+    <a href="dashboard.html" class="nav-item"><span class="icon">🏠</span><span class="label">Home</span></a>
+    <a href="investments.html" class="nav-item active"><span class="icon">📈</span><span class="label">Invest</span></a>
+    <a href="cards.html" class="nav-item"><span class="icon">💳</span><span class="label">Cards</span></a>
   </nav>
 
   <script>
@@ -163,86 +72,64 @@
     if(!user) window.location.replace("../index.html");
 
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    let currentBalance = 0;
+    let canWithdraw = false;
 
     async function loadInvestments() {
-      try {
-        // Get account balances
-        const resAcc = await fetch(`/api/accounts/${user.id}`);
-        const balances = await resAcc.json();
-        
-        const invested = balances.brokerage || 0;
-        const bitcoin = balances.bitcoin || 0;
-        const totalPortfolio = invested + bitcoin;
+      const res = await fetch(`/api/accounts/${user.id}`);
+      const data = await res.json();
+      
+      const initialDep = data.brokerage || 0;
+      const createdAt = data.brokerage_created_at ? new Date(data.brokerage_created_at) : new Date();
+      const now = new Date();
+      
+      // Calculate days since deposit
+      const diffTime = Math.abs(now - createdAt);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      // Yield logic (e.g., 1.5% per day)
+      const dailyYield = 0.015;
+      const yieldAmount = initialDep * dailyYield * diffDays;
+      const totalVal = initialDep + yieldAmount;
 
-        // Fake profit calculation for the dashboard (simulating daily growth)
-        const profit = totalPortfolio * 0.12; // 12% simulated profit
-        const roi = totalPortfolio > 0 ? (profit / totalPortfolio) * 100 : 0;
+      document.getElementById('initial-dep').textContent = formatUSD(initialDep);
+      document.getElementById('profit-yield').textContent = `+${formatUSD(yieldAmount)}`;
+      document.getElementById('total-val').textContent = formatUSD(totalVal);
 
-        // Update KPIs
-        document.getElementById('kpi-balance').textContent = formatUSD(totalPortfolio);
-        document.getElementById('kpi-profit').textContent = formatUSD(profit);
-        document.getElementById('kpi-invested').textContent = formatUSD(totalPortfolio);
-        document.getElementById('kpi-roi').textContent = roi.toFixed(2) + '%';
-        document.getElementById('total-invested-chart').textContent = formatUSD(totalPortfolio);
+      // Withdrawal Lock Logic (7 or 30 days)
+      if (diffDays >= 7) {
+        document.getElementById('yield-status').textContent = "Active (Yield Yielding)";
+        document.getElementById('yield-status').style.background = "rgba(16, 185, 129, 0.2)";
+        canWithdraw = true;
+      } else {
+        document.getElementById('yield-status').textContent = `Locked (${7 - diffDays} days left)`;
+        document.getElementById('yield-status').style.background = "rgba(239, 68, 68, 0.2)";
+        canWithdraw = false;
+        document.getElementById('lock-alert').style.display = 'block';
+      }
 
-        // Render fake bars for chart
-        const bars = document.getElementById('chart-bars');
-        let barHTML = '';
-        for(let i=0; i<20; i++) {
-          const height = Math.floor(Math.random() * 80) + 20;
-          barHTML += `<div class="bar" style="height:${height}%;"></div>`;
-        }
-        bars.innerHTML = barHTML;
+      // Load Transactions
+      const txRes = await fetch(`/api/transactions/${user.id}`);
+      const txs = await txRes.json();
+      const investTxs = txs.filter(tx => tx.type.includes('DEPOSIT') || tx.type.includes('WITHDRAWAL'));
 
-        // Get actual holdings
-        const resHold = await fetch(`/api/investments/${user.id}`);
-        const holdings = await resHold.json();
-        
-        const container = document.getElementById('holdings-container');
-        if(holdings.length === 0 && bitcoin === 0) {
-          container.innerHTML = `<p style="text-align:center; color:var(--text-muted); padding:20px;">No investments yet. Deposit funds to start trading.</p>`;
-        } else {
-          let html = `<h3 style="font-size:1rem; margin-bottom:15px;">Your Portfolio</h3>`;
-          
-          if(bitcoin > 0) {
-            html += `
-              <div class="trade-item">
-                <div class="trade-coin">
-                  <div class="coin-icon" style="color:var(--gold);">₿</div>
-                  <div class="trade-info">
-                    <h4>Bitcoin</h4>
-                    <p>BTC</p>
-                  </div>
-                </div>
-                <div class="trade-amount">
-                  <h4>${formatUSD(bitcoin)}</h4>
-                  <p>+4.2% Today</p>
-                </div>
-              </div>
-            `;
-          }
+      document.getElementById('tx-list').innerHTML = investTxs.map(tx => `
+        <div class="tx-item" style="padding: 10px 0; border-bottom: 1px solid #eee;">
+          <div class="tx-details">
+            <h4>${tx.type}</h4>
+            <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+          </div>
+          <div class="tx-amount ${tx.type === 'DEPOSIT' ? 'credit' : 'debit'}">${formatUSD(tx.amount)}</div>
+        </div>
+      `).join('') || `<p style="color:var(--muted);">No investments yet.</p>`;
+    }
 
-          holdings.forEach(h => {
-            html += `
-              <div class="trade-item">
-                <div class="trade-coin">
-                  <div class="coin-icon">${h.symbol[0]}</div>
-                  <div class="trade-info">
-                    <h4>${h.symbol}</h4>
-                    <p>${parseFloat(h.shares).toFixed(2)} Shares</p>
-                  </div>
-                </div>
-                <div class="trade-amount">
-                  <h4>${formatUSD(parseFloat(h.shares) * parseFloat(h.purchase_price))}</h4>
-                  <p>+1.8% Today</p>
-                </div>
-              </div>
-            `;
-          });
-          container.innerHTML = html;
-        }
-
-      } catch(err) { console.error(err); }
+    function handleWithdraw() {
+      if (!canWithdraw) {
+        alert("Your investment is locked. You can only withdraw after 7 or 30 days.");
+        return;
+      }
+      window.location.href = "withdraw.html?type=brokerage";
     }
 
     loadInvestments();

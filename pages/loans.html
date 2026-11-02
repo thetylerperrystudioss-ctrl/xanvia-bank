@@ -5,336 +5,155 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Loan Center | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
+  <link rel="stylesheet" href="../css/dashboard.css">
   <style>
-    :root {
-      --emerald: #0F8A5F;
-      --deep-green: #0B2E23;
-      --gold: #C9A24B;
-      --bg: #F4F7F6;
-      --text: #1A1A1A;
-      --muted: #6B7280;
-      --border: #E5E7EB;
-      --white: #FFFFFF;
-      --sidebar-w: 260px;
-      --orange: #F59E0B;
-      --green-light: #10B981;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); color: var(--text); display: flex; min-height: 100vh; }
-
-    /* SIDEBAR */
-    .sidebar {
-      width: var(--sidebar-w); background: #0D0D0D; color: var(--white);
-      position: fixed; top: 0; bottom: 0; left: -280px;
-      display: flex; flex-direction: column; z-index: 1000; transition: left 0.3s ease;
-    }
-    .sidebar.open { left: 0; }
-    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 999; display: none; }
-    .sidebar-overlay.open { display: block; }
-
-    .brand { font-size: 1.8rem; font-weight: 900; color: var(--gold); padding: 30px 24px; letter-spacing: 1px; }
-    .nav-menu { list-style: none; padding: 0 15px; flex: 1; }
-    .nav-menu li { margin-bottom: 5px; }
-    .nav-menu a {
-      display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 8px;
-      color: #A1A1AA; font-size: 0.95rem; font-weight: 500; text-decoration: none; cursor: pointer; transition: 0.2s;
-    }
-    .nav-menu a:hover, .nav-menu a.active { background: var(--gold); color: var(--white); }
-    .nav-menu a .icon { font-size: 1.1rem; }
-
-    /* MAIN */
-    .main-content { margin-left: 0; flex: 1; padding: 20px; max-width: 1200px; margin: 0 auto; width: 100%; }
-    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .top-header h1 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; display: flex; align-items: center; gap: 15px; }
-    .mobile-menu-btn { display: block; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--deep-green); }
-    
-    .user-profile { display: flex; align-items: center; gap: 10px; text-align: right; }
-    .user-profile img { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--gold); }
-    .user-profile div p { font-size: 0.9rem; font-weight: 600; }
-    .user-profile div small { font-size: 0.75rem; color: var(--muted); }
-
-    /* KPI */
-    .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-    .kpi-card { border-radius: 16px; padding: 20px; color: var(--white); position: relative; overflow: hidden; }
-    .kpi-card.orange { background: #F59E0B; }
-    .kpi-card.green { background: #10B981; }
-    .kpi-card h4 { font-size: 0.85rem; font-weight: 500; margin-bottom: 10px; opacity: 0.9; }
-    .kpi-card h2 { font-size: 2.5rem; font-weight: 700; }
-    .kpi-icon { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; opacity: 0.6; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-
-    /* Banners */
-    .banner-card { background: var(--white); border-radius: 16px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .banner-card h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 5px; }
-    .banner-card p { font-size: 0.85rem; color: var(--muted); }
-    .btn-dark { background: #111827; color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
-
-    /* Underwriter */
-    .underwriter-card { background: var(--white); border-radius: 16px; padding: 25px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-    .underwriter-card img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
-    .underwriter-info h2 { font-size: 1.3rem; color: var(--text); margin-bottom: 4px; }
-    .underwriter-info .role { font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
-    .underwriter-info p { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
-    .btn-gold { background: var(--gold); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; margin-left: auto; }
-
-    /* Table */
-    .table-container { background: var(--white); border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow-x: auto; }
-    .table-header h3 { font-size: 1.1rem; color: var(--text); }
-    .table-header p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
-    
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; text-align: left; }
-    th { color: var(--muted); font-weight: 600; padding: 12px 15px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    td { padding: 15px; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 500; white-space: nowrap; }
-    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-    .status-approved { background: #D1FAE5; color: #065F46; }
-    .status-review { background: #FEF3C7; color: #92400E; }
-
-    /* MODAL */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
-    .modal-overlay.open { display: flex; }
-    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-content h2 { color: var(--deep-green); margin-bottom: 10px; }
-    .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
-    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
-    
-    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; }
-    .admin-details-box strong { color: var(--deep-green); }
-    .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
-
-    @media (min-width: 1024px) {
-      .sidebar { left: 0; }
-      .main-content { margin-left: var(--sidebar-w); padding: 30px; max-width: calc(100% - var(--sidebar-w)); }
-      .mobile-menu-btn { display: none; }
-      .kpi-grid { grid-template-columns: repeat(4, 1fr); }
-    }
+    .loan-hero { background: linear-gradient(135deg, #0F8A5F 0%, #0B2E23 100%); color: white; padding: 30px 20px; border-radius: 0 0 30px 30px; margin-bottom: 20px; text-align: center; }
+    .loan-balance { font-size: 2.8rem; font-family: var(--font-display); font-weight: 700; margin: 10px 0; }
+    .loan-tx-item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); }
   </style>
 </head>
-<body>
+<body class="mobile-app-body">
 
-  <div class="sidebar-overlay" id="overlay" onclick="toggleMenu()"></div>
-
-  <aside class="sidebar" id="sidebar">
-    <div class="brand">XANVIA</div>
-    <ul class="nav-menu">
-      <li><a href="hub.html"><span class="icon">🏠</span> Dashboard</a></li>
-      <li><a href="loans.html" class="active"><span class="icon">💰</span> Loans</a></li>
-      <li><a onclick="openModal()"><span class="icon">📝</span> Submit Another Deal</a></li>
-      <li><a><span class="icon">💬</span> Communication</a></li>
-      <li><a><span class="icon">🎧</span> Contact Support</a></li>
-    </ul>
-  </aside>
-
-  <main class="main-content">
-    <header class="top-header">
-      <h1>
-        <button class="mobile-menu-btn" onclick="toggleMenu()">☰</button>
-        Dashboard
-      </h1>
-      <div class="user-profile">
-        <div>
-          <p id="header-name">Loading...</p>
-          <small>Borrower</small>
-        </div>
-        <img src="https://ui-avatars.com/api/?name=User&background=0F8A5F&color=fff" alt="Profile">
-      </div>
-    </header>
-
-    <div class="kpi-grid">
-      <div class="kpi-card orange">
-        <h4>Current Loans Pending</h4>
-        <h2 id="kpi-pending">0</h2>
-        <div class="kpi-icon">⏳</div>
-      </div>
-      <div class="kpi-card green">
-        <h4>Total Closed Loans</h4>
-        <h2 id="kpi-closed">0</h2>
-        <div class="kpi-icon">✓</div>
-      </div>
+  <div class="loan-hero">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <a href="dashboard.html" style="color: white; text-decoration: none; font-size: 1.5rem;">←</a>
+      <h2 style="font-size: 1.2rem;">Loan Center</h2>
+      <div style="width: 24px;"></div>
     </div>
-
-    <div class="banner-card">
-      <div>
-        <h3>Apply For Funding Today!</h3>
-        <p>No Obligations, Credit Check, Or Hidden Costs!</p>
-      </div>
-      <button class="btn-dark" onclick="openModal()">Next ></button>
-    </div>
-
-    <div class="underwriter-card">
-      <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=200&q=80" alt="Underwriter">
-      <div class="underwriter-info">
-        <h2>Jonathan Doe</h2>
-        <div class="role">Senior Underwriter</div>
-        <p>📞 012 345 6789</p>
-        <p>✉️ underwriter@xanviabank.com</p>
-      </div>
-      <button class="btn-gold">Contact</button>
-    </div>
-
-    <div class="table-container">
-      <div class="table-header">
-        <h3>Applied Loans</h3>
-        <p>Manage Your Loan Applications Effortlessly</p>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Loan Id</th>
-            <th>Type</th>
-            <th>Amount</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="loan-table-body">
-          <tr><td colspan="5" style="text-align:center;">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </main>
-
-  <!-- APPLY MODAL -->
-  <div class="modal-overlay" id="apply-modal">
-    <div class="modal-content">
-      <button class="close-modal" onclick="closeModal()">×</button>
-      <h2>Apply for Funding</h2>
-      
-      <div id="admin-alert" class="admin-details-box" style="display:none;">
-        <strong style="color:red;">⚠️ Insufficient Funds for 15% Deposit</strong><br>
-        Please send your deposit to the Admin details below, then upload your receipt on the Deposit page.
-        <div id="admin-details-content" style="margin-top:10px; background:white; padding:10px; border-radius:6px; border:1px solid #ddd;">
-          Loading...
-        </div>
-      </div>
-
-      <p>A 15% deposit is required upfront and deducted immediately from your Checking account.</p>
-      
-      <div class="form-group">
-        <label>Loan Amount ($)</label>
-        <input type="number" id="loan-amount" placeholder="e.g. 10000" oninput="updateDepositReq()">
-      </div>
-      <div style="margin-bottom: 15px; font-weight: 600; color: var(--danger);">
-        Required 15% Deposit: <span id="dep-req-display">$0.00</span>
-      </div>
-      <div class="form-group">
-        <label>Term</label>
-        <select id="loan-term">
-          <option value="12">12 Months</option>
-          <option value="24">24 Months</option>
-          <option value="36">36 Months</option>
-        </select>
-      </div>
-      
-      <button class="btn-primary" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; font-size:1rem; margin-top:10px; cursor:pointer;" onclick="submitLoan()">Submit Application</button>
-      <div id="modal-msg" style="margin-top:15px; font-weight:bold; text-align:center;"></div>
-    </div>
+    
+    <p style="font-size: 0.9rem; opacity: 0.8;">Total Outstanding Debt</p>
+    <div class="loan-balance" id="loan-balance">$0.00</div>
+    
+    <button class="btn-primary" onclick="openLoanModal()" style="background: white; color: var(--deep-green); border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">Apply for New Loan</button>
   </div>
+
+  <main class="app-main">
+    
+    <div class="panel" style="background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
+      <h3 style="color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem;">Loan Transactions</h3>
+      <div id="loan-tx-list">Loading...</div>
+    </div>
+
+    <div id="admin-details-box" class="panel" style="display:none; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 16px; padding: 20px;">
+      <h4 style="color: #92400E; margin-bottom: 10px;">⚠️ Deposit Required</h4>
+      <p style="font-size: 0.9rem; color: #92400E; margin-bottom: 15px;">You need a 15% deposit to apply. Send funds to the Admin details below:</p>
+      <div id="admin-details-content" style="background: white; padding: 15px; border-radius: 8px; font-size: 0.9rem;"></div>
+    </div>
+
+  </main>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
-    document.getElementById('header-name').textContent = user.name;
+    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-    function toggleMenu() {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('overlay').classList.toggle('open');
-    }
-
-    async function openModal() { 
-      document.getElementById('apply-modal').classList.add('open'); 
-      
-      // Check balance and show admin details if low
+    async function loadLoanData() {
       const res = await fetch(`/api/accounts/${user.id}`);
       const data = await res.json();
-      const checking = data.checking || 0;
-      const alertBox = document.getElementById('admin-alert');
+      
+      const loanBal = data.loan || 0;
+      document.getElementById('loan-balance').textContent = formatUSD(loanBal);
 
-      if (checking < 100) {
-        alertBox.style.display = 'block';
-        const settings = await (await fetch('/api/admin/settings')).json();
-        document.getElementById('admin-details-content').innerHTML = `
-          <strong>Bank Name:</strong> ${settings.bank_name || 'N/A'}<br>
-          <strong>Account Number:</strong> ${settings.bank_account || 'N/A'}<br>
-          <strong>Routing Number:</strong> ${settings.bank_routing || 'N/A'}<br>
-          <hr>
-          <strong>Bitcoin Address:</strong> ${settings.btc_address || 'N/A'}
-        `;
-      } else {
-        alertBox.style.display = 'none';
-      }
+      // Load Loan Transactions
+      const txRes = await fetch(`/api/transactions/${user.id}`);
+      const txs = await txRes.json();
+      const loanTxs = txs.filter(tx => tx.type.includes('LOAN'));
+
+      document.getElementById('loan-tx-list').innerHTML = loanTxs.map(tx => `
+        <div class="loan-tx-item">
+          <div>
+            <strong>${tx.type}</strong><br>
+            <small style="color: var(--muted);">${new Date(tx.created_at).toLocaleDateString()}</small>
+          </div>
+          <div style="font-weight: 600; color: ${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'};">
+            ${formatUSD(tx.amount)}<br>
+            <small style="font-size: 0.7rem;">${tx.status}</small>
+          </div>
+        </div>
+      `).join('') || `<p style="color: var(--muted); font-size: 0.9rem;">No loan history.</p>`;
     }
 
-    function closeModal() { document.getElementById('apply-modal').classList.remove('open'); }
+    loadLoanData();
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Loan Center | Xanvia Bank</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .loan-hero { background: linear-gradient(135deg, #0F8A5F 0%, #0B2E23 100%); color: white; padding: 30px 20px; border-radius: 0 0 30px 30px; margin-bottom: 20px; text-align: center; }
+    .loan-balance { font-size: 2.8rem; font-family: var(--font-display); font-weight: 700; margin: 10px 0; }
+    .loan-tx-item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); }
+  </style>
+</head>
+<body class="mobile-app-body">
 
-    function updateDepositReq() {
-      const amount = parseFloat(document.getElementById('loan-amount').value) || 0;
-      document.getElementById('dep-req-display').textContent = `$${(amount * 0.15).toFixed(2)}`;
-    }
+  <div class="loan-hero">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <a href="dashboard.html" style="color: white; text-decoration: none; font-size: 1.5rem;">←</a>
+      <h2 style="font-size: 1.2rem;">Loan Center</h2>
+      <div style="width: 24px;"></div>
+    </div>
+    
+    <p style="font-size: 0.9rem; opacity: 0.8;">Total Outstanding Debt</p>
+    <div class="loan-balance" id="loan-balance">$0.00</div>
+    
+    <button class="btn-primary" onclick="openLoanModal()" style="background: white; color: var(--deep-green); border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">Apply for New Loan</button>
+  </div>
 
-    async function loadLoans() {
-      try {
-        const res = await fetch(`/api/loans/${user.id}`);
-        const loans = await res.json();
-        const tbody = document.getElementById('loan-table-body');
-        
-        let pending = 0;
-        let closed = 0;
+  <main class="app-main">
+    
+    <div class="panel" style="background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
+      <h3 style="color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem;">Loan Transactions</h3>
+      <div id="loan-tx-list">Loading...</div>
+    </div>
 
-        if (loans.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--muted);">No loan applications found.</td></tr>`;
-        } else {
-          tbody.innerHTML = loans.map((loan, index) => {
-            if(loan.status === 'Under Review') pending++;
-            if(loan.status === 'Approved') closed++;
+    <div id="admin-details-box" class="panel" style="display:none; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 16px; padding: 20px;">
+      <h4 style="color: #92400E; margin-bottom: 10px;">⚠️ Deposit Required</h4>
+      <p style="font-size: 0.9rem; color: #92400E; margin-bottom: 15px;">You need a 15% deposit to apply. Send funds to the Admin details below:</p>
+      <div id="admin-details-content" style="background: white; padding: 15px; border-radius: 8px; font-size: 0.9rem;"></div>
+    </div>
 
-            const isApproved = loan.status === 'Approved';
-            const badgeClass = isApproved ? 'status-approved' : 'status-review';
-            
-            return `
-              <tr>
-                <td>#NL-${1000 + loan.id}</td>
-                <td>Personal Loan</td>
-                <td>$${parseFloat(loan.amount).toFixed(2)}</td>
-                <td><span class="status-badge ${badgeClass}">${loan.status}</span></td>
-                <td><button class="btn-action">👁️</button></td>
-              </tr>
-            `;
-          }).join('');
-        }
+  </main>
 
-        document.getElementById('kpi-pending').textContent = pending;
-        document.getElementById('kpi-closed').textContent = closed;
+  <script>
+    const user = JSON.parse(localStorage.getItem("xanvia_user"));
+    if (!user) window.location.replace("../index.html");
+    
+    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-      } catch (err) { console.error(err); }
-    }
-
-    async function submitLoan() {
-      const amount = parseFloat(document.getElementById('loan-amount').value);
-      const term = parseInt(document.getElementById('loan-term').value);
-      const msg = document.getElementById('modal-msg');
-
-      if (!amount || amount <= 0) { msg.textContent = "Enter valid amount."; msg.style.color = "red"; return; }
-
-      const res = await fetch('/api/loans/apply', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, amount, termMonths: term, rate: 6.49 })
-      });
+    async function loadLoanData() {
+      const res = await fetch(`/api/accounts/${user.id}`);
       const data = await res.json();
       
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
+      const loanBal = data.loan || 0;
+      document.getElementById('loan-balance').textContent = formatUSD(loanBal);
 
-      if(data.success) {
-        setTimeout(() => { closeModal(); loadLoans(); }, 1500);
-      }
+      // Load Loan Transactions
+      const txRes = await fetch(`/api/transactions/${user.id}`);
+      const txs = await txRes.json();
+      const loanTxs = txs.filter(tx => tx.type.includes('LOAN'));
+
+      document.getElementById('loan-tx-list').innerHTML = loanTxs.map(tx => `
+        <div class="loan-tx-item">
+          <div>
+            <strong>${tx.type}</strong><br>
+            <small style="color: var(--muted);">${new Date(tx.created_at).toLocaleDateString()}</small>
+          </div>
+          <div style="font-weight: 600; color: ${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'};">
+            ${formatUSD(tx.amount)}<br>
+            <small style="font-size: 0.7rem;">${tx.status}</small>
+          </div>
+        </div>
+      `).join('') || `<p style="color: var(--muted); font-size: 0.9rem;">No loan history.</p>`;
     }
 
-    loadLoans();
+    loadLoanData();
   </script>
 </body>
 </html>
