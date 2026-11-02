@@ -2,22 +2,29 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Investments | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
   
   <style>
-    /* Specific Investment Dashboard Styles */
-    body { background-color: #F4F7F6; }
+    body { background-color: #F4F7F6; display: flex; justify-content: center; }
     
+    .app-container {
+      width: 100%;
+      max-width: 600px;
+      background: #F4F7F6;
+      min-height: 100vh;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0,0,0,0.05);
+    }
+
     .app-header { 
       background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); 
       color: white; 
-      padding: 20px 20px 40px; 
+      padding: 30px 20px 60px; 
       border-radius: 0 0 30px 30px; 
       position: relative;
-      box-shadow: 0 10px 30px rgba(11, 46, 35, 0.15);
     }
 
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -33,38 +40,34 @@
       font-size: 0.8rem; font-weight: 600; border: 1px solid rgba(16, 185, 129, 0.3);
     }
 
-    /* Stats Grid */
     .stats-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
-      margin: -25px 20px 20px; position: relative; z-index: 10;
+      margin: -40px 20px 20px; position: relative; z-index: 10;
     }
     .stat-card {
-      background: white; padding: 15px; border-radius: 16px;
+      background: white; padding: 20px 15px; border-radius: 16px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center;
     }
-    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 5px; }
-    .stat-card h3 { font-size: 1.2rem; color: var(--deep-green); font-weight: 700; }
+    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
+    .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
     .stat-card h3.profit { color: var(--emerald); }
 
-    /* Action Buttons */
     .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
     .action-btn {
       flex: 1; padding: 16px; border-radius: 12px; font-weight: 600; font-size: 1rem;
       text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px;
     }
-    .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 12px rgba(15,138,95,0.3); }
+    .btn-deposit { background: var(--emerald); color: white; }
     .btn-withdraw { background: white; color: var(--text); border: 1px solid var(--border); }
     .btn-withdraw:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    /* Lock Alert */
     .lock-alert {
       margin: 0 20px 20px; padding: 15px; border-radius: 12px;
       background: #FEF3C7; color: #92400E; font-size: 0.85rem; font-weight: 600;
       display: flex; align-items: center; gap: 10px; border: 1px solid #F59E0B;
     }
 
-    /* History List */
-    .history-panel { padding: 0 20px 30px; }
+    .history-panel { padding: 0 20px 80px; }
     .history-panel h3 { font-size: 1.1rem; color: var(--deep-green); margin-bottom: 15px; }
     .tx-item {
       background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px;
@@ -74,80 +77,64 @@
     .tx-info p { font-size: 0.75rem; color: var(--muted); }
     .tx-amount { font-weight: 700; font-size: 1rem; text-align: right; }
     .tx-amount.credit { color: var(--emerald); }
-    .tx-amount.debit { color: var(--text); }
-    .tx-status { font-size: 0.7rem; font-weight: 500; color: var(--muted); display: block; margin-top: 2px; }
   </style>
 </head>
-<body class="mobile-app-body">
+<body>
 
-  <!-- HEADER -->
-  <header class="app-header">
-    <div class="header-top">
-      <a href="hub.html">←</a>
-      <div class="logo" style="color: white; font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
-      <div style="width: 24px;"></div>
-    </div>
-    
-    <div class="invest-summary">
-      <p>Total Portfolio Value</p>
-      <h2 id="total-portfolio-val">$0.00</h2>
-      <div class="yield-badge" id="yield-status">Calculating...</div>
-    </div>
-  </header>
-
-  <main style="padding-top: 10px;">
-    
-    <!-- STATS -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <p>Deposited Balance</p>
-        <h3 id="deposited-bal">$0.00</h3>
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-top">
+        <a href="hub.html">←</a>
+        <div class="logo" style="color: white; font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
+        <div style="width: 24px;"></div>
       </div>
-      <div class="stat-card">
-        <p>Profit Yield</p>
-        <h3 class="profit" id="profit-yield">+$0.00</h3>
+      
+      <div class="invest-summary">
+        <p>Total Portfolio Value</p>
+        <h2 id="total-portfolio-val">$0.00</h2>
+        <div class="yield-badge" id="yield-status">Loading...</div>
       </div>
-      <div class="stat-card">
-        <p>Total Withdrawn</p>
-        <h3 id="withdrawn-bal">$0.00</h3>
+    </header>
+
+    <main>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <p>Deposited Balance</p>
+          <h3 id="deposited-bal">$0.00</h3>
+        </div>
+        <div class="stat-card">
+          <p>Profit Yield</p>
+          <h3 class="profit" id="profit-yield">+$0.00</h3>
+        </div>
+        <div class="stat-card">
+          <p>Total Withdrawn</p>
+          <h3 id="withdrawn-bal">$0.00</h3>
+        </div>
+        <div class="stat-card">
+          <p>Active Days</p>
+          <h3 id="active-days">0 Days</h3>
+        </div>
       </div>
-      <div class="stat-card">
-        <p>Active Days</p>
-        <h3 id="active-days">0 Days</h3>
+
+      <div class="action-grid">
+        <a href="deposit.html?target=brokerage" class="action-btn btn-deposit">
+          <span>⬇️</span> Deposit
+        </a>
+        <button id="withdraw-btn" class="action-btn btn-withdraw" onclick="handleWithdraw()" disabled>
+          <span>⬆️</span> Withdraw
+        </button>
       </div>
-    </div>
 
-    <!-- ACTIONS -->
-    <div class="action-grid">
-      <a href="deposit.html?target=brokerage" class="action-btn btn-deposit">
-        <span>⬇️</span> Deposit
-      </a>
-      <button id="withdraw-btn" class="action-btn btn-withdraw" onclick="handleWithdraw()" disabled>
-        <span>⬆️</span> Withdraw
-      </button>
-    </div>
-
-    <!-- LOCK ALERT -->
-    <div id="lock-alert" class="lock-alert" style="display:none;">
-      🔒 Withdrawals are locked for 7 days. Your funds will unlock soon.
-    </div>
-
-    <!-- HISTORY -->
-    <div class="history-panel">
-      <h3>Investment History</h3>
-      <div id="history-list">
-        <p style="text-align:center; color:var(--muted); font-size:0.9rem;">Loading...</p>
+      <div id="lock-alert" class="lock-alert" style="display:none;">
+        🔒 Withdrawals are locked for 7 days. Your funds will unlock soon.
       </div>
-    </div>
 
-  </main>
-
-  <!-- BOTTOM NAV -->
-  <nav class="bottom-nav">
-    <a href="dashboard.html" class="nav-item"><span class="icon">🏠</span><span class="label">Home</span></a>
-    <a href="investments.html" class="nav-item active"><span class="icon">📈</span><span class="label">Invest</span></a>
-    <a href="cards.html" class="nav-item"><span class="icon">💳</span><span class="label">Cards</span></a>
-  </nav>
+      <div class="history-panel">
+        <h3>Investment History</h3>
+        <div id="history-list"></div>
+      </div>
+    </main>
+  </div>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
@@ -158,23 +145,25 @@
 
     async function loadInvestments() {
       try {
-        // 1. Fetch Account Balances
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
         
+        // The initial deposit from the database
         const initialDep = data.brokerage || 0;
+        
+        // The time the deposit was approved
         const createdAt = data.brokerage_created_at ? new Date(data.brokerage_created_at) : new Date();
         const now = new Date();
         
-        // 2. Calculate Days and Yield
+        // Calculate days elapsed
         const diffTime = Math.abs(now - createdAt);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
         
-        const dailyYield = 0.015; // 1.5% daily
+        // Yield Calculation (1.5% per day)
+        const dailyYield = 0.015; 
         const yieldAmount = initialDep * dailyYield * diffDays;
         const totalVal = initialDep + yieldAmount;
 
-        // 3. Fetch Transactions for Withdrawal and History
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
         
@@ -187,18 +176,18 @@
           }
         });
 
-        // 4. Update UI elements
+        // Update UI
         document.getElementById('total-portfolio-val').textContent = formatUSD(totalVal);
         document.getElementById('deposited-bal').textContent = formatUSD(initialDep);
         document.getElementById('profit-yield').textContent = `+${formatUSD(yieldAmount)}`;
         document.getElementById('withdrawn-bal').textContent = formatUSD(totalWithdrawn);
         document.getElementById('active-days').textContent = `${diffDays} Days`;
 
-        // 5. Lock/Unlock Logic
-        if (diffDays >= 7) {
-          document.getElementById('yield-status').textContent = "Active Yield";
-          document.getElementById('withdraw-btn').disabled = false;
-          canWithdraw = true;
+        // Lock Logic
+        if (diffDays >= 7 || initialDep === 0) {
+          document.getElementById('yield-status').textContent = initialDep === 0 ? "No Active Deposit" : "Active Yield";
+          document.getElementById('withdraw-btn').disabled = initialDep === 0;
+          canWithdraw = initialDep > 0;
           document.getElementById('lock-alert').style.display = 'none';
         } else {
           document.getElementById('yield-status').textContent = `Locked (${7 - diffDays} days left)`;
@@ -207,7 +196,7 @@
           document.getElementById('lock-alert').style.display = 'flex';
         }
 
-        // 6. Render History
+        // History
         const historyList = document.getElementById('history-list');
         if (investTxs.length === 0) {
           historyList.innerHTML = `<p style="text-align:center; color:var(--muted); font-size:0.9rem;">No investment history yet.</p>`;
@@ -218,9 +207,8 @@
                 <h4>${tx.type.replace('_', ' ')}</h4>
                 <p>${new Date(tx.created_at).toLocaleDateString()}</p>
               </div>
-              <div class="tx-amount ${tx.type === 'DEPOSIT' ? 'credit' : 'debit'}">
+              <div class="tx-amount ${tx.type === 'DEPOSIT' ? 'credit' : ''}">
                 ${tx.type === 'DEPOSIT' ? '+' : '-'}${formatUSD(tx.amount)}
-                <span class="tx-status">${tx.status}</span>
               </div>
             </div>
           `).join('');
@@ -232,10 +220,7 @@
     }
 
     function handleWithdraw() {
-      if (!canWithdraw) {
-        alert("Your investment is locked. You can only withdraw after 7 days.");
-        return;
-      }
+      if (!canWithdraw) return;
       window.location.href = "withdraw.html?type=brokerage";
     }
 
