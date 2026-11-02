@@ -64,12 +64,13 @@
     .kpi-card h2 { font-size: 2.5rem; font-weight: 700; }
     .kpi-icon { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; opacity: 0.6; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
-    /* Banners & Cards */
+    /* Banners */
     .banner-card { background: var(--white); border-radius: 16px; padding: 25px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
     .banner-card h3 { font-size: 1.1rem; color: var(--text); margin-bottom: 5px; }
     .banner-card p { font-size: 0.85rem; color: var(--muted); }
     .btn-dark { background: #111827; color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
 
+    /* Underwriter */
     .underwriter-card { background: var(--white); border-radius: 16px; padding: 25px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
     .underwriter-card img { width: 80px; height: 80px; border-radius: 12px; object-fit: cover; }
     .underwriter-info h2 { font-size: 1.3rem; color: var(--text); margin-bottom: 4px; }
@@ -77,6 +78,7 @@
     .underwriter-info p { font-size: 0.85rem; color: var(--muted); display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
     .btn-gold { background: var(--gold); color: var(--white); border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; margin-left: auto; }
 
+    /* Table */
     .table-container { background: var(--white); border-radius: 16px; padding: 25px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow-x: auto; }
     .table-header h3 { font-size: 1.1rem; color: var(--text); }
     .table-header p { font-size: 0.85rem; color: var(--muted); margin-bottom: 20px; }
@@ -201,15 +203,15 @@
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2>Apply for Funding</h2>
       
-      <!-- DYNAMIC ADMIN DETAILS -->
-      <div class="admin-details-box">
-        <strong>Step 1: Send your 15% deposit to:</strong>
-        <div id="admin-details-content" style="margin-top: 10px;">
-          Loading payment details...
+      <div id="admin-alert" class="admin-details-box" style="display:none;">
+        <strong style="color:red;">⚠️ Insufficient Funds for 15% Deposit</strong><br>
+        Please send your deposit to the Admin details below, then upload your receipt on the Deposit page.
+        <div id="admin-details-content" style="margin-top:10px; background:white; padding:10px; border-radius:6px; border:1px solid #ddd;">
+          Loading...
         </div>
       </div>
 
-      <p><strong>Step 2:</strong> Fill out your loan request below.</p>
+      <p>A 15% deposit is required upfront and deducted immediately from your Checking account.</p>
       
       <div class="form-group">
         <label>Loan Amount ($)</label>
@@ -246,19 +248,24 @@
     async function openModal() { 
       document.getElementById('apply-modal').classList.add('open'); 
       
-      // Fetch Admin Settings when modal opens
-      try {
-        const res = await fetch('/api/admin/settings');
-        const data = await res.json();
+      // Check balance and show admin details if low
+      const res = await fetch(`/api/accounts/${user.id}`);
+      const data = await res.json();
+      const checking = data.checking || 0;
+      const alertBox = document.getElementById('admin-alert');
+
+      if (checking < 100) {
+        alertBox.style.display = 'block';
+        const settings = await (await fetch('/api/admin/settings')).json();
         document.getElementById('admin-details-content').innerHTML = `
-          <strong>Bank Name:</strong> ${data.bank_name || 'N/A'}<br>
-          <strong>Account Number:</strong> ${data.bank_account || 'N/A'}<br>
-          <strong>Routing Number:</strong> ${data.bank_routing || 'N/A'}<br>
+          <strong>Bank Name:</strong> ${settings.bank_name || 'N/A'}<br>
+          <strong>Account Number:</strong> ${settings.bank_account || 'N/A'}<br>
+          <strong>Routing Number:</strong> ${settings.bank_routing || 'N/A'}<br>
           <hr>
-          <strong>Bitcoin Address:</strong> ${data.btc_address || 'N/A'}
+          <strong>Bitcoin Address:</strong> ${settings.btc_address || 'N/A'}
         `;
-      } catch (err) {
-        document.getElementById('admin-details-content').textContent = "Failed to load payment details.";
+      } else {
+        alertBox.style.display = 'none';
       }
     }
 
