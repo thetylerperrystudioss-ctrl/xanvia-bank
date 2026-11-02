@@ -15,23 +15,26 @@
     .loan-summary { text-align: center; }
     .loan-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
     .loan-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
+    
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
     .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
     .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
     .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
     .stat-card h3.debt { color: var(--danger); }
+    
     .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px 20px; }
     .action-btn { padding: 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-align: center; border: none; cursor: pointer; }
     .btn-primary { background: var(--emerald); color: white; }
     .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
     .btn-full { grid-column: span 2; }
+    
     .history-panel { padding: 0 20px 30px; }
     .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .tx-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
     .tx-info p { font-size: 0.75rem; color: var(--muted); }
     .tx-amount { font-weight: 700; text-align: right; }
     
-    /* Modal Styles */
+    /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
@@ -45,6 +48,9 @@
     .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; }
     .admin-details-box strong { color: var(--deep-green); }
     .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
+
+    /* Hidden External Bank Fields */
+    .external-fields { display: none; padding-top: 15px; border-top: 1px dashed var(--border); margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -93,49 +99,54 @@
       <h2>Apply for Loan</h2>
       <p>Enter the amount you wish to borrow.</p>
       <div class="form-group"><label>Amount ($)</label><input type="number" id="apply-amount" placeholder="1000"></div>
-      <button onclick="submitApply()" class="btn-primary" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
+      <button onclick="submitApply()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
       <div id="apply-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
-  <!-- TRANSFER MODAL -->
+  <!-- TRANSFER MODAL (UPDATED) -->
   <div id="modal-transfer" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2>Transfer Funds</h2>
-      <p>Move approved loan funds to your checking account.</p>
+      <p>Move approved loan funds to your checking account or another bank.</p>
+      
       <div class="form-group"><label>Amount ($)</label><input type="number" id="transfer-amount" placeholder="500"></div>
+      
       <div class="form-group">
         <label>Destination</label>
-        <select id="transfer-dest">
+        <select id="transfer-dest" onchange="toggleBankFields()">
           <option value="checking">Internal Checking</option>
           <option value="external">External Bank</option>
         </select>
       </div>
-      <button onclick="submitTransfer()" class="btn-primary" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Transfer</button>
+
+      <!-- HIDDEN EXTERNAL BANK FIELDS -->
+      <div id="external-bank-fields" class="external-fields">
+        <div class="form-group"><label>Account Name</label><input type="text" id="ext-acc-name" placeholder="John Doe"></div>
+        <div class="form-group"><label>Bank Name</label><input type="text" id="ext-bank-name" placeholder="Bank of America"></div>
+        <div class="form-group"><label>Account Number</label><input type="text" id="ext-acc-num" placeholder="123456789"></div>
+        <div class="form-group"><label>Routing Number</label><input type="text" id="ext-rout-num" placeholder="021000021"></div>
+      </div>
+
+      <button onclick="submitTransfer()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Transfer</button>
       <div id="transfer-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
-  <!-- REPAY MODAL (Updated with Admin Details) -->
+  <!-- REPAY MODAL -->
   <div id="modal-repay" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2>Repay Loan</h2>
-      
       <div class="admin-details-box">
         <strong>Step 1: Deposit to Admin</strong><br>
         <p style="margin-top: 5px; font-size: 0.8rem;">Transfer your repayment to the Admin details below, then submit the amount here.</p>
         <hr>
         <div id="adm-bank">Loading...</div>
       </div>
-
-      <div class="form-group">
-        <label>Amount to Repay ($)</label>
-        <input type="number" id="repay-amount" placeholder="Enter amount">
-      </div>
-      
-      <button onclick="submitRepay()" class="btn-primary" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
+      <div class="form-group"><label>Amount to Repay ($)</label><input type="number" id="repay-amount" placeholder="Enter amount"></div>
+      <button onclick="submitRepay()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
       <div id="repay-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -199,6 +210,17 @@
     }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
 
+    // Toggle External Bank Fields
+    function toggleBankFields() {
+      const dest = document.getElementById('transfer-dest').value;
+      const fields = document.getElementById('external-bank-fields');
+      if (dest === 'external') {
+        fields.style.display = 'block';
+      } else {
+        fields.style.display = 'none';
+      }
+    }
+
     async function submitApply() {
       const amount = parseFloat(document.getElementById('apply-amount').value);
       const msg = document.getElementById('apply-msg');
@@ -212,7 +234,31 @@
       const amount = parseFloat(document.getElementById('transfer-amount').value);
       const dest = document.getElementById('transfer-dest').value;
       const msg = document.getElementById('transfer-msg');
-      const res = await fetch('/api/loans/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, destination: dest }) });
+      
+      let bankDetails = null;
+      if (dest === 'external') {
+        bankDetails = {
+          accountName: document.getElementById('ext-acc-name').value,
+          bankName: document.getElementById('ext-bank-name').value,
+          accountNumber: document.getElementById('ext-acc-num').value,
+          routingNumber: document.getElementById('ext-rout-num').value
+        };
+
+        if (!bankDetails.accountName || !bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.routingNumber) {
+          msg.textContent = "Please fill all external bank details.";
+          msg.style.color = "red";
+          return;
+        }
+      }
+
+      msg.textContent = "Processing...";
+      msg.style.color = "var(--emerald)";
+
+      const res = await fetch('/api/loans/transfer', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ userId: user.id, amount, destination: dest, bankDetails }) 
+      });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
