@@ -5,7 +5,6 @@ const path = require('path');
 
 const app = express();
 app.use(express.json());
-// Serve your frontend files
 app.use(express.static(path.join(__dirname, '../')));
 
 // Connect to Render's PostgreSQL database
@@ -14,15 +13,26 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Create users table automatically on startup
-pool.query(`
-  CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
-    password VARCHAR(100)
-  )
-`).catch(err => console.log("Database error:", err));
+// Check connection and Create Table
+pool.connect((err, client, release) => {
+  if (err) {
+    console.error('❌ DATABASE CONNECTION ERROR:', err.message);
+  } else {
+    console.log('✅ Connected to PostgreSQL Database!');
+    client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100) UNIQUE,
+        password VARCHAR(100)
+      )
+    `, (err, result) => {
+      release();
+      if (err) console.error('❌ TABLE CREATION ERROR:', err.message);
+      else console.log('✅ Users table ready.');
+    });
+  }
+});
 
 // REGISTER API
 app.post('/api/register', async (req, res) => {
@@ -35,8 +45,9 @@ app.post('/api/register', async (req, res) => {
     );
     res.json({ success: true, message: 'Account created.' });
   } catch (err) {
+    console.error('Register Error:', err.message);
     if (err.code === '23505') return res.status(400).json({ error: 'Email already exists.' });
-    res.status(500).json({ error: 'Server error.' });
+    res.status(500).json({ error: 'Database error.' });
   }
 });
 
@@ -53,11 +64,12 @@ app.post('/api/login', async (req, res) => {
     
     res.json({ success: true, user: { id: user.id, name: user.name, email: user.email } });
   } catch (err) {
-    res.status(500).json({ error: 'Server error.' });
+    console.error('Login Error:', err.message);
+    res.status(500).json({ error: 'Database error.' });
   }
 });
 
-// Catch-all: Send index.html for any other route
+// Serve the frontend
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../index.html'));
 });
