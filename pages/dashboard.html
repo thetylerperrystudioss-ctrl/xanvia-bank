@@ -3,42 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Dashboard | Xanvia Bank</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Dashboard | Xanvia Credit Union</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
+  <style>
+    .app-header { 
+      padding: 20px 20px 50px; 
+      border-radius: 0 0 30px 30px; 
+      text-align: center; 
+      position: relative; 
+      background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); 
+      color: white; 
+    }
+    .top-nav { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 20px; 
+    }
+    
+    .logo { display: flex; align-items: center; gap: 10px; }
+    .logo-icon { background: var(--emerald); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
+    .logo-text { display: flex; flex-direction: column; text-align: left; }
+    .logo-title { font-family: 'Merriweather', serif; font-size: 1.2rem; font-weight: 900; line-height: 1; }
+    .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
+
+    .logout-btn { color: white; background: rgba(255,255,255,0.1); border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .balance-section { margin-top: 10px; }
+    .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; }
+    .balance-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
+    
+    .quick-actions { display: flex; justify-content: center; gap: 15px; margin-top: 30px; position: absolute; bottom: -35px; left: 0; right: 0; padding: 0 20px; }
+    .action-btn { background: white; border: none; border-radius: 16px; padding: 15px 10px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
+    .icon-circle { width: 36px; height: 36px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .action-btn span { font-size: 0.8rem; font-weight: 600; }
+  </style>
 </head>
 <body class="mobile-app-body">
 
-  <!-- TOP GREEN HEADER -->
   <header class="app-header">
-    <div class="header-tabs">
-      <span class="active">Personal</span>
-      <span>Business</span>
-      <span>Family</span>
+    <div class="top-nav">
+      <div class="logo">
+        <div class="logo-icon">X</div>
+        <div class="logo-text">
+          <span class="logo-title">Xanvia</span>
+          <span class="logo-subtitle">Credit Union</span>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="logout()">Log Out</button>
     </div>
-
+    
     <div class="balance-section">
       <h1 class="balance-amount" id="total-balance">$0.00</h1>
       <p class="balance-label">Available Balance</p>
     </div>
 
     <div class="quick-actions">
-      <button class="action-btn" onclick="window.location.href='hub.html'">
+      <a href="hub.html" class="action-btn">
         <div class="icon-circle">⚙️</div>
         <span>Manage</span>
-      </button>
-      <button class="action-btn" onclick="window.location.href='withdraw.html'">
+      </a>
+      <a href="withdraw.html" class="action-btn">
         <div class="icon-circle">↗</div>
         <span>Transfer</span>
-      </button>
-      <button class="action-btn" onclick="window.location.href='deposit.html'">
+      </a>
+      <a href="deposit.html?target=checking" class="action-btn">
         <div class="icon-circle">+</div>
         <span>Deposit</span>
-      </button>
+      </a>
     </div>
   </header>
 
-  <main class="app-main">
+  <main class="app-main" style="padding-top: 50px;">
     <div class="search-bar">
       <span>🔍</span>
       <input type="text" placeholder="Search Transactions">
@@ -53,11 +89,10 @@
     </div>
 
     <div class="transaction-container" id="transaction-list">
-      <!-- Transactions injected here -->
+      <!-- Transactions injected by JS -->
     </div>
   </main>
 
-  <!-- BOTTOM NAVIGATION -->
   <nav class="bottom-nav">
     <a href="#" class="nav-item">
       <span class="icon">💳</span>
@@ -85,6 +120,11 @@
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
 
+    function logout() {
+      localStorage.removeItem("xanvia_user");
+      window.location.replace("../index.html");
+    }
+
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
     async function loadDashboard() {
@@ -94,59 +134,55 @@
         
         const checking = data.checking || 0;
         const savings = data.savings || 0;
-        const total = checking + savings;
-
-        document.getElementById('total-balance').textContent = formatUSD(total);
+        
+        document.getElementById('total-balance').textContent = formatUSD(checking + savings);
 
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
+        const container = document.getElementById('transaction-list');
         
-        renderTransactions(txs);
+        if (!txs || txs.length === 0) {
+          container.innerHTML = `<p style="text-align:center; color:var(--muted); padding: 20px;">No transactions yet.</p>`;
+          return;
+        }
 
-      } catch (err) { console.error(err); }
-    }
-
-    function renderTransactions(txs) {
-      const container = document.getElementById('transaction-list');
-      
-      if (!txs || txs.length === 0) {
-        container.innerHTML = `<p style="text-align:center; color:var(--muted); padding: 20px;">No transactions yet.</p>`;
-        return;
-      }
-
-      let html = `
-        <div class="month-header">
-          <span>Recent Activity</span>
-          <span class="spent-text">Transactions</span>
-        </div>
-      `;
-
-      txs.forEach(tx => {
-        const isCredit = tx.type.includes('DEPOSIT') || tx.type.includes('LOAN');
-        const amountClass = isCredit ? 'credit' : 'debit';
-        const sign = isCredit ? '+' : '-';
-        const icon = tx.type === 'DEPOSIT' ? '⬇️' : tx.type === 'WITHDRAWAL' ? '⬆️' : '🔄';
-        
-        const date = new Date(tx.created_at);
-        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const dateStr = date.toLocaleDateString([], { month: '2-digit', day: '2-digit' });
-
-        html += `
-          <div class="tx-item">
-            <div class="tx-icon">${icon}</div>
-            <div class="tx-details">
-              <h4>${tx.type.replace('_', ' ')}</h4>
-              <p>${timeStr} • ${dateStr}</p>
-            </div>
-            <div class="tx-amount ${amountClass}">
-              ${sign}${formatUSD(parseFloat(tx.amount))}
-              <span class="tx-status">${tx.status}</span>
-            </div>
+        let html = `
+          <div class="month-header">
+            <span>Recent Activity</span>
+            <span class="spent-text">Transactions</span>
           </div>
         `;
-      });
 
-      container.innerHTML = html;
+        txs.forEach(tx => {
+          const isCredit = tx.type.includes('DEPOSIT') || tx.type.includes('LOAN');
+          const amountClass = isCredit ? 'credit' : 'debit';
+          const sign = isCredit ? '+' : '-';
+          const icon = tx.type === 'DEPOSIT' ? '⬇️' : tx.type === 'WITHDRAWAL' ? '⬆️' : '🔄';
+          
+          const date = new Date(tx.created_at);
+          const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          const dateStr = date.toLocaleDateString([], { month: '2-digit', day: '2-digit' });
+
+          html += `
+            <div class="tx-item">
+              <div class="tx-icon">${icon}</div>
+              <div class="tx-details">
+                <h4>${tx.type.replace('_', ' ')}</h4>
+                <p>${timeStr} • ${dateStr}</p>
+              </div>
+              <div class="tx-amount ${amountClass}">
+                ${sign}${formatUSD(parseFloat(tx.amount))}
+                <span class="tx-status">${tx.status}</span>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+
+      } catch (err) { 
+        console.error("Dashboard Error:", err); 
+      }
     }
 
     loadDashboard();

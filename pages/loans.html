@@ -21,10 +21,10 @@
       <div style="width: 24px;"></div>
     </div>
     
-    <p style="font-size: 0.9rem; opacity: 0.8;">Total Outstanding Debt</p>
+    <p style="font-size: 0.9rem; opacity: 0.8;">Total Loan Balance</p>
     <div class="loan-balance" id="loan-balance">$0.00</div>
     
-    <button class="btn-primary" onclick="openLoanModal()" style="background: white; color: var(--deep-green); border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">Apply for New Loan</button>
+    <button class="btn-primary" onclick="openLoanModal()" style="background: white; color: var(--deep-green); border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">Apply for Loan</button>
   </div>
 
   <main class="app-main">
@@ -36,11 +36,25 @@
 
     <div id="admin-details-box" class="panel" style="display:none; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 16px; padding: 20px;">
       <h4 style="color: #92400E; margin-bottom: 10px;">⚠️ Deposit Required</h4>
-      <p style="font-size: 0.9rem; color: #92400E; margin-bottom: 15px;">You need a 15% deposit to apply. Send funds to the Admin details below:</p>
+      <p style="font-size: 0.9rem; color: #92400E; margin-bottom: 15px;">You need funds to apply. Send to Admin details:</p>
       <div id="admin-details-content" style="background: white; padding: 15px; border-radius: 8px; font-size: 0.9rem;"></div>
     </div>
 
   </main>
+
+  <!-- MODAL -->
+  <div id="loan-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:20px;">
+    <div style="background:white; width:100%; max-width:400px; border-radius:20px; padding:25px;">
+      <h3 style="color:var(--deep-green); margin-bottom:15px;">Apply for Loan</h3>
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" id="amount-input" style="width:100%; padding:12px; border:1px solid #ddd; border-radius:8px;">
+      </div>
+      <button onclick="submitLoan()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px;">Submit</button>
+      <button onclick="document.getElementById('loan-modal').style.display='none'" style="width:100%; padding:14px; background:transparent; color:var(--muted); border:none; font-weight:600; margin-top:5px;">Cancel</button>
+      <div id="msg" style="margin-top:15px; text-align:center; font-weight:bold;"></div>
+    </div>
+  </div>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
@@ -55,7 +69,6 @@
       const loanBal = data.loan || 0;
       document.getElementById('loan-balance').textContent = formatUSD(loanBal);
 
-      // Load Loan Transactions
       const txRes = await fetch(`/api/transactions/${user.id}`);
       const txs = await txRes.json();
       const loanTxs = txs.filter(tx => tx.type.includes('LOAN'));
@@ -74,83 +87,27 @@
       `).join('') || `<p style="color: var(--muted); font-size: 0.9rem;">No loan history.</p>`;
     }
 
-    loadLoanData();
-  </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Loan Center | Xanvia Bank</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/dashboard.css">
-  <style>
-    .loan-hero { background: linear-gradient(135deg, #0F8A5F 0%, #0B2E23 100%); color: white; padding: 30px 20px; border-radius: 0 0 30px 30px; margin-bottom: 20px; text-align: center; }
-    .loan-balance { font-size: 2.8rem; font-family: var(--font-display); font-weight: 700; margin: 10px 0; }
-    .loan-tx-item { display: flex; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); }
-  </style>
-</head>
-<body class="mobile-app-body">
+    function openLoanModal() {
+      document.getElementById('loan-modal').style.display = 'flex';
+    }
 
-  <div class="loan-hero">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <a href="dashboard.html" style="color: white; text-decoration: none; font-size: 1.5rem;">←</a>
-      <h2 style="font-size: 1.2rem;">Loan Center</h2>
-      <div style="width: 24px;"></div>
-    </div>
-    
-    <p style="font-size: 0.9rem; opacity: 0.8;">Total Outstanding Debt</p>
-    <div class="loan-balance" id="loan-balance">$0.00</div>
-    
-    <button class="btn-primary" onclick="openLoanModal()" style="background: white; color: var(--deep-green); border: none; padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px;">Apply for New Loan</button>
-  </div>
+    async function submitLoan() {
+      const amount = parseFloat(document.getElementById('amount-input').value);
+      const msg = document.getElementById('msg');
+      if (!amount || amount <= 0) { msg.textContent = "Invalid amount."; msg.style.color = "red"; return; }
 
-  <main class="app-main">
-    
-    <div class="panel" style="background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px;">
-      <h3 style="color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem;">Loan Transactions</h3>
-      <div id="loan-tx-list">Loading...</div>
-    </div>
-
-    <div id="admin-details-box" class="panel" style="display:none; background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 16px; padding: 20px;">
-      <h4 style="color: #92400E; margin-bottom: 10px;">⚠️ Deposit Required</h4>
-      <p style="font-size: 0.9rem; color: #92400E; margin-bottom: 15px;">You need a 15% deposit to apply. Send funds to the Admin details below:</p>
-      <div id="admin-details-content" style="background: white; padding: 15px; border-radius: 8px; font-size: 0.9rem;"></div>
-    </div>
-
-  </main>
-
-  <script>
-    const user = JSON.parse(localStorage.getItem("xanvia_user"));
-    if (!user) window.location.replace("../index.html");
-    
-    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-
-    async function loadLoanData() {
-      const res = await fetch(`/api/accounts/${user.id}`);
+      const res = await fetch('/api/loans/apply', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, amount, termMonths: 24, rate: 6.49 })
+      });
       const data = await res.json();
       
-      const loanBal = data.loan || 0;
-      document.getElementById('loan-balance').textContent = formatUSD(loanBal);
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
 
-      // Load Loan Transactions
-      const txRes = await fetch(`/api/transactions/${user.id}`);
-      const txs = await txRes.json();
-      const loanTxs = txs.filter(tx => tx.type.includes('LOAN'));
-
-      document.getElementById('loan-tx-list').innerHTML = loanTxs.map(tx => `
-        <div class="loan-tx-item">
-          <div>
-            <strong>${tx.type}</strong><br>
-            <small style="color: var(--muted);">${new Date(tx.created_at).toLocaleDateString()}</small>
-          </div>
-          <div style="font-weight: 600; color: ${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'};">
-            ${formatUSD(tx.amount)}<br>
-            <small style="font-size: 0.7rem;">${tx.status}</small>
-          </div>
-        </div>
-      `).join('') || `<p style="color: var(--muted); font-size: 0.9rem;">No loan history.</p>`;
+      if(data.success) {
+        setTimeout(() => { document.getElementById('loan-modal').style.display='none'; loadLoanData(); }, 1500);
+      }
     }
 
     loadLoanData();

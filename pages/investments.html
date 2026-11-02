@@ -7,16 +7,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
-    .invest-card { background: var(--deep-green); color: white; padding: 25px; border-radius: 20px; margin-bottom: 20px; }
-    .invest-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.9rem; }
-    .invest-row strong { font-size: 1.1rem; }
-    .yield-badge { background: rgba(15,138,95,0.3); color: #34D399; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
+    .invest-card { background: var(--deep-green); color: white ; padding: 25px; border-radius: 2020px; margin-bottom: 20px; }
+   px .yield-badge { background: rgba(;">
+16, 185, 129, 0.2   ); color: #34D399; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; }
   </style>
 </head>
 <body class="mobile-app-body">
 
-  <header class="app-header" style="padding-bottom: 20px; border-radius: 0 0 20px 20px;">
-    <div style="text-align: left; width: 100%;">
+  <header class="app-header" style="padding-bottom: 20px; border-radius: 0 0 20px <div style="text-align: left; width: 100%;">
       <h1 style="font-size: 1.5rem; margin-bottom: 5px;">Investments</h1>
       <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Grow your portfolio with automated yield.</p>
     </div>
@@ -25,7 +23,7 @@
   <main class="app-main" style="padding-top: 20px;">
     
     <div class="invest-card">
-      <div class="invest-row">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
         <span>Total Portfolio Value</span>
         <span class="yield-badge" id="yield-status">Computing...</span>
       </div>
@@ -33,7 +31,7 @@
       
       <div style="display: flex; gap: 20px; margin-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;">
         <div>
-          <p style="font-size: 0.75rem; opacity: 0.7;">Initial Deposit</p>
+          <p style="font-size: 0.75rem; opacity: 0.7;">Deposited Balance</p>
           <p style="font-weight: 600;" id="initial-dep">$0.00</p>
         </div>
         <div>
@@ -43,36 +41,27 @@
       </div>
     </div>
 
-    <!-- Deposit / Withdraw Buttons -->
     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-      <a href="deposit.html" class="btn-submit" style="background: var(--emerald); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: 600; text-align: center; flex: 1;">Deposit</a>
+      <a href="deposit.html?target=brokerage" class="btn-submit" style="background: var(--emerald); color: white; text-decoration: none; padding: 14px; border-radius: 12px; font-weight: 600; text-align: center; flex: 1;">Deposit to Portfolio</a>
       <button class="btn-submit" id="withdraw-btn" onclick="handleWithdraw()" style="background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-weight: 600; flex: 1;">Withdraw</button>
     </div>
 
-    <!-- Locked Alert -->
     <div id="lock-alert" class="alert-box" style="display:none; background:#FEF3C7; color:#92400E; padding:15px; border-radius:12px; margin-bottom:20px; font-size:0.85rem; font-weight:600; border:1px solid #F59E0B;">
-      🔒 Withdrawal is locked. You can only withdraw after 7 or 30 days of depositing.
+      🔒 Withdrawal is locked. You can only withdraw after 7 days of depositing.
     </div>
 
     <div class="panel" style="background:white; padding:20px; border-radius:16px; border:1px solid var(--border);">
-      <h3 style="margin-bottom: 15px; color: var(--deep-green);">Recent Activity</h3>
+      <h3 style="margin-bottom: 15px; color: var(--deep-green);">Investment History</h3>
       <div id="tx-list"></div>
     </div>
 
   </main>
-
-  <nav class="bottom-nav">
-    <a href="dashboard.html" class="nav-item"><span class="icon">🏠</span><span class="label">Home</span></a>
-    <a href="investments.html" class="nav-item active"><span class="icon">📈</span><span class="label">Invest</span></a>
-    <a href="cards.html" class="nav-item"><span class="icon">💳</span><span class="label">Cards</span></a>
-  </nav>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if(!user) window.location.replace("../index.html");
 
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
-    let currentBalance = 0;
     let canWithdraw = false;
 
     async function loadInvestments() {
@@ -83,12 +72,10 @@
       const createdAt = data.brokerage_created_at ? new Date(data.brokerage_created_at) : new Date();
       const now = new Date();
       
-      // Calculate days since deposit
       const diffTime = Math.abs(now - createdAt);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
-      // Yield logic (e.g., 1.5% per day)
-      const dailyYield = 0.015;
+      const dailyYield = 0.015; // 1.5% daily
       const yieldAmount = initialDep * dailyYield * diffDays;
       const totalVal = initialDep + yieldAmount;
 
@@ -96,22 +83,18 @@
       document.getElementById('profit-yield').textContent = `+${formatUSD(yieldAmount)}`;
       document.getElementById('total-val').textContent = formatUSD(totalVal);
 
-      // Withdrawal Lock Logic (7 or 30 days)
       if (diffDays >= 7) {
-        document.getElementById('yield-status').textContent = "Active (Yield Yielding)";
-        document.getElementById('yield-status').style.background = "rgba(16, 185, 129, 0.2)";
+        document.getElementById('yield-status').textContent = "Unlocked";
         canWithdraw = true;
       } else {
         document.getElementById('yield-status').textContent = `Locked (${7 - diffDays} days left)`;
-        document.getElementById('yield-status').style.background = "rgba(239, 68, 68, 0.2)";
         canWithdraw = false;
         document.getElementById('lock-alert').style.display = 'block';
       }
 
-      // Load Transactions
       const txRes = await fetch(`/api/transactions/${user.id}`);
       const txs = await txRes.json();
-      const investTxs = txs.filter(tx => tx.type.includes('DEPOSIT') || tx.type.includes('WITHDRAWAL'));
+      const investTxs = txs.filter(tx => tx.reference === 'brokerage');
 
       document.getElementById('tx-list').innerHTML = investTxs.map(tx => `
         <div class="tx-item" style="padding: 10px 0; border-bottom: 1px solid #eee;">
@@ -121,12 +104,12 @@
           </div>
           <div class="tx-amount ${tx.type === 'DEPOSIT' ? 'credit' : 'debit'}">${formatUSD(tx.amount)}</div>
         </div>
-      `).join('') || `<p style="color:var(--muted);">No investments yet.</p>`;
+      `).join('') || `<p style="color:var(--muted);">No investment history.</p>`;
     }
 
     function handleWithdraw() {
       if (!canWithdraw) {
-        alert("Your investment is locked. You can only withdraw after 7 or 30 days.");
+        alert("Your investment is locked. You can only withdraw after 7 days.");
         return;
       }
       window.location.href = "withdraw.html?type=brokerage";
