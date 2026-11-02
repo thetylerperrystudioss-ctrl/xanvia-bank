@@ -24,7 +24,7 @@ const pool = new Pool({
 });
 
 // ==========================================
-// 1. DATABASE SETUP (AUTO-FIXES MISSING COLUMNS)
+// 1. DATABASE SETUP & AUTO-FIX
 // ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
@@ -55,10 +55,12 @@ pool.connect((err, client, release) => {
     `, (err) => {
       if (err) console.error('Table Error:', err.message);
       
+      // FORCE ADD MISSING COLUMNS
       client.query(`
         ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT;
         ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4);
+        ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT;
       `, (err2) => {
         release();
         if (err2) console.error('Alter Table Error:', err2.message);
@@ -66,7 +68,7 @@ pool.connect((err, client, release) => {
           pool.query(`INSERT INTO system_settings (key, value) VALUES 
             ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') 
             ON CONFLICT DO NOTHING`);
-          console.log('✅ Database ready.');
+          console.log('✅ Database upgraded and ready.');
         }
       });
     });
@@ -104,7 +106,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 3. ONBOARDING & ACCOUNTS
+// 3. ONBOARDING
 // ==========================================
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
@@ -128,10 +130,14 @@ app.post('/api/complete-onboarding', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     await pool.query('ROLLBACK');
+    console.error("ONBOARDING ERROR:", err.message);
     res.status(500).json({ error: 'Failed to complete application.' });
   }
 });
 
+// ==========================================
+// 4. DASHBOARD & TRANSACTIONS
+// ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
@@ -141,27 +147,6 @@ app.get('/api/accounts/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// ==========================================
-// 4. CARDS
-// ==========================================
-app.post('/api/cards/request', async (req, res) => {
-  const { userId, cardType } = req.body;
-  try {
-    await pool.query(`INSERT INTO cards (user_id, card_type) VALUES ($1, $2)`, [userId, cardType]);
-    res.json({ success: true, message: 'Card request submitted.' });
-  } catch (err) { res.status(500).json({ error: 'Failed to request card.' }); }
-});
-
-app.get('/api/cards/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch cards.' }); }
-});
-
-// ==========================================
-// 5. TRANSACTIONS, DEPOSITS & LOANS
-// ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -174,9 +159,15 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
   if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
   const imagePath = `/uploads/${req.file.filename}`;
   try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, [userId, amount, imagePath]);
+    await pool.query(
+      `INSERT INTO transactions (user_id, type, amount, status, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3)`, 
+      [userId, amount, imagePath]
+    );
     res.json({ success: true, message: 'Deposit sent. Pending Admin verification.' });
-  } catch (err) { res.status(500).json({ error: 'Request failed.' }); }
+  } catch (err) { 
+    console.error("DEPOSIT ERROR:", err.message);
+    res.status(500).json({ error: 'Request failed.' }); 
+  }
 });
 
 app.post('/api/withdraw/request', async (req, res) => {
@@ -192,6 +183,9 @@ app.post('/api/withdraw/request', async (req, res) => {
   } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Request failed.' }); }
 });
 
+// ==========================================
+// 5. LOANS
+// ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount, termMonths, rate } = req.body;
   const depositReq = amount * 0.15;
@@ -212,7 +206,25 @@ app.get('/api/loans/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 6. ADMIN ROUTES
+// 6. CARDS
+// ==========================================
+app.post('/api/cards/request', async (req, res) => {
+  const { userId, cardType } = req.body;
+  try {
+    await pool.query(`INSERT INTO cards (user_id, card_type) VALUES ($1, $2)`, [userId, cardType]);
+    res.json({ success: true, message: 'Card request submitted.' });
+  } catch (err) { res.status(500).json({ error: 'Failed to request card.' }); }
+});
+
+app.get('/api/cards/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch cards.' }); }
+});
+
+// ==========================================
+// 7. ADMIN
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
