@@ -2,35 +2,45 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Register | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-    .auth-card { background: white; width: 100%; max-width: 420px; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); }
-    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
-    .logo-icon { background: var(--emerald); color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
+    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    
+    .reg-card { background: white; width: 100%; max-width: 450px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
+    
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; justify-content: center; }
+    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; }
-    .logo-title { font-family: 'Merriweather', serif; font-size: 1.3rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
+    .logo-title { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
-    h2 { color: var(--deep-green); font-size: 1.8rem; margin-bottom: 8px; }
-    p.sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 30px; }
-    .input-group { margin-bottom: 20px; }
-    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
-    .input-group input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
-    .input-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; }
-    .switch-link { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--muted); }
-    .switch-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
-    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 500; }
+
+    .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
+    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+    .btn-primary:active { transform: scale(0.98); }
+    
+    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
     .msg.success { display: block; background: #D1FAE5; color: #065F46; }
+    
+    .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    .footer-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
+    
+    .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); text-decoration: none; }
   </style>
 </head>
 <body>
-  <div class="auth-card">
+
+  <div class="reg-card">
+    <a href="../index.html" class="back-btn">←</a>
+    
     <div class="logo">
       <div class="logo-icon">X</div>
       <div class="logo-text">
@@ -38,34 +48,84 @@
         <span class="logo-subtitle">Credit Union</span>
       </div>
     </div>
-    <h2>Create Account</h2>
-    <p class="sub">Join Xanvia Credit Union in under a minute.</p>
+
+    <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 10px;">Create an Account</h2>
+    <p style="text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 25px;">Join Xanvia Credit Union today.</p>
+
     <div id="msg" class="msg"></div>
+
     <form id="register-form">
-      <div class="input-group"><label>Full Name</label><input type="text" id="name" required></div>
-      <div class="input-group"><label>Username</label><input type="text" id="username" required></div>
-      <div class="input-group"><label>Email Address</label><input type="email" id="email" required></div>
-      <div class="input-group"><label>Password</label><input type="password" id="password" required></div>
-      <button type="submit" class="btn-primary">Sign Up</button>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="John Doe" required>
+      </div>
+      <div class="form-group">
+        <label>Gmail Address</label>
+        <input type="email" id="reg-email" placeholder="john@gmail.com" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Create a strong password" required>
+      </div>
+      <button type="submit" class="btn-primary" id="reg-btn">Sign Up</button>
     </form>
-    <div class="switch-link">Already have an account? <a href="login.html">Log In</a></div>
+
+    <div class="footer-link">
+      Already have an account? <a href="login.html">Log In</a>
+    </div>
   </div>
+
   <script>
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      
+      const btn = document.getElementById('reg-btn');
       const msg = document.getElementById('msg');
-      const btn = document.querySelector('.btn-primary');
-      btn.textContent = "Creating...";
+      
+      const name = document.getElementById('reg-name').value;
+      const email = document.getElementById('reg-email').value.toLowerCase();
+      const phone = document.getElementById('reg-phone').value;
+      const password = document.getElementById('reg-password').value;
+
+      // GMAIL VALIDATION CHECK
+      if (!email.endsWith('@gmail.com')) {
+        msg.className = "msg error";
+        msg.textContent = "Please enter a valid Gmail address (e.g., yourname@gmail.com).";
+        return; // Stop the form from submitting
+      }
+
+      btn.textContent = "Creating Account...";
+      msg.style.display = "none";
+
       try {
-        const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: document.getElementById('name').value, username: document.getElementById('username').value, email: document.getElementById('email').value, password: document.getElementById('password').value }) });
+        const res = await fetch('/api/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, password })
+        });
+
         const data = await res.json();
+
         if (data.success) {
-          msg.className = "msg success"; msg.textContent = "Account created! Redirecting...";
-          setTimeout(() => window.location.href = "login.html", 1500);
+          msg.className = "msg success";
+          msg.textContent = "Account created successfully! Redirecting to login...";
+          setTimeout(() => {
+            window.location.href = "login.html";
+          }, 1500);
         } else {
-          msg.className = "msg error"; msg.textContent = data.error || "Registration failed."; btn.textContent = "Sign Up";
+          msg.className = "msg error";
+          msg.textContent = data.error || "Registration failed.";
+          btn.textContent = "Sign Up";
         }
-      } catch (err) { msg.className = "msg error"; msg.textContent = "Server error."; btn.textContent = "Sign Up"; }
+      } catch (err) {
+        msg.className = "msg error";
+        msg.textContent = "Server error. Try again.";
+        btn.textContent = "Sign Up";
+      }
     });
   </script>
 </body>

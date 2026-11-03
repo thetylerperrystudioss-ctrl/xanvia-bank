@@ -35,6 +35,7 @@ pool.connect((err, client, release) => {
       CREATE TABLE IF NOT EXISTS investments (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
       CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
       CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE, sender VARCHAR(20), message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
       CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
     `, async (err) => {
       if (err) console.error('Create Table Error:', err.message);
@@ -44,6 +45,8 @@ pool.connect((err, client, release) => {
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
@@ -95,30 +98,36 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// 2. AUTHENTICATION & ONBOARDING
+// 2. AUTHENTICATION
 // ==========================================
 app.post('/api/register', async (req, res) => {
   try {
-    const email = req.body.email;
-    if (!email) return res.status(400).json({ error: 'Email is required.' });
+    const { name, email, password, phone, username } = req.body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
 
-    const name = req.body.name || 'Xanvia Member';
-    const username = req.body.username || email.split('@')[0] + Math.floor(Math.random() * 1000);
-    const password = req.body.password || 'XanviaDefault123!'; 
+    if (!email.toLowerCase().endsWith('@gmail.com')) {
+      return res.status(400).json({ error: 'Please enter a valid Gmail address.' });
+    }
+
+    const safeName = name || 'Xanvia Member';
+    const safeUsername = username || email.split('@')[0] + Math.floor(Math.random() * 1000);
+    const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
 
     const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
-    if (existingUser.rows.length > 0) return res.status(400).json({ error: 'Email already registered. Please log in.' });
+    if (existingUser.rows.length > 0) return res.status(400).json({ error: 'Email already registered.' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    
     const userResult = await pool.query(
-      `INSERT INTO users (name, username, email, password) VALUES ($1, $2, $3, $4) RETURNING id`, 
-      [name, username.toLowerCase(), email.toLowerCase(), hashedPassword]
+      `INSERT INTO users (name, username, email, password, phone, account_number) 
+       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`, 
+      [safeName, safeUsername.toLowerCase(), email.toLowerCase(), hashedPassword, phone || null, accountNumber]
     );
     
     const newUserId = userResult.rows[0].id;
     await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUserId]);
 
-    res.json({ success: true, message: 'Account created successfully.' });
+    res.json({ success: true, message: 'Account created successfully!', userId: newUserId });
   } catch (err) { 
     res.status(500).json({ error: 'Database Error: ' + err.message }); 
   }
@@ -131,6 +140,7 @@ app.post('/api/login', async (req, res) => {
     const user = result.rows[0];
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
+    
     await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
@@ -147,7 +157,6 @@ app.post('/api/complete-onboarding', async (req, res) => {
         await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'FEE', 25.00, 'Pending', 'Account Activation Fee')`, [userId]);
       }
     }
-
     res.json({ success: true, message: 'Application approved!' });
   } catch (err) { 
     res.status(500).json({ error: 'Failed to update profile: ' + err.message }); 
@@ -158,20 +167,16 @@ app.get('/api/user-status/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT age, address FROM users WHERE id = $1', [req.params.userId]);
     const user = result.rows[0];
-    const loanCheck = await pool.query(`SELECT id FROM transactions WHERE user_id = $1 AND type = 'LOAN_APPLICATION'`, [req.params.userId]);
-    const investCheck = await pool.query(`SELECT id FROM investments WHERE user_id = $1`, [req.params.userId]);
-    
-    // Check if the $25 fee is paid
     const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [req.params.userId]);
     const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
     const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
+    const isOnboarded = !!(user.age && user.address);
 
     res.json({
-      has_bank: !!(user.age && user.address && hasPaidFee), // Must have info AND paid fee
-      has_loan: loanCheck.rows.length > 0,
-      has_investment: investCheck.rows.length > 0,
-      needs_fee: hasPendingFee,
-      fee_status: feeCheck.rows.length > 0 ? feeCheck.rows[0].status : 'None'
+      has_bank: !!(isOnboarded && hasPaidFee),
+      has_loan: isOnboarded, 
+      has_investment: isOnboarded,
+      needs_fee: hasPendingFee
     });
   } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
 });
@@ -197,6 +202,13 @@ app.get('/api/accounts/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
+app.get('/api/user/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT name, username, email, phone, account_number FROM users WHERE id = $1', [req.params.userId]);
+    res.json(result.rows[0]);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
 app.get('/api/admin/settings', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM system_settings');
@@ -218,19 +230,25 @@ app.post('/api/admin/settings/update', async (req, res) => {
 });
 
 // ==========================================
-// 4. DEPOSITS, WITHDRAWALS, LOANS
+// 4. DEPOSITS, LOANS, FEES
 // ==========================================
+app.post('/api/fee/pay', upload.single('screenshot'), async (req, res) => {
+  const { userId } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Payment screenshot required.' });
+  const imagePath = `/uploads/${req.file.filename}`;
+  try {
+    await pool.query(`UPDATE transactions SET proof_image = $1, status = 'Pending Admin Approval' WHERE user_id = $2 AND type = 'FEE' AND status = 'Pending'`, [imagePath, userId]);
+    res.json({ success: true, message: 'Fee payment submitted.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
 app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
   const { userId, amount, targetAccount } = req.body;
   if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
-  
   const imagePath = `/uploads/${req.file.filename}`;
   try {
-    await pool.query(
-      `INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, 
-      [userId, amount, targetAccount, imagePath]
-    );
-    res.json({ success: true, message: 'Deposit submitted. Pending Admin approval.' });
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, targetAccount, imagePath]);
+    res.json({ success: true, message: 'Deposit submitted.' });
   } catch (err) { res.status(500).json({ error: 'Server error.' }); }
 });
 
@@ -249,6 +267,7 @@ app.post('/api/withdraw/request', async (req, res) => {
     
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
     
+    // FIXED: Ensure it is saved as 'Pending'
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
     res.json({ success: true, message: 'Withdrawal pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -257,23 +276,85 @@ app.post('/api/withdraw/request', async (req, res) => {
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
+    // FIXED: Ensure it is saved as 'Pending'
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
-    res.json({ success: true, message: 'Application received and pending Admin approval.' });
+    res.json({ success: true, message: 'Application received.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.post('/api/fee/pay', upload.single('screenshot'), async (req, res) => {
-  const { userId } = req.body;
-  if (!req.file) return res.status(400).json({ error: 'Payment screenshot required.' });
-  const imagePath = `/uploads/${req.file.filename}`;
+app.post('/api/loans/transfer', async (req, res) => {
+  const { userId, amount, destination, bankDetails } = req.body;
   try {
-    await pool.query(`UPDATE transactions SET proof_image = $1, status = 'Pending Admin Approval' WHERE user_id = $2 AND type = 'FEE' AND status = 'Pending'`, [imagePath, userId]);
-    res.json({ success: true, message: 'Fee payment submitted.' });
+    const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
+    // FIXED: Ensure it is saved as 'Pending'
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
+    res.json({ success: true, message: 'Transfer pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/loans/repay', async (req, res) => {
+  const { userId, amount } = req.body;
+  try {
+    // FIXED: Ensure it is saved as 'Pending'
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
+    res.json({ success: true, message: 'Repayment pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
 // ==========================================
-// 5. ADMIN & SUPPORT
+// 5. CHAT / SUPPORT SYSTEM
+// ==========================================
+app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
+  const { userId, category, subject, message } = req.body;
+  const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
+  
+  try {
+    const result = await pool.query(
+      `INSERT INTO complaints (user_id, ref_number, category, subject, message, attachment) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`, 
+      [userId, refNum, category, subject, message, attachmentPath]
+    );
+    const complaintId = result.rows[0].id;
+
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'user', $2)`, [complaintId, message]);
+    const autoReply = `Welcome to Xanvia Credit Union Support. We have received your inquiry regarding "${subject}". A secure support agent has been assigned to your ticket and will review your message shortly. Please hold while we connect you to a live representative. Your reference number is ${refNum}.`;
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [complaintId, autoReply]);
+
+    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/complaints/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/chat/:complaintId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM chat_messages WHERE complaint_id = $1 ORDER BY created_at ASC', [req.params.complaintId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/chat/:complaintId', async (req, res) => {
+  const { sender, message } = req.body;
+  try {
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, $2, $3)`, [req.params.complaintId, sender, message]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/chat/:complaintId/resolve', async (req, res) => {
+  try {
+    await pool.query(`UPDATE complaints SET status = 'Resolved' WHERE id = $1`, [req.params.complaintId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// ==========================================
+// 6. ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
@@ -332,29 +413,13 @@ app.get('/api/admin/complaints', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.post('/api/admin/complaints/:id', async (req, res) => {
-  const { status, response } = req.body;
+app.post('/api/admin/chat/:complaintId', async (req, res) => {
+  const { message } = req.body;
   try {
-    await pool.query(`UPDATE complaints SET status = $1, admin_response = $2 WHERE id = $3`, [status, response, req.params.id]);
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [req.params.complaintId, message]);
+    await pool.query(`UPDATE complaints SET status = 'In Progress' WHERE id = $1`, [req.params.complaintId]);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
-  const { userId, category, subject, message } = req.body;
-  const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
-  const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
-  try {
-    await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message, attachment) VALUES ($1, $2, $3, $4, $5, $6)`, [userId, refNum, category, subject, message, attachmentPath]);
-    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.get('/api/complaints/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/transactions/:userId', async (req, res) => {
@@ -364,6 +429,9 @@ app.get('/api/transactions/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+// ==========================================
+// 7. STATIC FILES (Catch-all)
+// ==========================================
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
 const PORT = process.env.PORT || 3000;
