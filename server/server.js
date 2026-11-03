@@ -91,7 +91,9 @@ pool.connect((err, client, release) => {
   }
 });
 
-// AUTHENTICATION
+// ==========================================
+// 2. AUTHENTICATION
+// ==========================================
 app.post('/api/register', async (req, res) => {
   const { name, username, email, password } = req.body;
   try {
@@ -123,7 +125,7 @@ app.get('/api/accounts/:userId', async (req, res) => {
 });
 
 // ==========================================
-// DEPOSIT / WITHDRAWAL ROUTES
+// 3. DEPOSIT & WITHDRAWAL
 // ==========================================
 app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
   const { userId, amount, targetAccount } = req.body;
@@ -155,7 +157,32 @@ app.post('/api/withdraw/request', async (req, res) => {
 });
 
 // ==========================================
-// INVESTMENTS & LOANS
+// 4. SUPPORT / COMPLAINTS (RESTORED IMAGE UPLOAD)
+// ==========================================
+app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
+  const { userId, category, subject, message } = req.body;
+  const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
+  const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
+  
+  try {
+    await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message, attachment) VALUES ($1, $2, $3, $4, $5, $6)`, 
+      [userId, refNum, category, subject, message, attachmentPath]);
+    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
+  } catch (err) { 
+    console.error("COMPLAINT ERROR:", err.message);
+    res.status(500).json({ error: 'Failed.' }); 
+  }
+});
+
+app.get('/api/complaints/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+// ==========================================
+// 5. INVESTMENTS & LOANS
 // ==========================================
 app.post('/api/investments/deposit', upload.single('screenshot'), async (req, res) => {
   const { userId, amount, reference } = req.body;
@@ -205,7 +232,7 @@ app.post('/api/loans/repay', async (req, res) => {
 });
 
 // ==========================================
-// ADMIN ROUTES
+// 6. ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
@@ -263,6 +290,21 @@ app.post('/api/admin/freeze', async (req, res) => {
   const { userId, status } = req.body;
   try {
     await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/admin/complaints', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/complaints/:id', async (req, res) => {
+  const { status, response } = req.body;
+  try {
+    await pool.query(`UPDATE complaints SET status = $1, admin_response = $2 WHERE id = $3`, [status, response, req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
