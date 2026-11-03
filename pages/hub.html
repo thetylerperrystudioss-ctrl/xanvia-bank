@@ -41,17 +41,17 @@
     <div class="panel">
       <h2>🏦 Personal Banking</h2>
       <p>Manage checking, savings, deposits, and transfers.</p>
-      <div id="bank-action"></div>
+      <div id="bank-action">Loading...</div>
     </div>
     <div class="panel">
       <h2>💳 Smart Lending</h2>
       <p>Apply for personal loans and track repayments.</p>
-      <div id="loan-action"></div>
+      <div id="loan-action">Loading...</div>
     </div>
     <div class="panel">
       <h2>📈 Wealth Management</h2>
       <p>Trade stocks and buy Bitcoin.</p>
-      <div id="invest-action"></div>
+      <div id="invest-action">Loading...</div>
     </div>
   </div>
 
@@ -64,23 +64,36 @@
       window.location.replace("../index.html"); 
     }
 
-    if(user.has_bank) {
-      document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
-    } else {
-      document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
+    async function checkAccountStatus() {
+      try {
+        const res = await fetch(`/api/user-status/${user.id}`);
+        const data = await res.json();
+
+        if (data.has_bank) {
+          document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
+        } else {
+          document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
+        }
+
+        if (data.has_loan) {
+          document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
+        } else {
+          document.getElementById('loan-action').innerHTML = `<a href="onboarding.html?type=loan" class="btn-primary">Apply for Loan Account</a>`;
+        }
+
+        if (data.has_investment) {
+          document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
+        } else {
+          document.getElementById('invest-action').innerHTML = `<a href="onboarding.html?type=investment" class="btn-primary">Apply for Investment Account</a>`;
+        }
+      } catch (err) {
+        console.error("Error fetching status:", err);
+        // Fallback if network fails
+        document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
+      }
     }
 
-    if(user.has_loan) {
-      document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
-    } else {
-      document.getElementById('loan-action').innerHTML = `<a href="onboarding.html?type=loan" class="btn-primary">Apply for Loan Account</a>`;
-    }
-
-    if(user.has_investment) {
-      document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
-    } else {
-      document.getElementById('invest-action').innerHTML = `<a href="onboarding.html?type=investment" class="btn-primary">Apply for Investment Account</a>`;
-    }
+    checkAccountStatus();
   </script>
 </body>
 </html>
