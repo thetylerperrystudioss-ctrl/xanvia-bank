@@ -13,13 +13,26 @@
     /* HEADER */
     .app-header { padding: 20px 20px 50px; border-radius: 0 0 30px 30px; text-align: center; position: relative; background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .menu-icon-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0; }
+    
+    /* FIXED MENU BUTTON */
+    .menu-icon-btn { 
+      background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; 
+      padding: 0 10px; z-index: 5000; position: relative; display: flex; align-items: center; 
+    }
+
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon { background: var(--emerald); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; text-align: left; }
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.2rem; font-weight: 900; line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
     
+    /* CHAT BUTTON */
+    .chat-icon-btn { position: relative; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+    .chat-icon-btn:hover { background: rgba(255,255,255,0.2); }
+    .chat-icon-btn svg { width: 22px; height: 22px; fill: white; }
+    .active-dot { position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background-color: #22c55e; border: 2px solid #0A2E23; border-radius: 50%; animation: pulse-dot 2s infinite; }
+    @keyframes pulse-dot { 0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); } 70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); } 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+
     .balance-section { margin-top: 10px; }
     .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; }
     .balance-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
@@ -67,18 +80,33 @@
     .edit-profile-btn { background: var(--emerald); color: white; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-top: auto; margin-bottom: 10px; }
     .logout-btn { background: #FEE2E2; color: #991B1B; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
 
-    /* EDIT MODAL */
+    /* MODAL & CHAT */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
-    .modal-content { background: white; width: 100%; max-width: 400px; padding: 25px; border-radius: 20px; }
+    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; display: flex; flex-direction: column; }
     .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
     .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
     .form-group input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
+    
+    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+    .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
+    .msg.user { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: {
+ 2px; }
+    .msg.admin { background: white; color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
+    
+    .chat-input-row { display: flex; gap: 10px; margin-top: auto; }
+    .chat-input-row input { flex-grow: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; }
+    .chat-send-btn { background: var(--emerald); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; }
+    .btn-resolve { width: 100%; padding: 12px; background: #FEE2E2; color: #991B1B; border: 1px solid #F87171; border-radius: 8px; font-weight: 600; margin-top: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
   
+  <!-- SIDEBAR OVERLAY -->
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR MENU -->
   <div class="sidebar" id="sidebar">
     <div class="profile-section">
       <img src="" id="prof-pic-img" class="profile-img" alt="Profile">
@@ -99,6 +127,7 @@
     <button class="logout-btn" onclick="logout()">Log Out</button>
   </div>
 
+  <!-- EDIT PROFILE MODAL -->
   <div id="edit-modal" class="modal-overlay">
     <div class="modal-content">
       <h3 style="color:var(--deep-green); margin-bottom:15px;">Edit Profile</h3>
@@ -113,13 +142,22 @@
 
   <header class="app-header">
     <div class="top-nav">
-      <div style="display:flex; align-items:center; gap:15px;">
-        <button class="menu-icon-btn" onclick="toggleSidebar()">☰</button>
+      <div style="display:flex; align-items:center; gap:5px;">
+        <!-- THE MENU BUTTON -->
+        <button class="menu-icon-btn" onclick="toggleSidebar()" type="button">☰</button>
         <div class="logo">
           <div class="logo-icon">X</div>
           <div class="logo-text"><span class="logo-title">Xanvia</span><span class="logo-subtitle">Credit Union</span></div>
         </div>
       </div>
+      <!-- LIVE CHAT BUTTON -->
+      <button class="chat-icon-btn" onclick="openSupport(event)" title="Support">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2ZM20 16H5.17L4 17.17V4H20V16Z"/>
+          <path d="M7 9H17V11H7V9ZM7 12H14V14H7V12Z"/>
+        </svg>
+        <span class="active-dot"></span>
+      </button>
     </div>
     <div class="balance-section">
       <h1 class="balance-amount" id="total-balance">$0.00</h1>
@@ -139,33 +177,80 @@
     <div class="transaction-container" id="transaction-list"></div>
   </main>
 
+  <!-- SUPPORT / CHAT MODAL -->
+  <div id="modal-support" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;" onclick="document.getElementById('modal-support').classList.remove('open')">×</button>
+      
+      <div id="support-list-view">
+        <h2 style="color:var(--deep-green); margin-bottom:15px;">Live Chat Support</h2>
+        <div id="user-complaints" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto;">Loading...</div>
+        <button onclick="document.getElementById('support-list-view').style.display='none'; document.getElementById('support-form-view').style.display='block';" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Start New Chat</button>
+      </div>
+
+      <div id="support-form-view" style="display: none;">
+        <h2 style="color:var(--deep-green); margin-bottom:15px;">Start New Chat</h2>
+        <div class="form-group"><label>Category</label><select id="sup-category" style="padding:12px; border:1px solid #ddd; border-radius:8px;"><option>Deposit Issue</option><option>Withdrawal Issue</option><option>Login Problem</option><option>Other</option></select></div>
+        <div class="form-group"><label>Subject</label><input type="text" id="sup-subject" placeholder="Brief summary"></div>
+        <div class="form-group"><label>Message</label><textarea id="sup-message" rows="3" placeholder="Explain your issue..." style="padding:12px; border:1px solid #ddd; border-radius:8px;"></textarea></div>
+        <button onclick="submitComplaint()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Submit Ticket</button>
+        <button onclick="document.getElementById('support-form-view').style.display='none'; document.getElementById('support-list-view').style.display='block';" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px;">Cancel</button>
+        <div id="sup-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
+      </div>
+
+      <div id="chat-view" style="display: none; flex-direction: column; height: 60vh;">
+        <h3 id="chat-title" style="color:var(--deep-green); margin-bottom:15px; font-size:1.1rem;"></h3>
+        <div class="chat-box" id="chat-messages"></div>
+        <div class="chat-input-row" id="chat-input-area">
+          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleChatEnter(event)">
+          <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+        </div>
+        <button class="btn-resolve" id="resolve-btn" onclick="resolveTicket()">Mark as Resolved</button>
+      </div>
+
+    </div>
+  </div>
+
   <script>
+    // Global variables
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
+    let allTransactions = [];
+    let activeComplaintId = null;
+    let chatInterval = null;
+
     function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-    let allTransactions = [];
-    let currentBalance = 0;
-
+    // --- SIDEBAR LOGIC ---
     function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('open');
-      document.getElementById('sidebar-overlay').classList.toggle('open');
-      if (document.getElementById('sidebar').classList.contains('open')) fetchUserData();
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      if (sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+      } else {
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        fetchUserData();
+      }
     }
 
     async function fetchUserData() {
-      const res = await fetch(`/api/user/${user.id}`);
-      const data = await res.json();
-      
-      document.getElementById('prof-name').textContent = data.name;
-      document.getElementById('prof-user').textContent = '@' + data.username;
-      document.getElementById('prof-acc-num').textContent = data.account_number || 'Generating...';
-      document.getElementById('prof-rout-num').textContent = data.routing_number || 'Generating...';
-      document.getElementById('prof-phone').textContent = data.phone || 'Not provided';
-      document.getElementById('prof-email').textContent = data.email;
-      if(data.profile_pic) document.getElementById('prof-pic-img').src = data.profile_pic;
+      try {
+        const res = await fetch(`/api/user/${user.id}`);
+        const data = await res.json();
+        
+        document.getElementById('prof-name').textContent = data.name || 'User';
+        document.getElementById('prof-user').textContent = '@' + (data.username || 'user');
+        document.getElementById('prof-acc-num').textContent = data.account_number || 'Generating...';
+        document.getElementById('prof-rout-num').textContent = data.routing_number || 'Generating...';
+        document.getElementById('prof-phone').textContent = data.phone || 'Not provided';
+        document.getElementById('prof-email').textContent = data.email || 'N/A';
+        if(data.profile_pic) document.getElementById('prof-pic-img').src = data.profile_pic;
+      } catch (err) { console.error("Sidebar error:", err); }
     }
 
     function openEditModal() {
@@ -175,8 +260,7 @@
       document.getElementById('edit-modal').classList.add('open');
     }
 
-    async function saveProfile() {
-      const name = document.getElementById('edit-name').value;
+    async function saveProfile()      const name = document.getElementById('edit-name').value;
       const username = document.getElementById('edit-username').value;
       const phone = document.getElementById('edit-phone').value;
       const pic = document.getElementById('edit-pic').files[0];
@@ -200,16 +284,155 @@
       }
     }
 
-    async function loadDashboard() {
+    // --- CHAT & SUPPORT LOGIC ---
+    function openSupport(e) {
+      if (e) e.preventDefault();
+      document.getElementById('modal-support').classList.add('open');
+      document.getElementById('support-list-view').style.display = 'block';
+      document.getElementById('support-form-view').style.display = 'none';
+      document.getElementById('chat-view').style.display = 'none';
+      loadComplaints();
+    }
+
+    async function loadComplaints() {
+      const container = document.getElementById('user-complaints');
+      container.innerHTML = '<p>Loading...</p>';
+      try {
+        const res = await fetch(`/api/complaints/${user.id}`);
+        const data = await res.json();
+        
+        container.innerHTML = data.length > 0 ? data.map(c => `
+          <div onclick="openChat(${c.id}, '${c.subject}', '${c.status}')" style="background:#F4F7F6; padding:15px; border-radius:10px; margin-bottom:10px; border:1px solid var(--border); cursor:pointer;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+              <h4 style="color:var(--deep-green); font-size:0.95rem;">${c.subject}</h4>
+              <span style="font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:4px; background:${c.status === 'Resolved' ? '#D1FAE5' : '#FEE2E2'}; color:${c.status === 'Resolved' ? '#065F46' : '#991B1B'};">${c.status}</span>
+            </div>
+            <p style="font-size:0.8rem; color:var(--muted); margin:0;">Ref: ${c.ref_number}</p>
+          </div>
+        `).join('') : '<p style="color:var(--muted); font-size:0.9rem; text-align:center;">No active tickets.</p>';
+      } catch (err) { container.innerHTML = '<p style="color:red;">Failed to load.</p>'; }
+    }
+
+    async function submitComplaint() {
+      const category = document.getElementById('sup-category').value;
+      const subject = document.getElementById('sup-subject').value;
+      const message = document.getElementById('sup-message').value;
+      const msg = document.getElementById('sup-msg');
+
+      if (!subject || !message) { msg.textContent = "Fill all fields."; msg.style.color = "red"; return; }
+
+      const formData = new FormData();
+      formData.append('userId', user.id);
+      formData.append('category', category);
+      formData.append('subject', subject);
+      formData.append('message', message);
+
+      const res = await fetch('/api/complaints', { method: 'POST', body: formData });
+      const data = await res.json();
+      
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) {
+        setTimeout(() => {
+          document.getElementById('support-form-view').style.display = 'none';
+          document.getElementById('support-list-view').style.display = 'block';
+          document.getElementById('sup-subject').value = '';
+          document.getElementById('sup-message').value = '';
+          msg.textContent = '';
+          loadComplaints();
+        }, 1500);
+      }
+    }
+
+    async function openChat(id, subject, status) {
+      activeComplaintId = id;
+      document.getElementById('chat-title').textContent = subject;
+      document.getElementById('support-list-view').style.display = 'none';
+      document.getElementById('chat-view').style.display = 'flex';
+      
+      const resolveBtn = document.getElementById('resolve-btn');
+      const inputArea = document.getElementById('chat-input-area');
+      
+      if (status === 'Resolved') {
+        resolveBtn.style.display = 'none';
+        inputArea.style.display = 'none';
+      } else {
+        resolveBtn.style.display = 'block';
+        inputArea.style.display = 'flex';
+      }
+
+      await loadMessages();
+      if (chatInterval) clearInterval(chatInterval);
+      chatInterval = setInterval(loadMessages, 3000);
+    }
+
+    async function loadMessages() {
+      if (!activeComplaintId) return;
+      const container = document.getElementById('chat-messages');
+      
+      try {
+        const res = await fetch(`/api/chat/${activeComplaintId}`);
+        const messages = await res.json();
+        
+        const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+        container.innerHTML = messages.map(m => `
+          <div class="msg ${m.sender}">
+            ${m.message}
+            <span class="msg-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          </div>
+        `).join('');
+
+        if (isScrolledToBottom) container.scrollTop = container.scrollHeight;
+      } catch (err) { console.log(err); }
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById('chat-input');
+      const message = input.value.trim();
+      if (!message || !activeComplaintId) return;
+      input.value = '';
+      
+      const container = document.getElementById('chat-messages');
+      container.innerHTML += `<div class="msg user">${message}<span class="msg-time">Just now</span></div>`;
+      container.scrollTop = container.scrollHeight;
+
+      await fetch(`/api/chat/${activeComplaintId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: 'user', message })
+      });
+      loadMessages();
+    }
+
+    function handleChatEnter(e) { if (e.key === 'Enter') sendMessage(); }
+
+    async function resolveTicket() {
+      if (!activeComplaintId) return;
+      if (!confirm("Are you sure this issue is resolved? You won't be able to message this ticket anymore.")) return;
+      await fetch(`/api/chat/${activeComplaintId}/resolve`, { method: 'POST' });
+      closeChatView();
+    }
+
+    function closeChatView() {
+      if (chatInterval) clearInterval(chatInterval);
+      activeComplaintId = null;
+      document.getElementById('chat-view').style.display = 'none';
+      document.getElementById('support-list-view').style.display = 'block';
+      loadComplaints();
+    }
+
+    // --- DASHBOARD LOGIC ---
+    async function loadDashboard(isPolling = false) {
       try {
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
-        document.getElementById('total-balance').textContent = formatUSD(data.checking);
+        
+        const newBalance = parseFloat(data.checking) || 0;
+        document.getElementById('total-balance').textContent = formatUSD(newBalance);
         
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
         
-        // FILTER: Hide loans and investments from main dashboard
         allTransactions = txs.filter(tx => 
           !tx.type.includes('INVESTMENT') && 
           !tx.type.includes('LOAN')
