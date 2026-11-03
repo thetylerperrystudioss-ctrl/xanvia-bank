@@ -92,15 +92,58 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// 2. AUTHENTICATION
+// 2. AUTHENTICATION & REGISTRATION (FIXED)
 // ==========================================
 app.post('/api/register', async (req, res) => {
-  const { name, username, email, password } = req.body;
+  // Safely grab all fields
+  const { name, username, email, password, age, address, ssn } = req.body;
+  
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (name, username, email, password) VALUES ($1, $2, $3, $4)', [name, username.toLowerCase(), email.toLowerCase(), hashedPassword]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Username or email already exists.' }); }
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
+
+    // Safely handle missing fields
+    const safeName = name || 'Xanvia User';
+    const safeUsername = username ? username.toLowerCase() : email.split('@')[0];
+    const safePassword = password || 'XanviaDefault123!';
+    
+    // Check if user already exists
+    const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Email already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(safePassword, 10);
+    
+    // Insert user (using safe variables)
+    const userResult = await pool.query(
+      `INSERT INTO users (name, username, email, password, age, address, ssn_last4) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, 
+      [
+        safeName, 
+        safeUsername, 
+        email.toLowerCase(), 
+        hashedPassword, 
+        age || null, 
+        address || null, 
+        ssn || null
+      ]
+    );
+    
+    const newUserId = userResult.rows[0].id;
+
+    // Automatically create the 4 default accounts
+    await pool.query(
+      `INSERT INTO accounts (user_id, type, balance) VALUES 
+       ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, 
+      [newUserId]
+    );
+
+    res.json({ success: true, message: 'Account created successfully.' });
+
+  } catch (err) { 
+    console.error("REGISTRATION ERROR:", err.message); 
+    res.status(500).json({ error: 'Server error: ' + err.message }); 
+  }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -116,11 +159,10 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 3. ACCOUNTS (DYNAMIC BALANCE CALCULATION)
+// 3. ACCOUNTS (LIVE MATHEMATICAL BALANCE)
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
-    // This query calculates the balance directly from approved transactions
     const query = `
       SELECT 
         COALESCE(SUM(
@@ -138,7 +180,6 @@ app.get('/api/accounts/:userId', async (req, res) => {
     const result = await pool.query(query, [req.params.userId]);
     const checkingBalance = parseFloat(result.rows[0].checking_balance) || 0;
 
-    // Return dynamic balance
     res.json({ 
       checking: checkingBalance,
       savings: 0,
@@ -173,7 +214,6 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
 app.post('/api/withdraw/request', async (req, res) => {
   const { userId, amount, details, accountType } = req.body;
   try {
-    // Check real balance before allowing withdrawal
     const balCheck = await pool.query(`
       SELECT COALESCE(SUM(
         CASE 
@@ -188,7 +228,6 @@ app.post('/api/withdraw/request', async (req, res) => {
     `, [userId]);
     
     const currentBalance = parseFloat(balCheck.rows[0].balance);
-
     if (currentBalance < amount) return res.status(400).json({ error: 'Insufficient funds.' });
     
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
@@ -239,18 +278,28 @@ app.get('/api/investments/:userId', async (req, res) => {
 });
 
 app.post('/api/loans/apply', async (req, res) => {
-  const { userId, amount } = req.body;
+  const { userId, amount, age, address, ssn } = req.body;
+  
   try {
+    if (age || address || ssn) {
+      await pool.query(
+        `UPDATE users SET age = COALESCE($1, age), address = COALESCE($2, address), ssn_last4 = COALESCE($3, ssn_last4) WHERE id = $4`,
+        [age || null, address || null, ssn || null, userId]
+      );
+    }
+
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
     res.json({ success: true, message: 'Loan application pending Admin approval.' });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+  } catch (err) { 
+    console.error("LOAN ERROR:", err.message);
+    res.status(500).json({ error: 'Failed.' }); 
+  }
 });
 
 app.post('/api/loans/transfer', async (req, res) => {
   const { userId, amount, destination, bankDetails } = req.body;
   try {
     const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
-    // Ensure amount is saved properly to prevent $0.00 display
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
     res.json({ success: true, message: 'Transfer pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -287,7 +336,6 @@ app.post('/api/admin/approve', async (req, res) => {
     if (action === 'approve') {
       await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
       
-      // Handle specific logic for investments
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         const now = new Date();
         const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
