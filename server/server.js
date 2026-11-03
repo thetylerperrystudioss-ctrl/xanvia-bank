@@ -24,7 +24,7 @@ const pool = new Pool({
 });
 
 // ==========================================
-// 1. DATABASE SETUP & AUTO-FIX
+// 1. BULLETPROOF DATABASE SETUP
 // ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
@@ -86,14 +86,12 @@ pool.connect((err, client, release) => {
         ON CONFLICT (key) DO NOTHING`);
       
       release();
-      console.log('✅ Database ready.');
+      console.log('✅ Database fully upgraded and ready.');
     });
   }
 });
 
-// ==========================================
-// 2. AUTHENTICATION
-// ==========================================
+// AUTHENTICATION
 app.post('/api/register', async (req, res) => {
   const { name, username, email, password } = req.body;
   try {
@@ -115,19 +113,6 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-app.post('/api/complete-onboarding', async (req, res) => {
-  const { userId, type, age, address, ssn_last4 } = req.body;
-  try {
-    await pool.query('BEGIN');
-    await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
-    if (type === 'bank') {
-      await pool.query(`INSERT INTO accounts (user_id, type, balance) SELECT $1, 'checking', 0.00 WHERE NOT EXISTS (SELECT 1 FROM accounts WHERE user_id = $1 AND type = 'checking')`, [userId]);
-    }
-    await pool.query('COMMIT');
-    res.json({ success: true });
-  } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); }
-});
-
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM accounts WHERE user_id = $1', [req.params.userId]);
@@ -138,28 +123,39 @@ app.get('/api/accounts/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 3. SUPPORT / COMPLAINTS
+// DEPOSIT / WITHDRAWAL ROUTES
 // ==========================================
-app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
-  const { userId, category, subject, message } = req.body;
-  const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
-  const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
+app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, targetAccount } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
+  
+  const imagePath = `/uploads/${req.file.filename}`;
+
   try {
-    await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message, attachment) VALUES ($1, $2, $3, $4, $5, $6)`, 
-      [userId, refNum, category, subject, message, attachmentPath]);
-    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
+    await pool.query(
+      `INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, 
+      [userId, amount, targetAccount, imagePath]
+    );
+    res.json({ success: true, message: 'Deposit submitted. Pending Admin approval.' });
+  } catch (err) { 
+    console.error("DEPOSIT ERROR:", err.message);
+    res.status(500).json({ error: 'Server error.' }); 
+  }
+});
+
+app.post('/api/withdraw/request', async (req, res) => {
+  const { userId, amount, details, accountType } = req.body;
+  try {
+    const check = await pool.query(`SELECT balance FROM accounts WHERE user_id = $1 AND type = $2`, [userId, accountType]);
+    if (parseFloat(check.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
+    
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
+    res.json({ success: true, message: 'Withdrawal pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.get('/api/complaints/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
 // ==========================================
-// 4. INVESTMENTS & LOANS
+// INVESTMENTS & LOANS
 // ==========================================
 app.post('/api/investments/deposit', upload.single('screenshot'), async (req, res) => {
   const { userId, amount, reference } = req.body;
@@ -209,7 +205,7 @@ app.post('/api/loans/repay', async (req, res) => {
 });
 
 // ==========================================
-// 5. ADMIN ROUTES
+// ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
@@ -230,7 +226,10 @@ app.post('/api/admin/approve', async (req, res) => {
       const now = new Date();
       const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-      if (tx.type === 'INVESTMENT_DEPOSIT') {
+      if (tx.type === 'DEPOSIT') {
+        await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = $3`, [tx.amount, tx.user_id, tx.reference]);
+      }
+      else if (tx.type === 'INVESTMENT_DEPOSIT') {
         await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
         await pool.query(`UPDATE accounts SET balance = balance + $1 WHERE user_id = $2 AND type = 'brokerage'`, [tx.amount, tx.user_id]);
       }
@@ -264,21 +263,6 @@ app.post('/api/admin/freeze', async (req, res) => {
   const { userId, status } = req.body;
   try {
     await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.get('/api/admin/complaints', async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/admin/complaints/:id', async (req, res) => {
-  const { status, response } = req.body;
-  try {
-    await pool.query(`UPDATE complaints SET status = $1, admin_response = $2 WHERE id = $3`, [status, response, req.params.id]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
