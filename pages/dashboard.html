@@ -15,13 +15,16 @@
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.2rem; font-weight: 900; line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
     .logout-btn { color: white; background: rgba(255,255,255,0.1); border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    
     .balance-section { margin-top: 10px; }
     .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; }
     .balance-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
-    .quick-actions { display: flex; justify-content: center; gap: 15px; margin-top: 30px; position: absolute; bottom: -35px; left: 0; right: 0; padding: 0 20px; }
-    .action-btn { background: white; border: none; border-radius: 16px; padding: 15px 10px; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
-    .icon-circle { width: 36px; height: 36px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-    .action-btn span { font-size: 0.8rem; font-weight: 600; }
+    
+    /* 4 ICON GRID TO FIT ALL ACTIONS */
+    .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 30px; position: absolute; bottom: -35px; left: 0; right: 0; padding: 0 20px; }
+    .action-btn { background: white; border: none; border-radius: 16px; padding: 12px 5px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
+    .icon-circle { width: 32px; height: 32px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+    .action-btn span { font-size: 0.7rem; font-weight: 600; }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
@@ -31,6 +34,7 @@
     .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
     
+    /* Chat Styles */
     .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; max-height: 200px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
     .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; }
     .msg.user { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
@@ -51,10 +55,25 @@
       <h1 class="balance-amount" id="total-balance">$0.00</h1>
       <p class="balance-label">Available Checking Balance</p>
     </div>
+    
+    <!-- QUICK ACTIONS: Manage, Transfer, Deposit, Support -->
     <div class="quick-actions">
-      <a href="hub.html" class="action-btn"><div class="icon-circle">⚙️</div><span>Manage</span></a>
-      <a href="withdraw.html" class="action-btn"><div class="icon-circle">↗</div><span>Transfer</span></a>
-      <a href="#" class="action-btn" onclick="openSupport()"><div class="icon-circle">🎧</div><span>Support</span></a>
+      <a href="hub.html" class="action-btn">
+        <div class="icon-circle">⚙️</div>
+        <span>Manage</span>
+      </a>
+      <a href="withdraw.html" class="action-btn">
+        <div class="icon-circle">↗</div>
+        <span>Transfer</span>
+      </a>
+      <a href="deposit.html?target=checking" class="action-btn">
+        <div class="icon-circle">+</div>
+        <span>Deposit</span>
+      </a>
+      <a href="#" class="action-btn" onclick="openSupport(event)">
+        <div class="icon-circle">🎧</div>
+        <span>Support</span>
+      </a>
     </div>
   </header>
 
@@ -95,10 +114,12 @@
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
+    
     function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-    function openSupport() {
+    function openSupport(e) {
+      if (e) e.preventDefault();
       document.getElementById('modal-support').classList.add('open');
       loadComplaints();
     }
