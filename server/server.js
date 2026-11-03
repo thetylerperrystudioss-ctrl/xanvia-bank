@@ -232,6 +232,27 @@ app.post('/api/admin/settings/update', async (req, res) => {
 // ==========================================
 // 4. DEPOSITS, LOANS, FEES
 // ==========================================
+app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, targetAccount } = req.body;
+  
+  if (!req.file) {
+    return res.status(400).json({ error: 'Please upload a screenshot of your receipt.' });
+  }
+  
+  const imagePath = `/uploads/${req.file.filename}`;
+
+  try {
+    await pool.query(
+      `INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, 
+      [userId, amount, targetAccount, imagePath]
+    );
+    res.json({ success: true, message: 'Deposit submitted. Pending Admin approval.' });
+  } catch (err) { 
+    console.error("DEPOSIT ERROR:", err);
+    res.status(500).json({ error: 'Database error: ' + err.message }); 
+  }
+});
+
 app.post('/api/fee/pay', upload.single('screenshot'), async (req, res) => {
   const { userId } = req.body;
   if (!req.file) return res.status(400).json({ error: 'Payment screenshot required.' });
@@ -240,16 +261,6 @@ app.post('/api/fee/pay', upload.single('screenshot'), async (req, res) => {
     await pool.query(`UPDATE transactions SET proof_image = $1, status = 'Pending Admin Approval' WHERE user_id = $2 AND type = 'FEE' AND status = 'Pending'`, [imagePath, userId]);
     res.json({ success: true, message: 'Fee payment submitted.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
-  const { userId, amount, targetAccount } = req.body;
-  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
-  const imagePath = `/uploads/${req.file.filename}`;
-  try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, targetAccount, imagePath]);
-    res.json({ success: true, message: 'Deposit submitted.' });
-  } catch (err) { res.status(500).json({ error: 'Server error.' }); }
 });
 
 app.post('/api/withdraw/request', async (req, res) => {
@@ -267,7 +278,6 @@ app.post('/api/withdraw/request', async (req, res) => {
     
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
     
-    // FIXED: Ensure it is saved as 'Pending'
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
     res.json({ success: true, message: 'Withdrawal pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -276,7 +286,6 @@ app.post('/api/withdraw/request', async (req, res) => {
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
-    // FIXED: Ensure it is saved as 'Pending'
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
     res.json({ success: true, message: 'Application received.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -286,7 +295,6 @@ app.post('/api/loans/transfer', async (req, res) => {
   const { userId, amount, destination, bankDetails } = req.body;
   try {
     const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
-    // FIXED: Ensure it is saved as 'Pending'
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
     res.json({ success: true, message: 'Transfer pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -295,7 +303,6 @@ app.post('/api/loans/transfer', async (req, res) => {
 app.post('/api/loans/repay', async (req, res) => {
   const { userId, amount } = req.body;
   try {
-    // FIXED: Ensure it is saved as 'Pending'
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
     res.json({ success: true, message: 'Repayment pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
