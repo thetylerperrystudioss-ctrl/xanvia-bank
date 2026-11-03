@@ -7,7 +7,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
     
     .login-card { background: white; width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
@@ -23,10 +23,11 @@
     .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     
-    /* The main button for holding */
+    /* THE MAGIC BUTTON */
     .btn-primary { 
       width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
-      cursor: pointer; transition: 0.2s; user-select: none; -webkit-user-select: none; touch-action: manipulation; position: relative; overflow: hidden;
+      cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-user-select: none; touch-action: manipulation; 
+      position: relative; overflow: hidden; display: block; text-align: center;
     }
     .btn-primary:active { transform: scale(0.98); }
     
@@ -40,7 +41,7 @@
     #user-login-section { display: none; }
     #admin-login-section { display: none; }
     
-    /* The hold indicator ring */
+    /* The hold indicator ring inside the button */
     .hold-indicator { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--gold); width: 0%; transition: width 0.1s linear; z-index: 10; }
     
     /* Back button */
@@ -71,7 +72,7 @@
       </button>
     </div>
 
-    <!-- USER LOGIN FORM (Shows on Tap) -->
+    <!-- USER LOGIN FORM -->
     <div id="user-login-section">
       <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">User Login</h2>
       <div id="user-msg" class="msg"></div>
@@ -89,7 +90,7 @@
       </div>
     </div>
 
-    <!-- ADMIN LOGIN FORM (Shows on 5s Hold) -->
+    <!-- ADMIN LOGIN FORM -->
     <div id="admin-login-section">
       <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">Admin Access</h2>
       <div id="admin-msg" class="msg"></div>
@@ -103,45 +104,42 @@
   </div>
 
   <script>
-    // --- HOLD LOGIC ---
+    // --- HOLD LOGIC (FIXED FOR MOBILE) ---
     const magicBtn = document.getElementById('magic-btn');
     const holdBar = document.getElementById('hold-bar');
     const backBtn = document.getElementById('back-btn');
+    
     let holdTimer;
     let progressTimer;
     let progress = 0;
-    let isHolding = false;
 
     function startHold(e) {
-      if (e) e.preventDefault();
-      isHolding = true;
+      if (e) e.preventDefault(); // Prevents mobile zoom/select
       progress = 0;
       holdBar.style.width = '0%';
       
-      // Update the bar visually every 50ms
+      // Update the bar visually
       progressTimer = setInterval(() => {
         progress += 1;
         holdBar.style.width = (progress / 50) * 100 + '%';
       }, 50);
 
-      // If held for 5 seconds (5000ms), show admin
+      // Trigger admin screen after exactly 5 seconds
       holdTimer = setTimeout(() => {
         clearInterval(progressTimer);
         holdBar.style.width = '0%';
-        isHolding = false;
         showSection('admin-login-section');
       }, 5000);
     }
 
-    function cancelHold() {
-      if (!isHolding) return;
-      isHolding = false;
+    function cancelHold(e) {
+      if (e) e.preventDefault();
       clearTimeout(holdTimer);
       clearInterval(progressTimer);
-      holdBar.style.width = '0%';
       
-      // If they didn't hold for 5 seconds, it counts as a quick tap
-      if (progress < 50) {
+      // If held for less than 4.5 seconds, it's a tap -> open user login
+      if (progress < 45) {
+        holdBar.style.width = '0%';
         showSection('user-login-section');
       }
     }
@@ -161,21 +159,23 @@
       document.getElementById('admin-login-section').style.display = 'none';
       backBtn.style.display = 'none';
       
-      // Clear inputs
+      // Clear inputs and messages
       document.getElementById('user-identifier').value = '';
       document.getElementById('user-password').value = '';
       document.getElementById('admin-pass').value = '';
       document.getElementById('user-msg').style.display = 'none';
       document.getElementById('admin-msg').style.display = 'none';
+      
+      // Reset hold bar
+      progress = 0;
+      holdBar.style.width = '0%';
     }
 
-    // Attach events for both mouse and touch (mobile)
-    magicBtn.addEventListener('mousedown', startHold);
-    magicBtn.addEventListener('touchstart', startHold);
-    
-    magicBtn.addEventListener('mouseup', cancelHold);
-    magicBtn.addEventListener('mouseleave', cancelHold);
-    magicBtn.addEventListener('touchend', cancelHold);
+    // Use Pointer Events to handle both mouse and touch seamlessly
+    magicBtn.addEventListener('pointerdown', startHold);
+    magicBtn.addEventListener('pointerup', cancelHold);
+    magicBtn.addEventListener('pointercancel', cancelHold);
+    magicBtn.addEventListener('pointerleave', cancelHold);
 
     // --- USER LOGIN LOGIC ---
     async function userLogin() {
@@ -212,7 +212,7 @@
       const pass = document.getElementById('admin-pass').value;
       const msg = document.getElementById('admin-msg');
 
-      // ADMIN PASSCODE: @@@@
+      // THIS IS THE ADMIN PASSCODE
       if (pass === "@@@@") {
         window.location.replace("admin.html");
       } else {
