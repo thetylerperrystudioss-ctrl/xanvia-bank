@@ -188,15 +188,19 @@ app.post('/api/complete-onboarding', async (req, res) => {
     const userCheck = await pool.query('SELECT age, address, ssn_last4 FROM users WHERE id = $1', [userId]);
     const user = userCheck.rows[0];
 
+    // Strict Verification: If they already have details, the new details MUST match exactly
     if (user.age && user.address && user.ssn_last4) {
       if (user.age.toString() !== age.toString() || user.address !== address || user.ssn_last4 !== ssn_last4) {
         return res.status(400).json({ error: 'Verification failed. The Date of Birth, Address, or SSN does not match your main account.' });
       }
     } else {
+      // First time - save their details
       await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
     }
 
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : 'INVESTMENT_ACCOUNT']);
+    // Mark that they completed onboarding
+    const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : 'INVESTMENT_ACCOUNT';
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
 
     res.json({ success: true, message: 'Application approved!' });
   } catch (err) { res.status(500).json({ error: 'Failed to update profile: ' + err.message }); }
@@ -205,19 +209,15 @@ app.post('/api/complete-onboarding', async (req, res) => {
 app.get('/api/user-status/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
+    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
     
-    // Check if they have the specific account types
-    const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
-    const types = txRes.rows.map(r => r.type);
-
-    const has_bank = types.includes('BANK_ACCOUNT');
-    const has_loan = types.includes('LOAN_ACCOUNT');
-    const has_investment = types.includes('INVESTMENT_ACCOUNT');
+    // If they have an age and address, they are fully onboarded. Unlock everything.
+    const isOnboarded = !!(userRes.rows[0].age && userRes.rows[0].address);
 
     res.json({
-      has_bank: has_bank,
-      has_loan: has_loan, 
-      has_investment: has_investment,
+      has_bank: isOnboarded,
+      has_loan: isOnboarded, 
+      has_investment: isOnboarded,
       needs_fee: false 
     });
   } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
