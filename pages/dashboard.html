@@ -14,17 +14,38 @@
     .logo-text { display: flex; flex-direction: column; text-align: left; }
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.2rem; font-weight: 900; line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
-    .logout-btn { color: white; background: rgba(255,255,255,0.1); border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
     
+    /* NEW LIVE CHAT BUTTON */
+    .live-chat-btn { background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: 0.2s; }
+    .live-chat-btn:hover { background: rgba(255,255,255,0.25); }
+
     .balance-section { margin-top: 10px; }
-    .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; }
+    .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; transition: color 0.3s; }
     .balance-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
     
-    /* 4 ICON GRID TO FIT ALL ACTIONS */
+    /* Pulse animation for live updates */
+    @keyframes balance-pulse {
+      0% { transform: scale(1); color: #fff; }
+      50% { transform: scale(1.05); color: var(--gold); }
+      100% { transform: scale(1); color: #fff; }
+    }
+    .balance-updated { animation: balance-pulse 1s ease-in-out; }
+
+    /* 4 ICON GRID */
     .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 30px; position: absolute; bottom: -35px; left: 0; right: 0; padding: 0 20px; }
     .action-btn { background: white; border: none; border-radius: 16px; padding: 12px 5px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
     .icon-circle { width: 32px; height: 32px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
     .action-btn span { font-size: 0.7rem; font-weight: 600; }
+
+    /* Transaction List Styling */
+    .tx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid #eee; }
+    .tx-icon { width: 40px; height: 40px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .tx-details { flex: 1; margin-left: 15px; text-align: left; }
+    .tx-details h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 3px; text-transform: uppercase; }
+    .tx-details p { font-size: 0.75rem; color: #888; }
+    .tx-amount { font-weight: 700; font-size: 1rem; }
+    .tx-amount.credit { color: var(--emerald); }
+    .tx-amount.debit { color: #D32F2F; }
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
@@ -49,14 +70,17 @@
         <div class="logo-icon">X</div>
         <div class="logo-text"><span class="logo-title">Xanvia</span><span class="logo-subtitle">Credit Union</span></div>
       </div>
-      <button class="logout-btn" onclick="logout()">Log Out</button>
+      <!-- NEW LIVE CHAT BUTTON -->
+      <button class="live-chat-btn" onclick="openSupport(event)">
+        💬 Live Chat
+      </button>
     </div>
     <div class="balance-section">
       <h1 class="balance-amount" id="total-balance">$0.00</h1>
       <p class="balance-label">Available Checking Balance</p>
     </div>
     
-    <!-- QUICK ACTIONS: Manage, Transfer, Deposit, Support -->
+    <!-- QUICK ACTIONS: Manage, Transfer, Deposit, Cards -->
     <div class="quick-actions">
       <a href="hub.html" class="action-btn">
         <div class="icon-circle">⚙️</div>
@@ -70,15 +94,15 @@
         <div class="icon-circle">+</div>
         <span>Deposit</span>
       </a>
-      <a href="#" class="action-btn" onclick="openSupport(event)">
-        <div class="icon-circle">🎧</div>
-        <span>Support</span>
+      <a href="#" class="action-btn">
+        <div class="icon-circle">💳</div>
+        <span>Cards</span>
       </a>
     </div>
   </header>
 
   <main class="app-main" style="padding-top: 50px;">
-    <div class="search-bar"><span>🔍</span><input type="text" placeholder="Search Transactions"></div>
+    <div class="search-bar"><span>🔍</span><input type="text" id="search-input" placeholder="Search Transactions" onkeyup="filterTransactions()"></div>
     <div class="transaction-container" id="transaction-list"></div>
   </main>
 
@@ -112,12 +136,21 @@
   </div>
 
   <script>
+    let allTransactions = [];
+    let currentBalance = 0;
+
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
     function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
-    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    
+    const formatUSD = (val) => {
+      const num = parseFloat(val);
+      if (isNaN(num) || num === null) return '$0.00';
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(num);
+    };
 
+    // --- SUPPORT CENTER LOGIC ---
     function openSupport(e) {
       if (e) e.preventDefault();
       document.getElementById('modal-support').classList.add('open');
@@ -174,26 +207,97 @@
       }
     }
 
-    async function loadDashboard() {
+    // --- LIVE DASHBOARD LOGIC ---
+    async function loadDashboard(isPolling = false) {
       try {
+        // 1. Fetch Balance
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
-        document.getElementById('total-balance').textContent = formatUSD(data.checking || 0);
         
+        const balanceElement = document.getElementById('total-balance');
+        const newBalance = parseFloat(data.checking) || 0;
+        
+        // If polling and balance changed, flash it gold
+        if (isPolling && newBalance !== currentBalance) {
+          balanceElement.textContent = formatUSD(newBalance);
+          balanceElement.classList.add('balance-updated');
+          setTimeout(() => balanceElement.classList.remove('balance-updated'), 1000);
+        } else {
+          balanceElement.textContent = formatUSD(newBalance);
+        }
+        currentBalance = newBalance;
+        
+        // 2. Fetch Transactions
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
-        const mainTxs = txs.filter(tx => !tx.type.includes('INVESTMENT'));
+        
+        allTransactions = txs.filter(tx => !tx.type.includes('INVESTMENT'));
 
-        document.getElementById('transaction-list').innerHTML = mainTxs.length > 0 ? mainTxs.map(tx => `
-          <div class="tx-item">
-            <div class="tx-icon">🔄</div>
-            <div class="tx-details"><h4>${tx.type.replace('_', ' ')}</h4><p>${new Date(tx.created_at).toLocaleDateString()}</p></div>
-            <div class="tx-amount ${tx.type.includes('DEPOSIT') ? 'credit' : 'debit'}">${formatUSD(parseFloat(tx.amount))}</div>
-          </div>
-        `).join('') : '<p style="text-align:center; color:var(--muted); padding:20px;">No transactions.</p>';
-      } catch (err) { console.error(err); }
+        // Render Transactions
+        renderTransactions(allTransactions);
+
+      } catch (err) { 
+        console.error(err); 
+      }
     }
-    loadDashboard();
+
+    function renderTransactions(txs) {
+      const list = document.getElementById('transaction-list');
+      
+      if (txs.length === 0) {
+        list.innerHTML = '<p style="text-align:center; color:var(--muted); padding:20px;">No transactions.</p>';
+        return;
+      }
+
+      list.innerHTML = txs.map(tx => {
+        // Determine if it adds or subtracts money
+        const isCredit = tx.type.includes('DEPOSIT') || tx.type.includes('LOAN_APPLICATION') || (tx.type === 'LOAN_TRANSFER' && tx.details === 'checking');
+        
+        const amountClass = isCredit ? 'credit' : 'debit';
+        const safeAmount = parseFloat(tx.amount) || 0;
+        
+        // Choose icon
+        let icon = '🔄';
+        if (tx.type.includes('LOAN')) icon = '🏦';
+        if (tx.type.includes('DEPOSIT')) icon = '💵';
+        if (tx.type.includes('WITHDRAWAL')) icon = '💸';
+
+        // Format the title to look nice (e.g. LOAN_APPLICATION -> LOAN APPLICATION)
+        const title = tx.type.replace(/_/g, ' ');
+
+        return `
+          <div class="tx-item">
+            <div class="tx-icon">${icon}</div>
+            <div class="tx-details">
+              <h4>${title}</h4>
+              <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+            </div>
+            <div class="tx-amount ${amountClass}">
+              ${isCredit ? '+' : '-'}${formatUSD(safeAmount)}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function filterTransactions() {
+      const query = document.getElementById('search-input').value.toLowerCase();
+      const filtered = allTransactions.filter(tx => 
+        tx.type.toLowerCase().includes(query) || 
+        tx.amount.toString().includes(query) ||
+        new Date(tx.created_at).toLocaleDateString().includes(query)
+      );
+      renderTransactions(filtered);
+    }
+
+    // Initial Load
+    loadDashboard(false);
+
+    // LIVE POLLING: Check for new transactions and balance every 5 seconds
+    setInterval(() => {
+      loadDashboard(true);
+    }, 5000);
+
   </script>
 </body>
 </html>
