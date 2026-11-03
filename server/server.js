@@ -116,16 +116,16 @@ app.post('/api/login', async (req, res) => {
 });
 
 // ==========================================
-// 3. ACCOUNTS (DYNAMIC CALCULATION)
+// 3. ACCOUNTS (DYNAMIC BALANCE CALCULATION)
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
-    // We calculate the true balance dynamically from the transactions table
+    // This query calculates the balance directly from approved transactions
     const query = `
       SELECT 
         COALESCE(SUM(
           CASE 
-            WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION', 'INVESTMENT_DEPOSIT') THEN amount 
+            WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount 
             WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT') THEN -amount
             WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
             ELSE 0 
@@ -138,7 +138,7 @@ app.get('/api/accounts/:userId', async (req, res) => {
     const result = await pool.query(query, [req.params.userId]);
     const checkingBalance = parseFloat(result.rows[0].checking_balance) || 0;
 
-    // We still return savings, loan, and brokerage if you have logic for them elsewhere
+    // Return dynamic balance
     res.json({ 
       checking: checkingBalance,
       savings: 0,
@@ -173,8 +173,20 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
 app.post('/api/withdraw/request', async (req, res) => {
   const { userId, amount, details, accountType } = req.body;
   try {
-    // Check if they have enough money first
-    const balCheck = await pool.query(`SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount ELSE -amount END), 0) as balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`, [userId]);
+    // Check real balance before allowing withdrawal
+    const balCheck = await pool.query(`
+      SELECT COALESCE(SUM(
+        CASE 
+          WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount 
+          WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT') THEN -amount
+          WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
+          ELSE 0 
+        END
+      ), 0) as balance 
+      FROM transactions 
+      WHERE user_id = $1 AND status = 'Approved'
+    `, [userId]);
+    
     const currentBalance = parseFloat(balCheck.rows[0].balance);
 
     if (currentBalance < amount) return res.status(400).json({ error: 'Insufficient funds.' });
@@ -238,7 +250,7 @@ app.post('/api/loans/transfer', async (req, res) => {
   const { userId, amount, destination, bankDetails } = req.body;
   try {
     const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
-    // FIX: Ensure the amount is saved properly, no more $0.00
+    // Ensure amount is saved properly to prevent $0.00 display
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
     res.json({ success: true, message: 'Transfer pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -264,25 +276,36 @@ app.get('/api/admin/requests', async (req, res) => {
 
 app.post('/api/admin/approve', async (req, res) => {
   const { txId, action } = req.body;
+  
+  const client = await pool.connect();
   try {
-    const tx = (await pool.query('SELECT * FROM transactions WHERE id = $1', [txId])).rows[0];
+    const tx = (await client.query('SELECT * FROM transactions WHERE id = $1', [txId])).rows[0];
     if (!tx || tx.status !== 'Pending') return res.status(400).json({ error: 'Invalid.' });
     
-    await pool.query('BEGIN');
+    await client.query('BEGIN');
+    
     if (action === 'approve') {
-      await pool.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
+      await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
       
+      // Handle specific logic for investments
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         const now = new Date();
         const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        await pool.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
+        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
       }
     } else {
-      await pool.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
+      await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
     }
-    await pool.query('COMMIT');
+    
+    await client.query('COMMIT');
     res.json({ success: true });
-  } catch (err) { await pool.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); }
+  } catch (err) { 
+    await client.query('ROLLBACK'); 
+    console.error(err);
+    res.status(500).json({ error: 'Failed.' }); 
+  } finally {
+    client.release();
+  }
 });
 
 app.get('/api/admin/users', async (req, res) => {
@@ -323,10 +346,13 @@ app.get('/api/admin/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+// ==========================================
+// 8. TRANSACTIONS (SAFE FETCH)
+// ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try { 
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    // Force amount to be a float so UI never sees NaN
+    // Failsafe to prevent $NaN: Force amount to be a float
     const cleanRows = result.rows.map(row => ({
       ...row,
       amount: parseFloat(row.amount) || 0
@@ -336,6 +362,7 @@ app.get('/api/transactions/:userId', async (req, res) => {
   catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+// Catch-all route to serve frontend
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
 const PORT = process.env.PORT || 3000;
