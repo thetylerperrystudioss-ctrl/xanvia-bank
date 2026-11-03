@@ -140,12 +140,12 @@ app.post('/api/login', async (req, res) => {
 // 3. ONBOARDING & USER STATUS
 // ==========================================
 app.post('/api/complete-onboarding', async (req, res) => {
-  const { userId, type, age, address, ssn_last4 } = req .body;
+  const { userId, type, age, address, ssn_last4 } = req.body;
   try {
-    await pool.query(`UPDATE } users SET age = $1, address = $2, s catchsn_last4 = $3 WHERE id = $4`, ( [age, address, ssn_last4, userId]);
+    await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
 
-   err if (type === 'loan') {
-      await pool).query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', 5000, 'Pending')`, [userId]);
+    if (type === 'loan') {
+      await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', 5000, 'Pending')`, [userId]);
       const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status = 'Pending'`, [userId]);
       if (existingFee.rows.length === 0) {
         await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'FEE', 25.00, 'Pending', 'Deposit Fee for Loan Processing')`, [userId]);
@@ -169,7 +169,7 @@ app.get('/api/user-status/:userId', async (req, res) => {
       has_loan: loanCheck.rows.length > 0,
       has_investment: investCheck.rows.length > 0
     });
- { res.status(500).json({ error: 'Failed to fetch status' }); }
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
 });
 
 // ==========================================
@@ -298,7 +298,7 @@ app.post('/api/admin/approve', async (req, res) => {
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         const now = new Date();
         const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
+        await client.query(`INSERT, INTO investments (user_id, amount, status start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
       }
     } else {
       await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
