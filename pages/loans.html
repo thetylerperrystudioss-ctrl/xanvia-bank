@@ -34,22 +34,36 @@
     .tx-info p { font-size: 0.75rem; color: var(--muted); }
     .tx-amount { font-weight: 700; text-align: right; }
     
-    /* Modal */
+    /* MODAL & FORM FIXES */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
-    .modal-content { background: var(--white); width: 100%; max-width: 450px; padding: 30px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-content h2 { color: var(--deep-green); margin-bottom: 10px; }
-    .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
-    .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
+    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
+    .modal-content h2 { color: var(--deep-green); margin-bottom: 10px; font-size: 1.3rem; }
+    .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+    
+    .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #333; }
+    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; }
+    
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
     
-    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; }
+    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.5; }
     .admin-details-box strong { color: var(--deep-green); }
     .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
 
-    /* Hidden External Bank Fields */
+    /* WARNING BANNER FOR THE 10% DEPOSIT */
+    .deposit-warning { 
+      background: #FFFBEB; 
+      border-left: 4px solid var(--gold); 
+      padding: 15px; 
+      margin: 0 20px 20px; 
+      border-radius: 8px; 
+      color: #92400E; 
+      font-size: 0.85rem; 
+      line-height: 1.5; 
+    }
+    .deposit-warning strong { color: #78350F; }
+
     .external-fields { display: none; padding-top: 15px; border-top: 1px dashed var(--border); margin-top: 15px; }
   </style>
 </head>
@@ -68,6 +82,11 @@
     </header>
 
     <main>
+      <!-- NEW WARNING BANNER -->
+      <div class="deposit-warning">
+        <strong>Important Notice:</strong> All loan applications require a <strong>10% security deposit</strong> of the requested amount. Your loan will not be approved by the Admin until this deposit is confirmed.
+      </div>
+
       <div class="stats-grid">
         <div class="stat-card">
           <p>Total Approved</p>
@@ -98,13 +117,19 @@
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2>Apply for Loan</h2>
       <p>Enter the amount you wish to borrow.</p>
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="apply-amount" placeholder="1000"></div>
+      
+      <!-- UPDATED MODAL TEXT -->
+      <div style="background: #FFFBEB; border: 1px solid #FCD34D; color: #92400E; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px;">
+        <strong>Note:</strong> A 10% security deposit is required before the Admin can approve your loan. For example, a $5,000 loan requires a $500 deposit.
+      </div>
+
+      <div class="form-group"><label>Loan Amount Requested ($)</label><input type="number" id="apply-amount" placeholder="e.g. 5000"></div>
       <button onclick="submitApply()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
       <div id="apply-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
-  <!-- TRANSFER MODAL (UPDATED) -->
+  <!-- TRANSFER MODAL -->
   <div id="modal-transfer" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
@@ -121,7 +146,6 @@
         </select>
       </div>
 
-      <!-- HIDDEN EXTERNAL BANK FIELDS -->
       <div id="external-bank-fields" class="external-fields">
         <div class="form-group"><label>Account Name</label><input type="text" id="ext-acc-name" placeholder="John Doe"></div>
         <div class="form-group"><label>Bank Name</label><input type="text" id="ext-bank-name" placeholder="Bank of America"></div>
@@ -139,12 +163,14 @@
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2>Repay Loan</h2>
+      
       <div class="admin-details-box">
         <strong>Step 1: Deposit to Admin</strong><br>
-        <p style="margin-top: 5px; font-size: 0.8rem;">Transfer your repayment to the Admin details below, then submit the amount here.</p>
+        <p style="margin-top: 5px; font-size: 0.8rem; color: #666;">Transfer your repayment to the details below, then confirm the amount.</p>
         <hr>
-        <div id="adm-bank">Loading...</div>
+        <div id="adm-bank" style="font-size: 0.85rem;">Loading...</div>
       </div>
+
       <div class="form-group"><label>Amount to Repay ($)</label><input type="number" id="repay-amount" placeholder="Enter amount"></div>
       <button onclick="submitRepay()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
       <div id="repay-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
@@ -192,7 +218,7 @@
             <div style="font-size:0.7rem; color:var(--muted);">${tx.status}</div>
           </div>
         </div>
-      `).join('') || '<p>No loan history.</p>';
+      `).join('') || '<p style="color:var(--muted); font-size:0.9rem;">No loan history.</p>';
     }
 
     async function fetchAdminDetails() {
@@ -210,7 +236,6 @@
     }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
 
-    // Toggle External Bank Fields
     function toggleBankFields() {
       const dest = document.getElementById('transfer-dest').value;
       const fields = document.getElementById('external-bank-fields');
