@@ -15,20 +15,28 @@
     .back-btn { text-decoration: none; font-size: 1.5rem; color: var(--deep-green); margin-right: 15px; }
     .header h1 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
 
+    /* TAB SWITCHER */
+    .tabs { display: flex; background: #E5E7EB; border-radius: 10px; padding: 4px; margin-bottom: 20px; }
+    .tab-btn { flex: 1; padding: 10px; text-align: center; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: 0.2s; }
+    .tab-btn.active { background: white; color: var(--deep-green); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
     .card { background: white; border-radius: 16px; padding: 25px; border: 1px solid var(--border); }
     
     .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
     .form-group label { font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-    .form-group input { padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
+    .form-group input, .form-group select { padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
     
     .recipient-info { display: none; background: #D1FAE5; color: #065F46; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 600; font-size: 0.9rem; text-align: center; }
 
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
     
     #msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
     #msg.error { background: #FEE2E2; color: #991B1B; }
     #msg.success { background: #D1FAE5; color: #065F46; }
+
+    /* External form hidden by default */
+    #external-form { display: none; }
   </style>
 </head>
 <body>
@@ -41,19 +49,54 @@
 
     <div id="msg"></div>
 
+    <!-- TABS -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-internal" onclick="switchTab('internal')">Xanvia Bank</button>
+      <button class="tab-btn" id="tab-external" onclick="switchTab('external')">Other Banks</button>
+    </div>
+
     <div class="card">
-      <div class="form-group">
-        <label>Recipient Account Number</label>
-        <input type="text" id="recipient-account" placeholder="Enter 10-digit Xanvia Account Number" onkeyup="lookupAccount()">
-        <div id="recipient-name" class="recipient-info"></div>
+      <!-- INTERNAL TRANSFER FORM -->
+      <div id="internal-form">
+        <div class="form-group">
+          <label>Recipient Xanvia Account Number</label>
+          <input type="number" id="recipient-account" placeholder="Enter account number" oninput="lookupAccount()">
+          <div id="recipient-name" class="recipient-info"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Amount ($)</label>
+          <input type="number" id="internal-amount" placeholder="0.00">
+        </div>
+
+        <button class="btn-primary" id="internal-btn" onclick="submitInternalTransfer()" disabled>Send to Xanvia</button>
       </div>
 
-      <div class="form-group">
-        <label>Amount ($)</label>
-        <input type="number" id="transfer-amount" placeholder="0.00">
-      </div>
+      <!-- EXTERNAL TRANSFER FORM -->
+      <div id="external-form">
+        <div class="form-group">
+          <label>Bank Name</label>
+          <input type="text" id="ext-bank" placeholder="e.g. Chase Bank">
+        </div>
+        <div class="form-group">
+          <label>Account Name</label>
+          <input type="text" id="ext-name" placeholder="John Doe">
+        </div>
+        <div class="form-group">
+          <label>Account Number</label>
+          <input type="text" id="ext-account" placeholder="Enter account number">
+        </div>
+        <div class="form-group">
+          <label>Routing Number</label>
+          <input type="text" id="ext-routing" placeholder="Enter routing number">
+        </div>
+        <div class="form-group">
+          <label>Amount ($)</label>
+          <input type="number" id="external-amount" placeholder="0.00">
+        </div>
 
-      <button class="btn-primary" id="send-btn" onclick="submitTransfer()" disabled>Send Money</button>
+        <button class="btn-primary" onclick="submitExternalTransfer()">Send to Other Bank</button>
+      </div>
     </div>
   </div>
 
@@ -62,14 +105,30 @@
     if (!user) window.location.replace("../index.html");
 
     let validRecipient = false;
+    let currentTab = 'internal';
 
-    // Look up account as they type
+    // Switch between Internal and External
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`tab-${tab}`).classList.add('active');
+
+      if (tab === 'internal') {
+        document.getElementById('internal-form').style.display = 'block';
+        document.getElementById('external-form').style.display = 'none';
+      } else {
+        document.getElementById('internal-form').style.display = 'none';
+        document.getElementById('external-form').style.display = 'block';
+      }
+    }
+
+    // Instantly look up the Xanvia account name
     async function lookupAccount() {
       const accNum = document.getElementById('recipient-account').value;
       const nameDisplay = document.getElementById('recipient-name');
-      const sendBtn = document.getElementById('send-btn');
+      const sendBtn = document.getElementById('internal-btn');
 
-      if (accNum.length < 10) {
+      if (accNum.length < 8) { // Allows 8-10 digit numbers
         nameDisplay.style.display = 'none';
         sendBtn.disabled = true;
         validRecipient = false;
@@ -95,25 +154,15 @@
       }
     }
 
-    async function submitTransfer() {
+    // Send Xanvia to Xanvia
+    async function submitInternalTransfer() {
       const recipientAccount = document.getElementById('recipient-account').value;
-      const amount = document.getElementById('transfer-amount').value;
+      const amount = document.getElementById('internal-amount').value;
       const msg = document.getElementById('msg');
-      const btn = document.getElementById('send-btn');
+      const btn = document.getElementById('internal-btn');
 
-      if (!validRecipient) {
-        msg.className = "error";
-        msg.textContent = "Please enter a valid Xanvia account number.";
-        msg.style.display = "block";
-        return;
-      }
-
-      if (!amount || isNaN(amount) || amount <= 0) {
-        msg.className = "error";
-        msg.textContent = "Please enter a valid amount.";
-        msg.style.display = "block";
-        return;
-      }
+      if (!validRecipient) { msg.className = "error"; msg.textContent = "Invalid account."; msg.style.display = "block"; return; }
+      if (!amount || isNaN(amount) || amount <= 0) { msg.className = "error"; msg.textContent = "Enter a valid amount."; msg.style.display = "block"; return; }
 
       btn.textContent = "Sending...";
       btn.disabled = true;
@@ -130,26 +179,60 @@
 
         if (data.success) {
           msg.className = "success";
-          msg.textContent = "Transfer submitted successfully! Pending Admin approval.";
+          msg.textContent = data.message;
           msg.style.display = "block";
           btn.textContent = "Success!";
-          
-          setTimeout(() => {
-            window.location.href = "dashboard.html";
-          }, 2000);
+          setTimeout(() => { window.location.href = "dashboard.html"; }, 2000);
         } else {
           msg.className = "error";
-          msg.textContent = data.error || "Failed to send transfer.";
+          msg.textContent = data.error || "Failed to send.";
           msg.style.display = "block";
-          btn.textContent = "Send Money";
+          btn.textContent = "Send to Xanvia";
           btn.disabled = false;
         }
       } catch (err) {
-        msg.className = "error";
-        msg.textContent = "Network error. Please try again.";
-        msg.style.display = "block";
-        btn.textContent = "Send Money";
-        btn.disabled = false;
+        msg.className = "error"; msg.textContent = "Network error."; msg.style.display = "block";
+        btn.textContent = "Send to Xanvia"; btn.disabled = false;
+      }
+    }
+
+    // Send to External Bank (We can reuse the withdraw API for this)
+    async function submitExternalTransfer() {
+      const bankName = document.getElementById('ext-bank').value;
+      const accountName = document.getElementById('ext-name').value;
+      const accountNumber = document.getElementById('ext-account').value;
+      const routingNumber = document.getElementById('ext-routing').value;
+      const amount = document.getElementById('external-amount').value;
+      const msg = document.getElementById('msg');
+
+      if (!bankName || !accountName || !accountNumber || !routingNumber || !amount) {
+        msg.className = "error"; msg.textContent = "Please fill all external bank details."; msg.style.display = "block"; return;
+      }
+
+      const details = `External Transfer to ${bankName} (Acct: ${accountNumber}, Name: ${accountName}, Routing: ${routingNumber})`;
+      msg.style.display = "none";
+
+      try {
+        const res = await fetch('/api/withdraw/request', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, amount, details })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          msg.className = "success";
+          msg.textContent = "External transfer submitted. Pending Admin approval.";
+          msg.style.display = "block";
+          setTimeout(() => { window.location.href = "dashboard.html"; }, 2000);
+        } else {
+          msg.className = "error";
+          msg.textContent = data.error || "Failed to send.";
+          msg.style.display = "block";
+        }
+      } catch (err) {
+        msg.className = "error"; msg.textContent = "Network error."; msg.style.display = "block";
       }
     }
   </script>
