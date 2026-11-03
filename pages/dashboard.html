@@ -14,11 +14,8 @@
     .app-header { padding: 20px 20px 50px; border-radius: 0 0 30px 30px; text-align: center; position: relative; background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; }
     .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
     
-    /* FIXED MENU BUTTON */
-    .menu-icon-btn { 
-      background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; 
-      padding: 0 10px; z-index: 5000; position: relative; display: flex; align-items: center; 
-    }
+    /* MENU BUTTON */
+    .menu-icon-btn { background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; padding: 0 10px; z-index: 5000; position: relative; display: flex; align-items: center; }
 
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon { background: var(--emerald); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
@@ -26,7 +23,7 @@
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.2rem; font-weight: 900; line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
     
-    /* CHAT BUTTON */
+    /* LIVE CHAT BUTTON */
     .chat-icon-btn { position: relative; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
     .chat-icon-btn:hover { background: rgba(255,255,255,0.2); }
     .chat-icon-btn svg { width: 22px; height: 22px; fill: white; }
@@ -57,7 +54,7 @@
     .tx-amount.credit { color: var(--emerald); }
     .tx-amount.debit { color: #D32F2F; }
 
-    /* SIDEBAR */
+    /* SIDEBAR & MODALS */
     .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2500; display: none; }
     .sidebar-overlay.open { display: block; }
     .sidebar { position: fixed; top: 0; left: -350px; width: 320px; height: 100vh; background: white; z-index: 3000; transition: 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
@@ -80,7 +77,6 @@
     .edit-profile-btn { background: var(--emerald); color: white; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-top: auto; margin-bottom: 10px; }
     .logout-btn { background: #FEE2E2; color: #991B1B; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
 
-    /* MODAL & CHAT */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; display: flex; flex-direction: column; }
@@ -90,8 +86,7 @@
     
     .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
     .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
-    .msg.user { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: {
- 2px; }
+    .msg.user { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
     .msg.admin { background: white; color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 2px; }
     .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
     
@@ -103,10 +98,8 @@
 </head>
 <body>
   
-  <!-- SIDEBAR OVERLAY -->
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-  <!-- SIDEBAR MENU -->
   <div class="sidebar" id="sidebar">
     <div class="profile-section">
       <img src="" id="prof-pic-img" class="profile-img" alt="Profile">
@@ -127,7 +120,6 @@
     <button class="logout-btn" onclick="logout()">Log Out</button>
   </div>
 
-  <!-- EDIT PROFILE MODAL -->
   <div id="edit-modal" class="modal-overlay">
     <div class="modal-content">
       <h3 style="color:var(--deep-green); margin-bottom:15px;">Edit Profile</h3>
@@ -177,7 +169,6 @@
     <div class="transaction-container" id="transaction-list"></div>
   </main>
 
-  <!-- SUPPORT / CHAT MODAL -->
   <div id="modal-support" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" style="position:absolute; top:15px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;" onclick="document.getElementById('modal-support').classList.remove('open')">×</button>
@@ -212,7 +203,6 @@
   </div>
 
   <script>
-    // Global variables
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
@@ -238,10 +228,10 @@
       }
     }
 
-    async function fetchUserData() {
-      try {
-        const res = await fetch(`/api/user/${user.id}`);
-        const data = await res.json();
+         async function fetchUserData() {
+      try } {
+        const catch res = await fetch(`/api/user/${user.id}`);
+        ( const data = await res.json();
         
         document.getElementById('prof-name').textContent = data.name || 'User';
         document.getElementById('prof-user').textContent = '@' + (data.username || 'user');
@@ -250,7 +240,7 @@
         document.getElementById('prof-phone').textContent = data.phone || 'Not provided';
         document.getElementById('prof-email').textContent = data.email || 'N/A';
         if(data.profile_pic) document.getElementById('prof-pic-img').src = data.profile_pic;
-      } catch (err) { console.error("Sidebar error:", err); }
+err) { console.error("Sidebar error:", err); }
     }
 
     function openEditModal() {
@@ -260,7 +250,8 @@
       document.getElementById('edit-modal').classList.add('open');
     }
 
-    async function saveProfile()      const name = document.getElementById('edit-name').value;
+    async function saveProfile() {
+      const name = document.getElementById('edit-name').value;
       const username = document.getElementById('edit-username').value;
       const phone = document.getElementById('edit-phone').value;
       const pic = document.getElementById('edit-pic').files[0];
@@ -288,9 +279,10 @@
     function openSupport(e) {
       if (e) e.preventDefault();
       document.getElementById('modal-support').classList.add('open');
-      document.getElementById('support-list-view').style.display = 'block';
-      document.getElementById('support-form-view').style.display = 'none';
-      document.getElementById('chat-view').style.display = 'none';
+      document.getElementById('support-list-view').">
+style.display = 'block';
+      document.getElementById('support-form-view').           style.display = 'none';
+ ${      document.getElementById('chat-view').style.display = 'none';
       loadComplaints();
     }
 
@@ -376,8 +368,7 @@
         
         const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
         container.innerHTML = messages.map(m => `
-          <div class="msg ${m.sender}">
-            ${m.message}
+          <div class="msg ${m.sender}m.message}
             <span class="msg-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
           </div>
         `).join('');
