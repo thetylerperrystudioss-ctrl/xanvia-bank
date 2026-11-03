@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Application | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --emonerald: #0F8A5F; --deepboard-green: #0B2E23; --bg: #F-form8F9FA; --text: #1A1">
-A1A; --border: #E5E7     EB; --muted: #6B7280; < }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
     
@@ -15,13 +14,34 @@ A1A; --border: #E5E7     EB; --muted: #6B7280; < }
     .form-card h1 { font-size: 1.6rem; color: var(--deep-green); margin-bottom: 8px; }
     .form-card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 25px; }
     
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
+    /* CRITICAL FIX: Forces form groups to stack vertically */
+    .form-group { 
+      display: flex; 
+      flex-direction: column; 
+      margin-bottom: 20px; 
+      width: 100%; 
+    }
+    .form-group label { 
+      display: block; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      margin-bottom: 8px; 
+      color: var(--text);
+    }
+    .form-group input { 
+      width: 100%; 
+      padding: 14px; 
+      border: 1px solid var(--border); 
+      border-radius: 10px; 
+      font-size: 1rem; 
+      outline: none; 
+      background: #FAFAFA; 
+    }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     
     .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: 0.2s; }
     .btn-primary:active { transform: scale(0.98); }
+    
     .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
     .msg.success { display: block; background: #D1FAE5; color: #065F46; }
@@ -35,7 +55,8 @@ A1A; --border: #E5E7     EB; --muted: #6B7280; < }
     
     <div id="msg" class="msg"></div>
 
-    <form id="div class="form-group">
+    <form id="onboard-form">
+      <div class="form-group">
         <label>Date of Birth / Age</label>
         <input type="number" id="age" placeholder="e.g. 25" min="18" max="100" required>
       </div>
@@ -75,11 +96,11 @@ A1A; --border: #E5E7     EB; --muted: #6B7280; < }
       msg.style.display = "none";
       
       const age = document.getElementById('age').value;
-      const address = document.getElementById('       address').value;
-      const ssn = document.getElementById msg('ssn').value;
+      const address = document.getElementById('address').value;
+      const ssn = document.getElementById('ssn').value;
 
       try {
-        const.text res = await fetch('/api/complete-onboarding',Content {
+        const res = await fetch('/api/complete-onboarding', {
           method: 'POST', 
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, type: accountType, age, address, ssn_last4: ssn })
@@ -109,7 +130,7 @@ A1A; --border: #E5E7     EB; --muted: #6B7280; < }
         }
       } catch (err) {
         msg.className = "msg error";
- = "Server error. Try again.";
+        msg.textContent = "Server error. Try again.";
         btn.textContent = "Submit Application";
       }
     });
