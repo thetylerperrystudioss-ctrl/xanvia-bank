@@ -47,6 +47,8 @@ pool.connect((err, client, release) => {
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
@@ -98,7 +100,7 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// 2. AUTHENTICATION
+// 2. AUTHENTICATION & PROFILE
 // ==========================================
 app.post('/api/register', async (req, res) => {
   try {
@@ -111,7 +113,9 @@ app.post('/api/register', async (req, res) => {
 
     const safeName = name || 'Xanvia Member';
     const safeUsername = username || email.split('@')[0] + Math.floor(Math.random() * 1000);
+    
     const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+    const routingNumber = Math.floor(100000000 + Math.random() * 900000000).toString();
 
     const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
     if (existingUser.rows.length > 0) return res.status(400).json({ error: 'Email already registered.' });
@@ -119,9 +123,9 @@ app.post('/api/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     
     const userResult = await pool.query(
-      `INSERT INTO users (name, username, email, password, phone, account_number) 
-       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`, 
-      [safeName, safeUsername.toLowerCase(), email.toLowerCase(), hashedPassword, phone || null, accountNumber]
+      `INSERT INTO users (name, username, email, password, phone, account_number, routing_number) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, 
+      [safeName, safeUsername.toLowerCase(), email.toLowerCase(), hashedPassword, phone || null, accountNumber, routingNumber]
     );
     
     const newUserId = userResult.rows[0].id;
@@ -146,39 +150,32 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-app.post('/api/complete-onboarding', async (req, res) => {
-  const { userId, type, age, address, ssn_last4 } = req.body;
+app.get('/api/user/:userId', async (req, res) => {
   try {
-    await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
-
-    if (type === 'bank') {
-      const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status != 'Approved'`, [userId]);
-      if (existingFee.rows.length === 0) {
-        await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'FEE', 25.00, 'Pending', 'Account Activation Fee')`, [userId]);
-      }
-    }
-    res.json({ success: true, message: 'Application approved!' });
-  } catch (err) { 
-    res.status(500).json({ error: 'Failed to update profile: ' + err.message }); 
-  }
+    const result = await pool.query('SELECT name, username, email, phone, account_number, routing_number, profile_pic FROM users WHERE id = $1', [req.params.userId]);
+    res.json(result.rows[0]);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.get('/api/user-status/:userId', async (req, res) => {
+app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
+  const { userId, name, username, phone } = req.body;
+  const profilePicPath = req.file ? `/uploads/${req.file.filename}` : null;
   try {
-    const result = await pool.query('SELECT age, address FROM users WHERE id = $1', [req.params.userId]);
-    const user = result.rows[0];
-    const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [req.params.userId]);
-    const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
-    const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
-    const isOnboarded = !!(user.age && user.address);
+    if (profilePicPath) {
+      await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3, profile_pic = $4 WHERE id = $5`, [name, username.toLowerCase(), phone, profilePicPath, userId]);
+    } else {
+      await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3 WHERE id = $4`, [name, username.toLowerCase(), phone, userId]);
+    }
+    res.json({ success: true, message: 'Profile updated!' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
+});
 
-    res.json({
-      has_bank: !!(isOnboarded && hasPaidFee),
-      has_loan: isOnboarded, 
-      has_investment: isOnboarded,
-      needs_fee: hasPendingFee
-    });
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
+app.get('/api/lookup-account/:accountNumber', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT name FROM users WHERE account_number = $1', [req.params.accountNumber]);
+    if (result.rows.length > 0) res.json({ success: true, name: result.rows[0].name });
+    else res.status(404).json({ error: 'Account not found' });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 // ==========================================
@@ -190,7 +187,7 @@ app.get('/api/accounts/:userId', async (req, res) => {
       SELECT COALESCE(SUM(
         CASE 
           WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount 
-          WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE') THEN -amount
+          WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
           WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
           ELSE 0 
         END
@@ -198,15 +195,8 @@ app.get('/api/accounts/:userId', async (req, res) => {
       FROM transactions WHERE user_id = $1 AND status = 'Approved';
     `;
     const result = await pool.query(query, [req.params.userId]);
-    res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0, savings: 0, loan: 0, brokerage: 0 });
+    res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0 });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
-});
-
-app.get('/api/user/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT name, username, email, phone, account_number FROM users WHERE id = $1', [req.params.userId]);
-    res.json(result.rows[0]);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/admin/settings', async (req, res) => {
@@ -230,47 +220,21 @@ app.post('/api/admin/settings/update', async (req, res) => {
 });
 
 // ==========================================
-// 4. DEPOSITS, LOANS, FEES
+// 4. TRANSFERS & DEPOSITS
 // ==========================================
-app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
-  const { userId, amount, targetAccount } = req.body;
-  
-  if (!req.file) {
-    return res.status(400).json({ error: 'Please upload a screenshot of your receipt.' });
-  }
-  
-  const imagePath = `/uploads/${req.file.filename}`;
-
+app.post('/api/transfer/internal', async (req, res) => {
+  const { userId, recipientAccount, amount } = req.body;
   try {
-    await pool.query(
-      `INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, 
-      [userId, amount, targetAccount, imagePath]
-    );
-    res.json({ success: true, message: 'Deposit submitted. Pending Admin approval.' });
-  } catch (err) { 
-    console.error("DEPOSIT ERROR:", err);
-    res.status(500).json({ error: 'Database error: ' + err.message }); 
-  }
-});
+    const senderAcc = await pool.query('SELECT account_number FROM users WHERE id = $1', [userId]);
+    if (senderAcc.rows[0].account_number === recipientAccount) {
+      return res.status(400).json({ error: 'You cannot transfer to yourself.' });
+    }
 
-app.post('/api/fee/pay', upload.single('screenshot'), async (req, res) => {
-  const { userId } = req.body;
-  if (!req.file) return res.status(400).json({ error: 'Payment screenshot required.' });
-  const imagePath = `/uploads/${req.file.filename}`;
-  try {
-    await pool.query(`UPDATE transactions SET proof_image = $1, status = 'Pending Admin Approval' WHERE user_id = $2 AND type = 'FEE' AND status = 'Pending'`, [imagePath, userId]);
-    res.json({ success: true, message: 'Fee payment submitted.' });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.post('/api/withdraw/request', async (req, res) => {
-  const { userId, amount, details } = req.body;
-  try {
     const balCheck = await pool.query(`
       SELECT COALESCE(SUM(
         CASE 
           WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount 
-          WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE') THEN -amount
+          WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
           ELSE 0 
         END
       ), 0) as balance FROM transactions WHERE user_id = $1 AND status = 'Approved'
@@ -278,86 +242,34 @@ app.post('/api/withdraw/request', async (req, res) => {
     
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
     
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
-    res.json({ success: true, message: 'Withdrawal pending Admin approval.' });
+    const recipient = await pool.query('SELECT id, name FROM users WHERE account_number = $1', [recipientAccount]);
+    if (recipient.rows.length === 0) return res.status(404).json({ error: 'Recipient not found.' });
+
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, details) VALUES ($1, 'INTERNAL_TRANSFER', $2, 'Pending', $3, $4)`, 
+      [userId, amount, recipientAccount, `Transfer to ${recipient.rows[0].name}`]);
+
+    res.json({ success: true, message: 'Transfer submitted. Pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.post('/api/loans/apply', async (req, res) => {
-  const { userId, amount } = req.body;
+app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, targetAccount } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
+  const imagePath = `/uploads/${req.file.filename}`;
   try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
-    res.json({ success: true, message: 'Application received.' });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.post('/api/loans/transfer', async (req, res) => {
-  const { userId, amount, destination, bankDetails } = req.body;
-  try {
-    const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
-    res.json({ success: true, message: 'Transfer pending Admin approval.' });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.post('/api/loans/repay', async (req, res) => {
-  const { userId, amount } = req.body;
-  try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
-    res.json({ success: true, message: 'Repayment pending Admin approval.' });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, targetAccount, imagePath]);
+    res.json({ success: true, message: 'Deposit submitted.' });
+  } catch (err) { res.status(500).json({ error: 'Server error.' }); }
 });
 
 // ==========================================
-// 5. CHAT / SUPPORT SYSTEM
+// 5. TRANSACTIONS
 // ==========================================
-app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
-  const { userId, category, subject, message } = req.body;
-  const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
-  const attachmentPath = req.file ? `/uploads/${req.file.filename}` : null;
-  
-  try {
-    const result = await pool.query(
-      `INSERT INTO complaints (user_id, ref_number, category, subject, message, attachment) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`, 
-      [userId, refNum, category, subject, message, attachmentPath]
-    );
-    const complaintId = result.rows[0].id;
-
-    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'user', $2)`, [complaintId, message]);
-    const autoReply = `Welcome to Xanvia Credit Union Support. We have received your inquiry regarding "${subject}". A secure support agent has been assigned to your ticket and will review your message shortly. Please hold while we connect you to a live representative. Your reference number is ${refNum}.`;
-    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [complaintId, autoReply]);
-
-    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.get('/api/complaints/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows);
+app.get('/api/transactions/:userId', async (req, res) => {
+  try { 
+    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 }))); 
   } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.get('/api/chat/:complaintId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM chat_messages WHERE complaint_id = $1 ORDER BY created_at ASC', [req.params.complaintId]);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/chat/:complaintId', async (req, res) => {
-  const { sender, message } = req.body;
-  try {
-    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, $2, $3)`, [req.params.complaintId, sender, message]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.post('/api/chat/:complaintId/resolve', async (req, res) => {
-  try {
-    await pool.query(`UPDATE complaints SET status = 'Resolved' WHERE id = $1`, [req.params.complaintId]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
 // ==========================================
@@ -380,6 +292,15 @@ app.post('/api/admin/approve', async (req, res) => {
     await client.query('BEGIN');
     if (action === 'approve') {
       await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
+      
+      // If approved an internal transfer, deposit the money into the recipient's account
+      if (tx.type === 'INTERNAL_TRANSFER') {
+        const recipient = await client.query('SELECT id FROM users WHERE account_number = $1', [tx.reference]);
+        if (recipient.rows.length > 0) {
+           await client.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'DEPOSIT', $2, 'Approved')`, [recipient.rows[0].id, tx.amount]);
+        }
+      }
+
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         const now = new Date();
         const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -398,48 +319,8 @@ app.post('/api/admin/approve', async (req, res) => {
   }
 });
 
-app.get('/api/admin/users', async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT id, name, COALESCE(username, 'N/A') as username, email, status, created_at FROM users WHERE deleted = false ORDER BY created_at DESC`);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
-});
+// ... (Keep your other admin routes for users, freeze, complaints, chat here) ...
 
-app.post('/api/admin/freeze', async (req, res) => {
-  const { userId, status } = req.body;
-  try {
-    await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.get('/api/admin/complaints', async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/admin/chat/:complaintId', async (req, res) => {
-  const { message } = req.body;
-  try {
-    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [req.params.complaintId, message]);
-    await pool.query(`UPDATE complaints SET status = 'In Progress' WHERE id = $1`, [req.params.complaintId]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-app.get('/api/transactions/:userId', async (req, res) => {
-  try { 
-    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 }))); 
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-// ==========================================
-// 7. STATIC FILES (Catch-all)
-// ==========================================
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
-
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Transfer | Xanvia Credit Union</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background: var(--bg); display: flex; justify-content: center; min-height: 100vh; }
+    .app-container { width: 100%; max-width: 600px; padding: 20px; }
+    
+    .header { display: flex; align-items: center; margin-bottom: 25px; }
+    .back-btn { text-decoration: none; font-size: 1.5rem; color: var(--deep-green); margin-right: 15px; }
+    .header h1 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
+
+    .card { background: white; border-radius: 16px; padding: 25px; border: 1px solid var(--border); }
+    
+    .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
+    .form-group label { font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .form-group input { padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
+    
+    .recipient-info { display: none; background: #D1FAE5; color: #065F46; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 600; font-size: 0.9rem; text-align: center; }
+
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    #msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
+    #msg.error { background: #FEE2E2; color: #991B1B; }
+    #msg.success { background: #D1FAE5; color: #065F46; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div class="header">
+      <a href="dashboard.html" class="back-btn">←</a>
+      <h1>Transfer Funds</h1>
+    </div>
+
+    <div id="msg"></div>
+
+    <div class="card">
+      <div class="form-group">
+        <label>Recipient Account Number</label>
+        <input type="text" id="recipient-account" placeholder="Enter 10-digit Xanvia Account Number" onkeyup="lookupAccount()">
+        <div id="recipient-name" class="recipient-info"></div>
+      </div>
+
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" id="transfer-amount" placeholder="0.00">
+      </div>
+
+      <button class="btn-primary" id="send-btn" onclick="submitTransfer()" disabled>Send Money</button>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("xanvia_user"));
+    if (!user) window.location.replace("../index.html");
+
+    let validRecipient = false;
+
+    // Look up account as they type
+    async function lookupAccount() {
+      const accNum = document.getElementById('recipient-account').value;
+      const nameDisplay = document.getElementById('recipient-name');
+      const sendBtn = document.getElementById('send-btn');
+
+      if (accNum.length < 10) {
+        nameDisplay.style.display = 'none';
+        sendBtn.disabled = true;
+        validRecipient = false;
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/lookup-account/${accNum}`);
+        const data = await res.json();
+
+        if (data.success) {
+          nameDisplay.textContent = `Recipient: ${data.name}`;
+          nameDisplay.style.display = 'block';
+          sendBtn.disabled = false;
+          validRecipient = true;
+        } else {
+          nameDisplay.style.display = 'none';
+          sendBtn.disabled = true;
+          validRecipient = false;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function submitTransfer() {
+      const recipientAccount = document.getElementById('recipient-account').value;
+      const amount = document.getElementById('transfer-amount').value;
+      const msg = document.getElementById('msg');
+      const btn = document.getElementById('send-btn');
+
+      if (!validRecipient) {
+        msg.className = "error";
+        msg.textContent = "Please enter a valid Xanvia account number.";
+        msg.style.display = "block";
+        return;
+      }
+
+      if (!amount || isNaN(amount) || amount <= 0) {
+        msg.className = "error";
+        msg.textContent = "Please enter a valid amount.";
+        msg.style.display = "block";
+        return;
+      }
+
+      btn.textContent = "Sending...";
+      btn.disabled = true;
+      msg.style.display = "none";
+
+      try {
+        const res = await fetch('/api/transfer/internal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: user.id, recipientAccount, amount })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          msg.className = "success";
+          msg.textContent = "Transfer submitted successfully! Pending Admin approval.";
+          msg.style.display = "block";
+          btn.textContent = "Success!";
+          
+          setTimeout(() => {
+            window.location.href = "dashboard.html";
+          }, 2000);
+        } else {
+          msg.className = "error";
+          msg.textContent = data.error || "Failed to send transfer.";
+          msg.style.display = "block";
+          btn.textContent = "Send Money";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        msg.className = "error";
+        msg.textContent = "Network error. Please try again.";
+        msg.style.display = "block";
+        btn.textContent = "Send Money";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
