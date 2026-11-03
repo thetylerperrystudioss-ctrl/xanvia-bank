@@ -6,7 +6,7 @@
   <title>My Accounts | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444;}
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 50px; }
     .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 600px; margin: 0 auto; }
@@ -23,6 +23,9 @@
     .panel h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 10px; }
     .panel p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
     .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; display: block; text-align: center; text-decoration: none; font-size: 0.95rem; }
+    
+    /* Fee Warning Button */
+    .btn-fee { background: var(--danger); color: white; }
   </style>
 </head>
 <body>
@@ -36,6 +39,12 @@
         </div>
       </div>
       <button class="btn-logout" onclick="logout()">Log Out</button>
+    </div>
+
+    <!-- FEE ALERT -->
+    <div id="fee-alert" style="display:none; background:#FEE2E2; border:1px solid #F87171; color:#991B1B; padding:15px; border-radius:12px; margin-bottom:10px; font-size:0.9rem;">
+      <strong>⚠️ Account Activation Required</strong><br>
+      You must pay the $25 activation fee to access your bank dashboard.
     </div>
 
     <div class="panel">
@@ -69,18 +78,24 @@
         const res = await fetch(`/api/user-status/${user.id}`);
         const data = await res.json();
 
+        // BANK LOGIC (Check if fee is paid)
         if (data.has_bank) {
           document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
+        } else if (data.needs_fee) {
+          document.getElementById('fee-alert').style.display = 'block';
+          document.getElementById('bank-action').innerHTML = `<a href="deposit.html?target=fee" class="btn-primary btn-fee">Pay $25 Fee Now</a>`;
         } else {
           document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
         }
 
+        // LOAN LOGIC
         if (data.has_loan) {
           document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
         } else {
           document.getElementById('loan-action').innerHTML = `<a href="onboarding.html?type=loan" class="btn-primary">Apply for Loan Account</a>`;
         }
 
+        // INVESTMENT LOGIC
         if (data.has_investment) {
           document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
         } else {

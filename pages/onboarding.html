@@ -14,29 +14,9 @@
     .form-card h1 { font-size: 1.6rem; color: var(--deep-green); margin-bottom: 8px; }
     .form-card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 25px; }
     
-    /* CRITICAL FIX: Forces form groups to stack vertically */
-    .form-group { 
-      display: flex; 
-      flex-direction: column; 
-      margin-bottom: 20px; 
-      width: 100%; 
-    }
-    .form-group label { 
-      display: block; 
-      font-size: 0.85rem; 
-      font-weight: 600; 
-      margin-bottom: 8px; 
-      color: var(--text);
-    }
-    .form-group input { 
-      width: 100%; 
-      padding: 14px; 
-      border: 1px solid var(--border); 
-      border-radius: 10px; 
-      font-size: 1rem; 
-      outline: none; 
-      background: #FAFAFA; 
-    }
+    .form-group { display: flex; flex-direction: column; margin-bottom: 20px; width: 100%; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     
     .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: 0.2s; }
@@ -110,17 +90,17 @@
         
         if (data.success) {
           msg.className = "msg success";
-          msg.textContent = "Application approved! Redirecting...";
+          msg.textContent = "Application approved! Redirecting to your accounts...";
           
+          // Update local storage (but note the hub will double-check the server)
           if (accountType === 'bank') user.has_bank = true;
           if (accountType === 'loan') user.has_loan = true;
           if (accountType === 'investment') user.has_investment = true;
           localStorage.setItem("xanvia_user", JSON.stringify(user));
 
+          // ALWAYS REDIRECT TO HUB
           setTimeout(() => {
-            if (accountType === 'bank') window.location.href = "dashboard.html";
-            if (accountType === 'loan') window.location.href = "loans.html";
-            if (accountType === 'investment') window.location.href = "investments.html";
+            window.location.href = "hub.html";
           }, 1500);
           
         } else {

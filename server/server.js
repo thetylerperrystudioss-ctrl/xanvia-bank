@@ -141,9 +141,8 @@ app.post('/api/complete-onboarding', async (req, res) => {
   try {
     await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
 
-    // GENERATE $25 ACTIVATION FEE ON ACCOUNT CREATION
     if (type === 'bank') {
-      const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status = 'Pending'`, [userId]);
+      const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status != 'Approved'`, [userId]);
       if (existingFee.rows.length === 0) {
         await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'FEE', 25.00, 'Pending', 'Account Activation Fee')`, [userId]);
       }
@@ -153,6 +152,28 @@ app.post('/api/complete-onboarding', async (req, res) => {
   } catch (err) { 
     res.status(500).json({ error: 'Failed to update profile: ' + err.message }); 
   }
+});
+
+app.get('/api/user-status/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT age, address FROM users WHERE id = $1', [req.params.userId]);
+    const user = result.rows[0];
+    const loanCheck = await pool.query(`SELECT id FROM transactions WHERE user_id = $1 AND type = 'LOAN_APPLICATION'`, [req.params.userId]);
+    const investCheck = await pool.query(`SELECT id FROM investments WHERE user_id = $1`, [req.params.userId]);
+    
+    // Check if the $25 fee is paid
+    const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [req.params.userId]);
+    const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
+    const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
+
+    res.json({
+      has_bank: !!(user.age && user.address && hasPaidFee), // Must have info AND paid fee
+      has_loan: loanCheck.rows.length > 0,
+      has_investment: investCheck.rows.length > 0,
+      needs_fee: hasPendingFee,
+      fee_status: feeCheck.rows.length > 0 ? feeCheck.rows[0].status : 'None'
+    });
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
 });
 
 // ==========================================
@@ -236,7 +257,6 @@ app.post('/api/withdraw/request', async (req, res) => {
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
-    // Normal loan application, no fee attached here anymore
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
     res.json({ success: true, message: 'Application received and pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
