@@ -92,55 +92,34 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// 2. AUTHENTICATION (ANTI-CRASH REGISTRATION)
+// 2. AUTHENTICATION
 // ==========================================
 app.post('/api/register', async (req, res) => {
   try {
-    // 1. Log exactly what the frontend is sending so you can see it in Render logs
-    console.log("INCOMING REGISTRATION DATA:", req.body);
-
-    // 2. Safely extract data with fallbacks
     const email = req.body.email;
-    if (!email) {
-      return res.status(400).json({ error: 'Email address is required to open an account.' });
-    }
+    if (!email) return res.status(400).json({ error: 'Email is required.' });
 
-    const name = req.body.name || req.body.fullName || 'Xanvia Member';
+    const name = req.body.name || 'Xanvia Member';
     const username = req.body.username || email.split('@')[0] + Math.floor(Math.random() * 1000);
     const password = req.body.password || 'XanviaDefault123!'; 
-    const age = req.body.age || req.body.dob || null;
+    const age = req.body.age || null;
     const address = req.body.address || null;
-    const ssn = req.body.ssn || req.body.ssn_last4 || null;
+    const ssn = req.body.ssn || null;
 
-    // 3. Check if user already exists
     const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
-    if (existingUser.rows.length > 0) {
-      return res.status(400).json({ error: 'This email is already registered. Please log in.' });
-    }
+    if (existingUser.rows.length > 0) return res.status(400).json({ error: 'Email already registered. Please log in.' });
 
-    // 4. Hash password and insert user
     const hashedPassword = await bcrypt.hash(password, 10);
-    
     const userResult = await pool.query(
-      `INSERT INTO users (name, username, email, password, age, address, ssn_last4) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, 
+      `INSERT INTO users (name, username, email, password, age, address, ssn_last4) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, 
       [name, username.toLowerCase(), email.toLowerCase(), hashedPassword, age, address, ssn]
     );
     
     const newUserId = userResult.rows[0].id;
-
-    // 5. Create default accounts immediately so the dashboard works
-    await pool.query(
-      `INSERT INTO accounts (user_id, type, balance) VALUES 
-       ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, 
-      [newUserId]
-    );
+    await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUserId]);
 
     res.json({ success: true, message: 'Account created successfully.' });
-
   } catch (err) { 
-    console.error("CRITICAL REGISTRATION ERROR:", err.message); 
-    // Send the exact database error to the frontend so it's not a mystery
     res.status(500).json({ error: 'Database Error: ' + err.message }); 
   }
 });
@@ -155,6 +134,34 @@ app.post('/api/login', async (req, res) => {
     await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+// ==========================================
+// 2B. THE MISSING ONBOARDING ROUTE (FIXED!)
+// ==========================================
+app.post('/api/complete-onboarding', async (req, res) => {
+  const { userId, type, age, address, ssn_last4 } = req.body;
+  
+  try {
+    // 1. Update the user's KYC information
+    await pool.query(
+      `UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`,
+      [age, address, ssn_last4, userId]
+    );
+
+    // 2. If they applied for a loan, generate the $25 fee
+    if (type === 'loan') {
+      const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status = 'Pending'`, [userId]);
+      if (existingFee.rows.length === 0) {
+        await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'FEE', 25.00, 'Pending', 'Deposit Fee for Loan Processing')`, [userId]);
+      }
+    }
+
+    res.json({ success: true, message: 'Application approved!' });
+  } catch (err) {
+    console.error("ONBOARDING ERROR:", err.message);
+    res.status(500).json({ error: 'Failed to update profile: ' + err.message });
+  }
 });
 
 // ==========================================
@@ -179,12 +186,7 @@ app.get('/api/accounts/:userId', async (req, res) => {
     const result = await pool.query(query, [req.params.userId]);
     const checkingBalance = parseFloat(result.rows[0].checking_balance) || 0;
 
-    res.json({ 
-      checking: checkingBalance,
-      savings: 0,
-      loan: 0,
-      brokerage: 0
-    });
+    res.json({ checking: checkingBalance, savings: 0, loan: 0, brokerage: 0 });
   } catch (err) { 
     res.status(500).json({ error: 'Database error.' }); 
   }
@@ -232,19 +234,11 @@ app.post('/api/withdraw/request', async (req, res) => {
 });
 
 // ==========================================
-// 5. LOANS (WITH $25 DEPOSIT FEE)
+// 5. LOANS & FEES
 // ==========================================
 app.post('/api/loans/apply', async (req, res) => {
-  const { userId, amount, age, address, ssn } = req.body;
-  
+  const { userId, amount } = req.body;
   try {
-    if (age || address || ssn) {
-      await pool.query(
-        `UPDATE users SET age = COALESCE($1, age), address = COALESCE($2, address), ssn_last4 = COALESCE($3, ssn_last4) WHERE id = $4`,
-        [age || null, address || null, ssn || null, userId]
-      );
-    }
-
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
 
     const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status = 'Pending'`, [userId]);
