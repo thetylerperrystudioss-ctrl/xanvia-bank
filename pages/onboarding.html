@@ -2,26 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Application | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    
     .form-card { background: white; width: 100%; max-width: 480px; padding: 35px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); }
     .form-card h1 { font-size: 1.6rem; color: var(--deep-green); margin-bottom: 8px; }
     .form-card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 25px; }
-    
     .form-group { display: flex; flex-direction: column; margin-bottom: 20px; width: 100%; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
     .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
-    
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-    .btn-primary:active { transform: scale(0.98); }
-    
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; }
     .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
     .msg.success { display: block; background: #D1FAE5; color: #065F46; }
@@ -31,8 +25,7 @@
 
   <div class="form-card">
     <h1 id="page-title">Application</h1>
-    <p>Please complete the required information to open your account.</p>
-    
+    <p id="page-desc">Please complete the required information to open your account.</p>
     <div id="msg" class="msg"></div>
 
     <form id="onboard-form">
@@ -40,17 +33,14 @@
         <label>Date of Birth / Age</label>
         <input type="number" id="age" placeholder="e.g. 25" min="18" max="100" required>
       </div>
-      
       <div class="form-group">
         <label>Residential Address</label>
         <input type="text" id="address" placeholder="123 Main St, City, State, ZIP" required>
       </div>
-
       <div class="form-group">
         <label>SSN (Last 4 Digits)</label>
         <input type="text" id="ssn" placeholder="XXXX" maxlength="4" required>
       </div>
-
       <button type="submit" class="btn-primary" id="submit-btn">Submit Application</button>
     </form>
   </div>
@@ -63,16 +53,24 @@
     const urlParams = new URLSearchParams(window.location.search);
     const accountType = urlParams.get('type') || 'bank';
 
-    if (accountType === 'bank') document.getElementById('page-title').textContent = "Banking Application";
-    if (accountType === 'loan') document.getElementById('page-title').textContent = "Loan Application";
-    if (accountType === 'investment') document.getElementById('page-title').textContent = "Investment Application";
+    if (accountType === 'bank') {
+      document.getElementById('page-title').textContent = "Banking Application";
+      document.getElementById('page-desc').textContent = "Provide your KYC details to open your main checking account.";
+    }
+    if (accountType === 'loan') {
+      document.getElementById('page-title').textContent = "Loan Application";
+      document.getElementById('page-desc').textContent = "Verify your details. Note: Your DOB, Address, and SSN must match your main bank account exactly.";
+    }
+    if (accountType === 'investment') {
+      document.getElementById('page-title').textContent = "Investment Application";
+      document.getElementById('page-desc').textContent = "Verify your details. Note: Your DOB, Address, and SSN must match your main bank account exactly.";
+    }
 
     document.getElementById('onboard-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('submit-btn');
       const msg = document.getElementById('msg');
-      
-      btn.textContent = "Processing...";
+      btn.textContent = "Verifying...";
       msg.style.display = "none";
       
       const age = document.getElementById('age').value;
@@ -85,24 +83,18 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, type: accountType, age, address, ssn_last4: ssn })
         });
-        
         const data = await res.json();
         
         if (data.success) {
           msg.className = "msg success";
-          msg.textContent = "Application approved! Redirecting to your accounts...";
+          msg.textContent = "Verified successfully! Redirecting...";
           
-          // Update local storage (but note the hub will double-check the server)
           if (accountType === 'bank') user.has_bank = true;
           if (accountType === 'loan') user.has_loan = true;
           if (accountType === 'investment') user.has_investment = true;
           localStorage.setItem("xanvia_user", JSON.stringify(user));
 
-          // ALWAYS REDIRECT TO HUB
-          setTimeout(() => {
-            window.location.href = "hub.html";
-          }, 1500);
-          
+          setTimeout(() => { window.location.href = "hub.html"; }, 1500);
         } else {
           msg.className = "msg error";
           msg.textContent = data.error || "Application failed.";

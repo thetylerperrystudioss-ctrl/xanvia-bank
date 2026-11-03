@@ -86,11 +86,19 @@ pool.connect((err, client, release) => {
         try { await client.query(q); } catch (e) { }
       }
 
+      // Auto-generate account numbers for existing users missing them
+      try {
+        const usersNeedingNumbers = await client.query(`SELECT id FROM users WHERE account_number IS NULL OR routing_number IS NULL`);
+        for (let row of usersNeedingNumbers.rows) {
+          const accNum = Math.floor(1000000000 + Math.random() * 9000000000).toString();
+          const routNum = Math.floor(100000000 + Math.random() * 900000000).toString();
+          await client.query(`UPDATE users SET account_number = $1, routing_number = $2 WHERE id = $3`, [accNum, routNum, row.id]);
+        }
+      } catch(e) { }
+
       await client.query(`INSERT INTO system_settings (key, value) VALUES 
-        ('btc_address', 'bc1q...xanvia'), 
-        ('bank_name', 'Chase Bank'), 
-        ('bank_account', '123456789'), 
-        ('bank_routing', '021000021') 
+        ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), 
+        ('bank_account', '123456789'), ('bank_routing', '021000021') 
         ON CONFLICT (key) DO NOTHING`);
       
       release();
@@ -106,14 +114,10 @@ app.post('/api/register', async (req, res) => {
   try {
     const { name, email, password, phone, username } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Email and password are required.' });
-
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return res.status(400).json({ error: 'Please enter a valid Gmail address.' });
-    }
+    if (!email.toLowerCase().endsWith('@gmail.com')) return res.status(400).json({ error: 'Please enter a valid Gmail address.' });
 
     const safeName = name || 'Xanvia Member';
     const safeUsername = username || email.split('@')[0] + Math.floor(Math.random() * 1000);
-    
     const accountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
     const routingNumber = Math.floor(100000000 + Math.random() * 900000000).toString();
 
@@ -121,7 +125,6 @@ app.post('/api/register', async (req, res) => {
     if (existingUser.rows.length > 0) return res.status(400).json({ error: 'Email already registered.' });
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    
     const userResult = await pool.query(
       `INSERT INTO users (name, username, email, password, phone, account_number, routing_number) 
        VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, 
@@ -132,9 +135,7 @@ app.post('/api/register', async (req, res) => {
     await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUserId]);
 
     res.json({ success: true, message: 'Account created successfully!', userId: newUserId });
-  } catch (err) { 
-    res.status(500).json({ error: 'Database Error: ' + err.message }); 
-  }
+  } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -179,7 +180,51 @@ app.get('/api/lookup-account/:accountNumber', async (req, res) => {
 });
 
 // ==========================================
-// 3. ACCOUNTS & INVESTMENTS (GRADUAL PROFIT)
+// 3. ONBOARDING & STATUS
+// ==========================================
+app.post('/api/complete-onboarding', async (req, res) => {
+  const { userId, type, age, address, ssn_last4 } = req.body;
+  try {
+    const userCheck = await pool.query('SELECT age, address, ssn_last4 FROM users WHERE id = $1', [userId]);
+    const user = userCheck.rows[0];
+
+    if (user.age && user.address && user.ssn_last4) {
+      if (user.age.toString() !== age.toString() || user.address !== address || user.ssn_last4 !== ssn_last4) {
+        return res.status(400).json({ error: 'Verification failed. The Date of Birth, Address, or SSN does not match your main account.' });
+      }
+    } else {
+      await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
+    }
+
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : 'INVESTMENT_ACCOUNT']);
+
+    res.json({ success: true, message: 'Application approved!' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update profile: ' + err.message }); }
+});
+
+app.get('/api/user-status/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Check if they have the specific account types
+    const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
+    const types = txRes.rows.map(r => r.type);
+
+    const has_bank = types.includes('BANK_ACCOUNT');
+    const has_loan = types.includes('LOAN_ACCOUNT');
+    const has_investment = types.includes('INVESTMENT_ACCOUNT');
+
+    res.json({
+      has_bank: has_bank,
+      has_loan: has_loan, 
+      has_investment: has_investment,
+      needs_fee: false 
+    });
+  } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
+});
+
+// ==========================================
+// 4. ACCOUNTS & INVESTMENTS
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
@@ -202,21 +247,15 @@ app.get('/api/accounts/:userId', async (req, res) => {
 app.get('/api/investments/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    
     const investments = result.rows.map(inv => {
       let currentProfit = 0;
-      
-      // Calculate gradual profit based on time elapsed
       if (inv.status === 'Active' && inv.start_date && inv.maturity_date) {
         const start = new Date(inv.start_date).getTime();
         const maturity = new Date(inv.maturity_date).getTime();
         const now = new Date().getTime();
-        
-        const totalExpectedProfit = parseFloat(inv.amount) * 1.4; // 140% total return over the period
-        
-        if (now >= maturity) {
-          currentProfit = totalExpectedProfit; // Fully matured
-        } else if (now > start) {
+        const totalExpectedProfit = parseFloat(inv.amount) * 1.4; 
+        if (now >= maturity) currentProfit = totalExpectedProfit;
+        else if (now > start) {
           const totalDuration = maturity - start;
           const elapsed = now - start;
           currentProfit = totalExpectedProfit * (elapsed / totalDuration);
@@ -224,14 +263,8 @@ app.get('/api/investments/:userId', async (req, res) => {
       } else if (inv.status === 'Completed') {
          currentProfit = parseFloat(inv.profit) || 0;
       }
-
-      return {
-        ...inv,
-        amount: parseFloat(inv.amount),
-        profit: currentProfit.toFixed(2) 
-      };
+      return { ...inv, amount: parseFloat(inv.amount), profit: currentProfit.toFixed(2) };
     });
-
     res.json(investments);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
@@ -257,7 +290,7 @@ app.post('/api/admin/settings/update', async (req, res) => {
 });
 
 // ==========================================
-// 4. TRANSFERS & DEPOSITS
+// 5. TRANSFERS & DEPOSITS
 // ==========================================
 app.post('/api/transfer/internal', async (req, res) => {
   const { userId, recipientAccount, amount } = req.body;
@@ -310,7 +343,7 @@ app.post('/api/investments/deposit', upload.single('screenshot'), async (req, re
 });
 
 // ==========================================
-// 5. TRANSACTIONS
+// 6. TRANSACTIONS
 // ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try { 
@@ -320,7 +353,7 @@ app.get('/api/transactions/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 6. ADMIN ROUTES
+// 7. ADMIN ROUTES
 // ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
@@ -349,8 +382,7 @@ app.post('/api/admin/approve', async (req, res) => {
 
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         const now = new Date();
-        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
-        // Insert with 0 initial profit. The backend API handles the gradual calculation.
+        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); 
         await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, 0]);
       }
     } else {
