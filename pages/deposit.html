@@ -10,11 +10,11 @@
     .deposit-container { padding: 20px; max-width: 500px; margin: 0 auto; }
     .step-card { background: var(--white); border-radius: 16px; padding: 25px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid var(--border); }
     .step-title { font-size: 1.1rem; color: var(--deep-green); font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
-    .step-number { background: var(--emerald); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0input.8rem; }
+    .step-number { background: var(--emerald); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
     
-    .bank-detail-row type { display: flex; justify-content: space-between; padding: 12="px 0; border-bottom: 1px solid var(--borderfile); font-size: 0.95rem; }
-    .bank"-detail-row:last-child { border-bottom: none; }
- id    .bank-detail-row span:first-child { color: var(--muted); }
+    .bank-detail-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; }
+    .bank-detail-row:last-child { border-bottom: none; }
+    .bank-detail-row span:first-child { color: var(--muted); }
     .bank-detail-row span:last-child { font-weight: 600; color: var(--text); }
     
     .upload-area { border: 2px dashed var(--border); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; background: #FAFAFA; }
@@ -54,7 +54,7 @@
         </div>
         
         <div class="upload-area">
-          <="screenshot" accept="image/*" required>
+          <input type="file" id="screenshot" accept="image/*" required>
           <div class="upload-icon">📄</div>
           <p style="font-weight: 600; font-size: 0.9rem; color: var(--text);" id="file-name">Tap to upload screenshot</p>
           <p style="font-size: 0.75rem; color: var(--muted); margin-top: 5px;">PNG, JPG up to 5MB</p>
