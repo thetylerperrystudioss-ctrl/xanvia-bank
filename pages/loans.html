@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Loan Center | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     body { background-color: #F4F7F6; display: flex; justify-content: center; }
     .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
@@ -34,7 +33,7 @@
     .tx-info p { font-size: 0.75rem; color: var(--muted); }
     .tx-amount { font-weight: 700; text-align: right; }
     
-    /* MODAL & FORM FIXES */
+    /* MODAL FIXES */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
@@ -51,17 +50,7 @@
     .admin-details-box strong { color: var(--deep-green); }
     .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
 
-    /* WARNING BANNER FOR THE 10% DEPOSIT */
-    .deposit-warning { 
-      background: #FFFBEB; 
-      border-left: 4px solid var(--gold); 
-      padding: 15px; 
-      margin: 0 20px 20px; 
-      border-radius: 8px; 
-      color: #92400E; 
-      font-size: 0.85rem; 
-      line-height: 1.5; 
-    }
+    .deposit-warning { background: #FFFBEB; border-left: 4px solid var(--gold); padding: 15px; margin: 0 20px 20px; border-radius: 8px; color: #92400E; font-size: 0.85rem; line-height: 1.5; }
     .deposit-warning strong { color: #78350F; }
 
     .external-fields { display: none; padding-top: 15px; border-top: 1px dashed var(--border); margin-top: 15px; }
@@ -82,7 +71,6 @@
     </header>
 
     <main>
-      <!-- NEW WARNING BANNER -->
       <div class="deposit-warning">
         <strong>Important Notice:</strong> All loan applications require a <strong>10% security deposit</strong> of the requested amount. Your loan will not be approved by the Admin until this deposit is confirmed.
       </div>
@@ -118,7 +106,6 @@
       <h2>Apply for Loan</h2>
       <p>Enter the amount you wish to borrow.</p>
       
-      <!-- UPDATED MODAL TEXT -->
       <div style="background: #FFFBEB; border: 1px solid #FCD34D; color: #92400E; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px;">
         <strong>Note:</strong> A 10% security deposit is required before the Admin can approve your loan. For example, a $5,000 loan requires a $500 deposit.
       </div>
@@ -186,7 +173,6 @@
     async function loadData() {
       const res = await fetch(`/api/accounts/${user.id}`);
       const data = await res.json();
-
       const loanBalance = data.loan || 0;
       
       const txRes = await fetch(`/api/transactions/${user.id}`);
@@ -238,12 +224,7 @@
 
     function toggleBankFields() {
       const dest = document.getElementById('transfer-dest').value;
-      const fields = document.getElementById('external-bank-fields');
-      if (dest === 'external') {
-        fields.style.display = 'block';
-      } else {
-        fields.style.display = 'none';
-      }
+      document.getElementById('external-bank-fields').style.display = dest === 'external' ? 'block' : 'none';
     }
 
     async function submitApply() {
@@ -268,22 +249,13 @@
           accountNumber: document.getElementById('ext-acc-num').value,
           routingNumber: document.getElementById('ext-rout-num').value
         };
-
         if (!bankDetails.accountName || !bankDetails.bankName || !bankDetails.accountNumber || !bankDetails.routingNumber) {
-          msg.textContent = "Please fill all external bank details.";
-          msg.style.color = "red";
-          return;
+          msg.textContent = "Please fill all external bank details."; msg.style.color = "red"; return;
         }
       }
+      msg.textContent = "Processing..."; msg.style.color = "var(--emerald)";
 
-      msg.textContent = "Processing...";
-      msg.style.color = "var(--emerald)";
-
-      const res = await fetch('/api/loans/transfer', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ userId: user.id, amount, destination: dest, bankDetails }) 
-      });
+      const res = await fetch('/api/loans/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, destination: dest, bankDetails }) });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
@@ -292,13 +264,7 @@
     async function submitRepay() {
       const amount = parseFloat(document.getElementById('repay-amount').value);
       const msg = document.getElementById('repay-msg');
-      
-      if (amount > totalOutstanding) {
-        msg.textContent = "Amount exceeds outstanding debt.";
-        msg.style.color = "red";
-        return;
-      }
-
+      if (amount > totalOutstanding) { msg.textContent = "Amount exceeds outstanding debt."; msg.style.color = "red"; return; }
       const res = await fetch('/api/loans/repay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";

@@ -179,7 +179,7 @@ app.get('/api/lookup-account/:accountNumber', async (req, res) => {
 });
 
 // ==========================================
-// 3. ACCOUNTS & SETTINGS
+// 3. ACCOUNTS & INVESTMENTS (GRADUAL PROFIT)
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
@@ -197,6 +197,43 @@ app.get('/api/accounts/:userId', async (req, res) => {
     const result = await pool.query(query, [req.params.userId]);
     res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0 });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+app.get('/api/investments/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    
+    const investments = result.rows.map(inv => {
+      let currentProfit = 0;
+      
+      // Calculate gradual profit based on time elapsed
+      if (inv.status === 'Active' && inv.start_date && inv.maturity_date) {
+        const start = new Date(inv.start_date).getTime();
+        const maturity = new Date(inv.maturity_date).getTime();
+        const now = new Date().getTime();
+        
+        const totalExpectedProfit = parseFloat(inv.amount) * 1.4; // 140% total return over the period
+        
+        if (now >= maturity) {
+          currentProfit = totalExpectedProfit; // Fully matured
+        } else if (now > start) {
+          const totalDuration = maturity - start;
+          const elapsed = now - start;
+          currentProfit = totalExpectedProfit * (elapsed / totalDuration);
+        }
+      } else if (inv.status === 'Completed') {
+         currentProfit = parseFloat(inv.profit) || 0;
+      }
+
+      return {
+        ...inv,
+        amount: parseFloat(inv.amount),
+        profit: currentProfit.toFixed(2) 
+      };
+    });
+
+    res.json(investments);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/admin/settings', async (req, res) => {
@@ -262,6 +299,16 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
   } catch (err) { res.status(500).json({ error: 'Server error.' }); }
 });
 
+app.post('/api/investments/deposit', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, reference } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
+  const imagePath = `/uploads/${req.file.filename}`;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'INVESTMENT_DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, reference, imagePath]);
+    res.json({ success: true, message: 'Investment deposit pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
 // ==========================================
 // 5. TRANSACTIONS
 // ==========================================
@@ -293,7 +340,6 @@ app.post('/api/admin/approve', async (req, res) => {
     if (action === 'approve') {
       await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
       
-      // If approved an internal transfer, deposit the money into the recipient's account
       if (tx.type === 'INTERNAL_TRANSFER') {
         const recipient = await client.query('SELECT id FROM users WHERE account_number = $1', [tx.reference]);
         if (recipient.rows.length > 0) {
@@ -303,8 +349,9 @@ app.post('/api/admin/approve', async (req, res) => {
 
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         const now = new Date();
-        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, tx.amount * 2.4]);
+        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days from now
+        // Insert with 0 initial profit. The backend API handles the gradual calculation.
+        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, 0]);
       }
     } else {
       await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
@@ -319,7 +366,20 @@ app.post('/api/admin/approve', async (req, res) => {
   }
 });
 
-// ... (Keep your other admin routes for users, freeze, complaints, chat here) ...
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT id, name, COALESCE(username, 'N/A') as username, email, status, created_at FROM users WHERE deleted = false ORDER BY created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
+});
+
+app.post('/api/admin/freeze', async (req, res) => {
+  const { userId, status } = req.body;
+  try {
+    await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 const PORT = process.env.PORT || 3000;

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Investments | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../css/dashboard.css">
   <style>
     body { background-color: #F4F7F6; display: flex; justify-content: center; }
     .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; }
@@ -30,12 +29,10 @@
     .history-panel { padding: 0 20px 30px; }
     .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     
-    /* MODAL FIXES */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
     
-    /* CRITICAL FIX FOR THE FORM LAYOUT */
     .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #333; }
     .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; }
@@ -45,22 +42,22 @@
 </head>
 <body>
   <div class="app-container">
-    <header class="invest-header">
-      <div class="header-top">
-        <a href="hub.html">←</a>
-        <div class="logo" style="font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
-        <div style="width: 24px;"></div>
+    < <header class="invest-header">
+      <div class="header-topdiv">
+        <a href="hub.html">←</ classa>
+        <div class="logo" style="="font-family: var(--font-serif); font-weight: 700;">statXanvia</div>
+        <div style="width-card: 24px;"></div>
       </div>
-      <div class="invest-summary">
-        <p>Total Portfolio Balance</p>
-        <h2 id="total-val">$0.00</h2>
-      </div>
+     ">
+ <div class="invest-summary">
+        <p>         Total Portfolio Balance</p>
+        <h2 id=" <total-val">$0.00</h2>
+      </pdiv>
     </header>
 
     <main>
-      <div class="stats-grid">
-        <div class="stat-card">
-          <p>Deposited Capital</p>
+      <>div class="stats-grid">
+       Deposited Capital</p>
           <h3 id="capital-val">$0.00</h3>
         </div>
         <div class="stat-card">
@@ -110,37 +107,53 @@
     if(!user) window.location.replace("../index.html");
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
+    let liveCapital = 0;
+    let liveProfit = 0;
+    let profitTickRate = 0; // How much profit to add every second
+
     async function loadData() {
-      // Load Admin Details for Deposit
       const setRes = await fetch('/api/admin/settings');
       const settings = await setRes.json();
       document.getElementById('adm-bank').textContent = settings.bank_name || 'N/A';
- const      document.getElementById('adm-acc').textContent = settings.bank_account || 'N/A';
+      document.getElementById('adm-acc').textContent = settings.bank_account || 'N/A';
       document.getElementById('adm-rout').textContent = settings.bank_routing || 'N/A';
       document.getElementById('adm-btc').textContent = settings.btc_address || 'N/A';
 
-      // Load Investments
       const res = await fetch(`/api/investments/${user.id}`);
       const data = await res.json();
 
-      let totalCapital = 0;
-      let totalProfit = 0;
+      liveCapital = 0;
+      let baseProfit = 0;
+      profitTickRate = 0;
 
       data.forEach(inv => {
         if (inv.status === 'Active') {
-          totalCapital += parseFloat(inv.amount);
-          totalProfit += parseFloat(inv.profit);
+          liveCapital += parseFloat(inv.amount);
+          baseProfit += parseFloat(inv.profit);
+
+          // Calculate how much profit is earned PER SECOND for this specific investment
+          if (inv.start_date && inv.maturity_date) {
+            const totalDurationSeconds = (new Date(inv.maturity_date) - new Date(inv.start_date)) / 1000;
+            const totalExpectedProfit = parseFloat(inv.amount) * 1.4; // 140% total return
+            const profitPerSecond = totalExpectedProfit / totalDurationSeconds;
+            
+            // Add to the tick rate if it hasn't matured yet
+            if (new Date() < new Date(inv.maturity_date)) {
+              profitTickRate += profitPerSecond;
+            }
+          }
         }
       });
 
-      document.getElementById('capital-val').textContent = formatUSD(totalCapital);
-      document.getElementById('profit-val').textContent = `+${formatUSD(totalProfit)}`;
-      document.getElementById('total-val').textContent = formatUSD(totalCapital + totalProfit);
+      liveProfit = baseProfit;
 
-      // FILTER: Show only investment transactions
+      // Set initial values
+      updateUI();
+
+      // Load history
       const txRes = await fetch(`/api/transactions/${user.id}`);
-      const invest txs = await txRes.json();
-     Txs = txs.filter(tx => tx.type.includes('INVESTMENT'));
+      const txs = await txRes.json();
+      const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
 
       document.getElementById('history-list').innerHTML = investTxs.length > 0 ? investTxs.map(tx => `
         <div class="tx-item">
@@ -155,6 +168,20 @@
         </div>
       `).join('') : '<p style="color: var(--muted); font-size: 0.9rem;">No investment history.</p>';
     }
+
+    function updateUI() {
+      document.getElementById('capital-val').textContent = formatUSD(liveCapital);
+      document.getElementById('profit-val').textContent = `+${formatUSD(liveProfit)}`;
+      document.getElementById('total-val').textContent = formatUSD(liveCapital + liveProfit);
+    }
+
+    // The live ticker: Adds profit every 1 second
+    setInterval(() => {
+      if (profitTickRate > 0) {
+        liveProfit += profitTickRate;
+        updateUI();
+      }
+    }, 1000);
 
     function openModal(type) { document.getElementById(`modal-${type}`).classList.add('open'); }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
