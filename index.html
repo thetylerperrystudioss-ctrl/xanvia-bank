@@ -31,7 +31,6 @@
     .btn { padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; border: none; font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; white-space: nowrap; }
     .btn-primary { background: var(--emerald); color: var(--white); }
     .btn-primary:hover { background: var(--emerald-dark); }
-    .btn-admin { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
     
     /* Hero */
     .hero { position: relative; height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 0 20px; overflow: hidden; }
@@ -46,7 +45,7 @@
     .btn-large { padding: 14px 28px; font-size: 0.95rem; border-radius: 8px; width: auto; }
     .btn-outline { background: rgba(11, 46, 35, 0.8); color: var(--white); border: 1px solid rgba(255, 255, 255, 0.6); backdrop-filter: blur(8px); }
 
-    /* Horizontal Sliding Ads Section */
+    /* Horizontal Sliding Ads */
     .ads-section { padding: 20px 0; background: #061a13; border-top: 1px solid rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.05); overflow: hidden; white-space: nowrap; }
     .marquee-track { display: inline-block; animation: scroll-left 25s linear infinite; }
     .marquee-track:hover { animation-play-state: paused; }
@@ -54,45 +53,15 @@
     .marquee-item span { font-size: 1.25rem; }
     @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 
-    /* Services Section */
+    /* Services */
     .services-section { padding: 60px 20px 40px; text-align: center; background: #061a13; }
     .section-title { font-family: var(--font-serif); font-size: 2rem; color: var(--white); margin-bottom: 12px; }
     .section-subtitle { color: #A7C4B7; margin-bottom: 40px; font-size: 1rem; }
-    
     .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1100px; margin: 0 auto; }
     
-    /* Service Cards */
-    .service-card { 
-      border-radius: 12px; 
-      padding: 24px 20px; 
-      text-align: left; 
-      transition: 0.3s; 
-      background-size: cover; 
-      background-position: center; 
-      position: relative; 
-      overflow: hidden; 
-      border: 1px solid rgba(255,255,255,0.2); 
-      height: 380px; 
-      display: flex; 
-      flex-direction: column; 
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      /* Smooth transition for the background image change */
-      transition: background-image 1s ease-in-out, transform 0.3s, border-color 0.3s;
-    }
-
-    .service-card::before { 
-      content: ''; 
-      position: absolute; 
-      inset: 0; 
-      background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.9) 100%); 
-      z-index: 0; 
-      transition: 0.3s; 
-    }
-    
-    .service-card:hover::before { 
-      background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.95) 100%); 
-    }
-    
+    .service-card { border-radius: 12px; padding: 24px 20px; text-align: left; transition: 0.3s; background-size: cover; background-position: center; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.2); height: 380px; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .service-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.7) 60%, rgba(0,0,0,0.9) 100%); z-index: 0; transition: 0.3s; }
+    .service-card:hover::before { background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 60%, rgba(0,0,0,0.95) 100%); }
     .service-card > * { position: relative; z-index: 1; }
     .service-card:hover { transform: translateY(-5px); border-color: var(--gold); }
     
@@ -113,7 +82,6 @@
     .service-link { color: var(--gold); font-weight: 600; font-size: 0.85rem; display: inline-block; transition: 0.2s; text-shadow: 0 1px 3px rgba(0,0,0,0.9); }
     .service-link:hover { color: var(--white); }
 
-    /* Default background images (Starting point) */
     .bg-banking { background-image: url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1000&auto=format&fit=crop'); }
     .bg-loans { background-image: url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop'); }
     .bg-wealth { background-image: url('https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop'); }
@@ -149,15 +117,19 @@
       .header-inner { padding: 0 16px; height: 64px; }
       .logo-title { font-size: 1.15rem; }
       .btn { padding: 8px 12px; font-size: 0.8rem; }
+      
       .hero h1 { font-size: 2.2rem; }
       .hero p { font-size: 0.95rem; }
       .hero-ctas { flex-direction: column; width: 100%; max-width: 300px; margin: 0 auto; }
       .btn-large { width: 100%; padding: 12px 20px; }
+      
       .about-content p { font-size: 0.9rem; }
       .trust-badges { gap: 12px 16px; }
+      
       .footer-inner { grid-template-columns: 1fr; gap: 24px; text-align: center; }
       .footer-brand { display: flex; flex-direction: column; align-items: center; }
       .footer-brand p { max-width: 100%; }
+      
       .marquee-item { font-size: 0.9rem; margin-right: 40px; }
     }
   </style>
@@ -180,7 +152,7 @@
       </nav>
 
       <div class="header-actions">
-        <a href="pages/admin.html" class="btn btn-admin">Admin</a>
+        <!-- REMOVED ADMIN BUTTON HERE -->
         <a href="pages/login.html" class="btn btn-primary">Login</a>
       </div>
     </div>
@@ -228,7 +200,7 @@
 
     <div class="services-grid">
       
-      <!-- Personal Banking Card -->
+      <!-- Personal Banking -->
       <div class="service-card bg-banking" id="card-banking">
         <div class="service-icon">🏦</div>
         <h3>Personal Banking</h3>
@@ -244,7 +216,7 @@
         <a href="pages/login.html" class="service-link">Explore Accounts →</a>
       </div>
 
-      <!-- Smart Lending Card -->
+      <!-- Smart Lending -->
       <div class="service-card bg-loans" id="card-loans">
         <div class="service-icon">💳</div>
         <h3>Smart Lending</h3>
@@ -260,7 +232,7 @@
         <a href="pages/login.html" class="service-link">Apply for a Loan →</a>
       </div>
 
-      <!-- Wealth Management Card -->
+      <!-- Wealth Management -->
       <div class="service-card bg-wealth" id="card-wealth">
         <div class="service-icon">📈</div>
         <h3>Wealth Management</h3>
@@ -334,47 +306,38 @@
     </div>
   </footer>
 
+  <!-- Script to change background images every 4 seconds -->
   <script>
-    // --- DYNAMIC SERVICE CARD IMAGES ---
-
-    // Define the array of background images for each card
     const cardImages = {
       banking: [
-        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1000&auto=format&fit=crop", // Bank lobby
-        "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?q=80&w=1000&auto=format&fit=crop", // Credit cards
-        "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1000&auto=format&fit=crop"  // Money/cash
+        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=1000&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?q=80&w=1000&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=1000&auto=format&fit=crop"
       ],
       loans: [
-        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop", // House
-        "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=1000&auto=format&fit=crop", // Documents
-        "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1000&auto=format&fit=crop"  // Car
+        "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=1000&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=1000&auto=format&fit=crop"
       ],
       wealth: [
-        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop", // Trading chart
-        "https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=1000&auto=format&fit=crop", // Bitcoin
-        "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=1000&auto=format&fit=crop"  // Stock chart
+        "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=1000&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1621761191319-c6fb62004040?q=80&w=1000&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=1000&auto=format&fit=crop"
       ]
     };
 
-    let bankingIndex = 0;
-    let loansIndex = 0;
-    let wealthIndex = 0;
-
+    let bankingIndex = 0, loansIndex = 0, wealthIndex = 0;
     const bankingCard = document.getElementById('card-banking');
     const loansCard = document.getElementById('card-loans');
     const wealthCard = document.getElementById('card-wealth');
 
-    // Change images every 4 seconds (4000ms)
     setInterval(() => {
-      // Banking
       bankingIndex = (bankingIndex + 1) % cardImages.banking.length;
       bankingCard.style.backgroundImage = `url('${cardImages.banking[bankingIndex]}')`;
 
-      // Loans
       loansIndex = (loansIndex + 1) % cardImages.loans.length;
       loansCard.style.backgroundImage = `url('${cardImages.loans[loansIndex]}')`;
 
-      // Wealth
       wealthIndex = (wealthIndex + 1) % cardImages.wealth.length;
       wealthCard.style.backgroundImage = `url('${cardImages.wealth[wealthIndex]}')`;
     }, 4000); 

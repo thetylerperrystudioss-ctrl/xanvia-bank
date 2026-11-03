@@ -2,101 +2,224 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Login | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
-    .auth-card { background: white; width: 100%; max-width: 420px; padding: 40px 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
     
-    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
-    .logo-icon { background: var(--emerald); color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
+    .login-card { background: white; width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+    
+    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; justify-content: center; }
+    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; }
-    .logo-title { font-family: 'Merriweather', serif; font-size: 1.3rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
+    .logo-title { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
 
-    h2 { color: var(--deep-green); font-size: 1.8rem; margin-bottom: 8px; }
-    p.sub { color: var(--muted); font-size: 0.95rem; margin-bottom: 30px; }
-    .input-group { margin-bottom: 20px; }
-    .input-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 8px; }
-    .input-group input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
-    .input-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 10px; }
-    .switch-link { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--muted); }
-    .switch-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
-    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 500; }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
+    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    
+    /* The main button for holding */
+    .btn-primary { 
+      width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
+      cursor: pointer; transition: 0.2s; user-select: none; -webkit-user-select: none; touch-action: manipulation; position: relative; overflow: hidden;
+    }
+    .btn-primary:active { transform: scale(0.98); }
+    
+    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
-    .msg.success { display: block; background: #D1FAE5; color: #065F46; }
+    
+    .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
+    .footer-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
+
+    /* Hidden elements */
+    #user-login-section { display: none; }
+    #admin-login-section { display: none; }
+    
+    /* The hold indicator ring */
+    .hold-indicator { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--gold); width: 0%; transition: width 0.1s linear; z-index: 10; }
+    
+    /* Back button */
+    .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; }
   </style>
 </head>
 <body>
-  <div class="auth-card">
-    <div class="logo">
-      <div class="logo-icon">X</div>
-      <div class="logo-text">
-        <span class="logo-title">Xanvia</span>
-        <span class="logo-subtitle">Credit Union</span>
+
+  <div class="login-card">
+    <button class="back-btn" id="back-btn" onclick="resetView()">←</button>
+
+    <!-- INITIAL HOLD SCREEN -->
+    <div id="hold-screen">
+      <div class="logo">
+        <div class="logo-icon">X</div>
+        <div class="logo-text">
+          <span class="logo-title">Xanvia</span>
+          <span class="logo-subtitle">Credit Union</span>
+        </div>
+      </div>
+      <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 10px;">Welcome Back</h2>
+      <p style="text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 30px;">Tap to Login.</p>
+      
+      <!-- THE MAGIC BUTTON -->
+      <button class="btn-primary" id="magic-btn">
+        Login
+        <div class="hold-indicator" id="hold-bar"></div>
+      </button>
+    </div>
+
+    <!-- USER LOGIN FORM (Shows on Tap) -->
+    <div id="user-login-section">
+      <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">User Login</h2>
+      <div id="user-msg" class="msg"></div>
+      <div class="form-group">
+        <label>Email or Username</label>
+        <input type="text" id="user-identifier" placeholder="Enter email or username">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="user-password" placeholder="Enter password">
+      </div>
+      <button class="btn-primary" onclick="userLogin()" style="position: static;">Sign In</button>
+      <div class="footer-link">
+        Don't have an account? <a href="register.html">Register</a>
       </div>
     </div>
-    
-    <h2>Welcome Back</h2>
-    <p class="sub">Enter your credentials to access your account.</p>
-    
-    <div id="msg" class="msg"></div>
-    
-    <form id="login-form">
-      <div class="input-group">
-        <label>Email or Username</label>
-        <input type="text" id="identifier" placeholder="name@example.com or username" required>
+
+    <!-- ADMIN LOGIN FORM (Shows on 5s Hold) -->
+    <div id="admin-login-section">
+      <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">Admin Access</h2>
+      <div id="admin-msg" class="msg"></div>
+      <div class="form-group">
+        <label>Admin Passcode</label>
+        <input type="password" id="admin-pass" maxlength="4" placeholder="••••" style="text-align: center; letter-spacing: 8px; font-size: 1.5rem;">
       </div>
-      <div class="input-group">
-        <label>Password</label>
-        <input type="password" id="password" required>
-      </div>
-      <button type="submit" class="btn-primary">Log In</button>
-    </form>
-    
-    <div class="switch-link">Need an account? <a href="register.html">Sign Up</a></div>
+      <button class="btn-primary" onclick="verifyAdmin()" style="position: static;">Unlock Admin</button>
+    </div>
+
   </div>
 
   <script>
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById('msg');
-      const btn = document.querySelector('.btn-primary');
-      btn.textContent = "Authenticating...";
-      msg.className = "msg";
+    // --- HOLD LOGIC ---
+    const magicBtn = document.getElementById('magic-btn');
+    const holdBar = document.getElementById('hold-bar');
+    const backBtn = document.getElementById('back-btn');
+    let holdTimer;
+    let progressTimer;
+    let progress = 0;
+    let isHolding = false;
+
+    function startHold(e) {
+      if (e) e.preventDefault();
+      isHolding = true;
+      progress = 0;
+      holdBar.style.width = '0%';
+      
+      // Update the bar visually every 50ms
+      progressTimer = setInterval(() => {
+        progress += 1;
+        holdBar.style.width = (progress / 50) * 100 + '%';
+      }, 50);
+
+      // If held for 5 seconds (5000ms), show admin
+      holdTimer = setTimeout(() => {
+        clearInterval(progressTimer);
+        holdBar.style.width = '0%';
+        isHolding = false;
+        showSection('admin-login-section');
+      }, 5000);
+    }
+
+    function cancelHold() {
+      if (!isHolding) return;
+      isHolding = false;
+      clearTimeout(holdTimer);
+      clearInterval(progressTimer);
+      holdBar.style.width = '0%';
+      
+      // If they didn't hold for 5 seconds, it counts as a quick tap
+      if (progress < 50) {
+        showSection('user-login-section');
+      }
+    }
+
+    function showSection(id) {
+      document.getElementById('hold-screen').style.display = 'none';
+      document.getElementById('user-login-section').style.display = 'none';
+      document.getElementById('admin-login-section').style.display = 'none';
+      
+      document.getElementById(id).style.display = 'block';
+      backBtn.style.display = 'block';
+    }
+
+    function resetView() {
+      document.getElementById('hold-screen').style.display = 'block';
+      document.getElementById('user-login-section').style.display = 'none';
+      document.getElementById('admin-login-section').style.display = 'none';
+      backBtn.style.display = 'none';
+      
+      // Clear inputs
+      document.getElementById('user-identifier').value = '';
+      document.getElementById('user-password').value = '';
+      document.getElementById('admin-pass').value = '';
+      document.getElementById('user-msg').style.display = 'none';
+      document.getElementById('admin-msg').style.display = 'none';
+    }
+
+    // Attach events for both mouse and touch (mobile)
+    magicBtn.addEventListener('mousedown', startHold);
+    magicBtn.addEventListener('touchstart', startHold);
+    
+    magicBtn.addEventListener('mouseup', cancelHold);
+    magicBtn.addEventListener('mouseleave', cancelHold);
+    magicBtn.addEventListener('touchend', cancelHold);
+
+    // --- USER LOGIN LOGIC ---
+    async function userLogin() {
+      const identifier = document.getElementById('user-identifier').value;
+      const password = document.getElementById('user-password').value;
+      const msg = document.getElementById('user-msg');
+
+      if (!identifier || !password) { msg.textContent = "Fill all fields."; msg.className = "msg error"; return; }
 
       try {
-        const res = await fetch('/api/login', { 
-          method: 'POST', 
-          headers: { 'Content-Type': 'application/json' }, 
-          body: JSON.stringify({ 
-            identifier: document.getElementById('identifier').value, 
-            password: document.getElementById('password').value 
-          }) 
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password })
         });
-        
+
         const data = await res.json();
-        
+
         if (data.success) {
-          msg.className = "msg success"; 
-          msg.textContent = "Success! Redirecting...";
           localStorage.setItem("xanvia_user", JSON.stringify(data.user));
-          setTimeout(() => window.location.href = "hub.html", 1000);
+          window.location.replace("dashboard.html");
         } else {
-          msg.className = "msg error"; 
-          msg.textContent = data.error || "Login failed."; 
-          btn.textContent = "Log In";
+          msg.textContent = data.error;
+          msg.className = "msg error";
         }
-      } catch (err) { 
-        msg.className = "msg error"; 
-        msg.textContent = "Server error."; 
-        btn.textContent = "Log In"; 
+      } catch (err) {
+        msg.textContent = "Server error.";
+        msg.className = "msg error";
       }
-    });
+    }
+
+    // --- ADMIN LOGIN LOGIC ---
+    function verifyAdmin() {
+      const pass = document.getElementById('admin-pass').value;
+      const msg = document.getElementById('admin-msg');
+
+      // ADMIN PASSCODE: @@@@
+      if (pass === "@@@@") {
+        window.location.replace("admin.html");
+      } else {
+        msg.textContent = "Access Denied.";
+        msg.className = "msg error";
+      }
+    }
   </script>
 </body>
 </html>
