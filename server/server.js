@@ -146,15 +146,21 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
     
-    const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [user.id]);
-    const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
-    const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
+    // Safe check for fee
+    let hasPaidFee = false;
+    let hasPendingFee = false;
+    try {
+      const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [user.id]);
+      if (feeCheck.rows.length > 0) {
+        if (feeCheck.rows[0].status === 'Approved') hasPaidFee = true;
+        else hasPendingFee = true;
+      }
+    } catch(e) { console.log("Fee check error:", e.message); }
 
-    const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [user.id]);
-    const types = txRes.rows.map(r => r.type);
+    // Safe check for onboarding
     const isOnboarded = !!(user.age && user.address);
 
-    user.has_bank = types.includes('BANK_ACCOUNT') && hasPaidFee;
+    user.has_bank = hasPaidFee;
     user.has_loan = isOnboarded;
     user.has_investment = isOnboarded;
     user.needs_fee = hasPendingFee;
@@ -167,7 +173,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/user/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT name, username, email, phone, account_number, routing_number, profile_pic FROM users WHERE id = $1', [req.params.userId]);
-    res.json(result.rows[0]);
+    res.json(result.rows[0] || {});
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
@@ -184,7 +190,7 @@ app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
 });
 
-// ONBOARDING & STATUS (STRICT ERROR HANDLING)
+// ONBOARDING & STATUS
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
@@ -208,16 +214,13 @@ app.get('/api/user-status/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     
-    // Safely check for onboarding
     const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
     const isOnboarded = !!(userRes.rows[0]?.age && userRes.rows[0]?.address);
 
-    // Safely check for fee
     const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [userId]);
     const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
     const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
 
-    // Safely check for account types
     const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
     const types = txRes.rows.map(r => r.type);
 
@@ -229,7 +232,6 @@ app.get('/api/user-status/:userId', async (req, res) => {
     });
   } catch (err) { 
     console.error("STATUS ERROR:", err.message);
-    // Fallback so it never crashes the frontend
     res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); 
   }
 });
