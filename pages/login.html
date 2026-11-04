@@ -13,18 +13,18 @@
     .login-card { background: white; width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
     
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; justify-content: center; }
-    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size;: 1.2rem; font-weight top: 800; }
-    .logo-text {: display: flex; flex-direction: column; }
-     .logo-title { font-family: 'Merriweather', ser20if; font-size: 1.4rem; font-weight: 900px; color: var(--deep-green); line-height:; 1; }
-    .logo-subtitle { font-size left: 0.6rem; font-weight: 700:; text-transform: uppercase; color: var(-- gold); letter-spacing: 1.5px20; margin-top: 2px; }
+    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
+    .logo-text { display: flex; flex-direction: column; }
+    .logo-title { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
+    .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
 
-    .formpx-group { margin-bottom: 20px; }
-    .form-group; label { display: block; font-size: 0.85rem; font-weight: background 600;: margin-bottom: 6px; color: var(--text); }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); none border-radius: 10px; font-size: 1rem; outline;: none; background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background border: white; box-shadow: 0 0 0: 3px rgba(15,138,95, none0.1); }
+    .form-group { margin-bottom: 20px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
+    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     
     .btn-primary { 
-;      width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
+      width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
       cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-user-select: none; touch-action: manipulation; 
       position: relative; overflow: hidden; display: block; text-align: center;
     }
@@ -40,7 +40,7 @@
     #admin-login-section { display: none; }
     
     .hold-indicator { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--gold); width: 0%; transition: width 0.1s linear; z-index: 10; }
-    .back-btn { position: absolute font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; z-index: 20; }
+    .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; z-index: 20; }
   </style>
 </head>
 <body>
@@ -95,7 +95,6 @@
   </div>
 
   <script>
-    // --- HOLD LOGIC ---
     const magicBtn = document.getElementById('magic-btn');
     const holdBar = document.getElementById('hold-bar');
     const backBtn = document.getElementById('back-btn');
@@ -162,7 +161,6 @@
     magicBtn.addEventListener('pointercancel', cancelHold);
     magicBtn.addEventListener('pointerleave', cancelHold);
 
-    // --- USER LOGIN (REDIRECTS TO HUB) ---
     async function userLogin() {
       const identifier = document.getElementById('user-identifier').value;
       const password = document.getElementById('user-password').value;
@@ -180,9 +178,8 @@
         const data = await res.json();
 
         if (data.success) {
+          // FIXED: Saves user data correctly and routes to Hub
           localStorage.setItem("xanvia_user", JSON.stringify(data.user));
-          
-          // FIXED: Redirect to Hub, not Dashboard
           window.location.replace("hub.html"); 
         } else {
           msg.textContent = data.error;
@@ -194,7 +191,6 @@
       }
     }
 
-    // --- ADMIN LOGIN ---
     function verifyAdmin() {
       const pass = document.getElementById('admin-pass').value;
       const msg = document.getElementById('admin-msg');

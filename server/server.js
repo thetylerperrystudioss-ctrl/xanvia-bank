@@ -144,7 +144,7 @@ app.post('/api/register', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
 });
 
-// --- THE CRITICAL FIX: LOGIN NOW CHECKS ACCOUNT STATUS ---
+// --- LOGIN CHECKS STATUS AND RETURNS FLAGS ---
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body; 
   try {
@@ -153,17 +153,14 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
     
-    // Check Onboarding & Fee Status
     const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [user.id]);
     const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
     const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
 
-    // Check specific account types
     const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [user.id]);
     const types = txRes.rows.map(r => r.type);
     const isOnboarded = !!(user.age && user.address);
 
-    // Attach these to the user object so hub.html works instantly
     user.has_bank = types.includes('BANK_ACCOUNT') && hasPaidFee;
     user.has_loan = isOnboarded;
     user.has_investment = isOnboarded;
@@ -195,7 +192,7 @@ app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
 });
 
 // ==========================================
-// 3. ONBOARDING & STATUS (THE FEE LOGIC)
+// 3. ONBOARDING & STATUS
 // ==========================================
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
