@@ -65,8 +65,8 @@
     /* HISTORY & MODALS */
     .history-panel { padding: 0 20px 30px; }
     .history-panel h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
-    .tx-item { background: font white; padding: 15px; border-radius:-size 12px; margin-bottom: 10px;: border: 1px solid var(--border); display:  flex; justify-content: space-between;0 align-items: center; box-shadow: .0 2px 5px rgba(0,0,0,0.02); }
-    .tx-info h4 {95rem; margin: 0 0 4px 0; color: var(--text); }
+    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .tx-info h4 { font-size: 0.95rem; margin: 0 0 4px 0; color: var(--text); }
     .tx-info p { font-size: 0.75rem; color: var(--muted); margin: 0; }
     .tx-amount { font-weight: 800; text-align: right; font-family: var(--font-mono); }
     
@@ -192,6 +192,7 @@
     let profitTickRate = 0;
     let liveMarketData = { crypto: [], stocks: [] };
 
+    // 1. FETCH LIVE MARKET DATA FROM SERVER
     async function fetchMarketData() {
       try {
         const res = await fetch('/api/market');
@@ -241,6 +242,7 @@
       `).join('');
     }
 
+    // 2. FETCH USER PORTFOLIO
     async function loadDashboardData() {
       const setRes = await fetch('/api/admin/settings');
       const settings = await setRes.json();
@@ -256,6 +258,7 @@
       let baseProfit = 0;
       profitTickRate = 0;
 
+      // Loop through approved investments
       data.forEach(inv => {
         if (inv.status === 'Active') {
           liveCapital += parseFloat(inv.amount);
@@ -275,6 +278,7 @@
       liveProfit = baseProfit;
       updateUI();
 
+      // Fetch History
       const txRes = await fetch(`/api/transactions/${user.id}`);
       const txs = await txRes.json();
       const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
@@ -285,7 +289,7 @@
             <h4>${tx.type.replace(/_/g, ' ')}</h4>
             <p>${new Date(tx.created_at).toLocaleDateString()}</p>
           </div>
-          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : '#F59E0B'}">
+          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : (tx.status === 'Rejected' ? 'var(--danger)' : '#F59E0B')}">
             ${formatUSD(tx.amount)}
             <div style="font-size:0.7rem; color:var(--muted); font-family: var(--font-main);">${tx.status}</div>
           </div>
@@ -331,7 +335,6 @@
       msg.style.color = data.success ? "var(--emerald)" : "red";
       
       if(data.success) {
-        // Updated message
         msg.textContent = "Payment processing. Please wait for Admin approval."; 
         setTimeout(() => { closeModal(); loadDashboardData(); }, 2500);
       }
