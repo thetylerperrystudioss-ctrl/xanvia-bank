@@ -25,7 +25,7 @@ const pool = new Pool({
 });
 
 // ==========================================
-// MARKET DATA CACHE & FETCHING
+// MARKET DATA CACHE
 // ==========================================
 let marketCache = { crypto: [], stocks: [], lastUpdated: null };
 let isFetching = false;
@@ -36,46 +36,20 @@ async function updateMarketData() {
   try {
     const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd&include_24hr_change=true');
     const cryptoData = await cryptoRes.json();
-    
     const cryptoList = [
       { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin?.usd || 0, change: cryptoData.bitcoin?.usd_24h_change || 0, icon: '₿' },
       { name: 'Ethereum', ticker: 'ETH', price: cryptoData.ethereum?.usd || 0, change: cryptoData.ethereum?.usd_24h_change || 0, icon: 'Ξ' },
       { name: 'Solana', ticker: 'SOL', price: cryptoData.solana?.usd || 0, change: cryptoData.solana?.usd_24h_change || 0, icon: 'S' },
       { name: 'XRP', ticker: 'XRP', price: cryptoData.ripple?.usd || 0, change: cryptoData.ripple?.usd_24h_change || 0, icon: 'X' }
     ];
-
-    const ALPACA_KEY = process.env.ALPACA_KEY || 'YOUR_ALPACA_KEY';
-    const ALPACA_SECRET = process.env.ALPACA_SECRET || 'YOUR_ALPACA_SECRET';
-    
-    let stockList = [];
-    if (ALPACA_KEY !== 'YOUR_ALPACA_KEY') {
-      const stockRes = await fetch('https://data.alpaca.markets/v2/stocks/quotes/latest?symbols=AAPL,NVDA,TSLA', {
-        headers: { 'APCA-API-KEY-ID': ALPACA_KEY, 'APCA-API-SECRET-KEY': ALPACA_SECRET }
-      });
-      const stockData = await stockRes.json();
-      
-      stockList = [
-        { name: 'Apple Inc.', ticker: 'AAPL', price: stockData.quotes?.AAPL?.ap || 172.50, change: 0.5, icon: 'A' },
-        { name: 'NVIDIA Corp', ticker: 'NVDA', price: stockData.quotes?.NVDA?.ap || 890.20, change: 4.2, icon: 'N' },
-        { name: 'Tesla Inc.', ticker: 'TSLA', price: stockData.quotes?.TSLA?.ap || 175.30, change: -1.2, icon: 'T' }
-      ];
-    } else {
-      stockList = [
-        { name: 'Apple Inc.', ticker: 'AAPL', price: 172.50, change: 0.5, icon: 'A' },
-        { name: 'NVIDIA Corp', ticker: 'NVDA', price: 890.20, change: 4.2, icon: 'N' },
-        { name: 'Tesla Inc.', ticker: 'TSLA', price: 175.30, change: -1.2, icon: 'T' }
-      ];
-    }
-
+    const stockList = [
+      { name: 'Apple Inc.', ticker: 'AAPL', price: 172.50, change: 0.5, icon: 'A' },
+      { name: 'NVIDIA Corp', ticker: 'NVDA', price: 890.20, change: 4.2, icon: 'N' },
+      { name: 'Tesla Inc.', ticker: 'TSLA', price: 175.30, change: -1.2, icon: 'T' }
+    ];
     marketCache = { crypto: cryptoList, stocks: stockList, lastUpdated: new Date() };
-    console.log('📈 Market data updated at', new Date().toLocaleTimeString());
-  } catch (err) {
-    console.error('Market Data Error:', err.message);
-  } finally {
-    isFetching = false;
-  }
+  } catch (err) { console.error('Market Data Error:', err.message); } finally { isFetching = false; }
 }
-
 updateMarketData();
 setInterval(updateMarketData, 60000);
 
@@ -92,6 +66,7 @@ pool.connect((err, client, release) => {
       CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
       CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
       CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE, sender VARCHAR(20), message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+      CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, message TEXT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
       CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
     `, async (err) => {
       if (err) console.error('Create Table Error:', err.message);
@@ -118,10 +93,7 @@ pool.connect((err, client, release) => {
         "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT"
       ];
-
-      for (let q of alterQueries) {
-        try { await client.query(q); } catch (e) { }
-      }
+      for (let q of alterQueries) { try { await client.query(q); } catch (e) { } }
 
       try {
         const usersNeedingNumbers = await client.query(`SELECT id FROM users WHERE account_number IS NULL OR routing_number IS NULL`);
@@ -144,7 +116,7 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// 2. AUTHENTICATION & PROFILE
+// 2. AUTHENTICATION & USERS
 // ==========================================
 app.post('/api/register', async (req, res) => {
   try {
@@ -226,11 +198,10 @@ app.get('/api/user-status/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 4. ACCOUNTS (THE FIX IS HERE)
+// 4. ACCOUNTS & NOTIFICATIONS
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
-    // This query now correctly calculates BOTH checking and loan balances
     const query = `
       SELECT 
         COALESCE(SUM(CASE 
@@ -255,8 +226,15 @@ app.get('/api/accounts/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
+app.get('/api/notifications/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
 // ==========================================
-// 5. TRANSACTIONS & LOANS
+// 5. TRANSACTIONS & INVESTMENTS
 // ==========================================
 app.get('/api/investments/:userId', async (req, res) => {
   try {
@@ -428,6 +406,63 @@ app.post('/api/admin/approve', async (req, res) => {
   } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); } finally { client.release(); }
 });
 
+// ADMIN: User Management
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT id, name, COALESCE(username, 'N/A') as username, email, status, created_at FROM users WHERE deleted = false ORDER BY created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
+});
+
+app.post('/api/admin/freeze', async (req, res) => {
+  const { userId, status } = req.body;
+  try {
+    await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.delete('/api/admin/users/:id', async (req, res) => {
+  try {
+    await pool.query(`UPDATE users SET deleted = true WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+// ADMIN: Send Notifications
+app.post('/api/admin/notify', async (req, res) => {
+  const { target, message } = req.body;
+  try {
+    if (target === 'all') {
+      const users = await pool.query('SELECT id FROM users WHERE deleted = false');
+      for (let u of users.rows) {
+        await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [u.id, message]);
+      }
+    } else {
+      await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [target, message]);
+    }
+    res.json({ success: true, message: 'Notification(s) sent!' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// ADMIN: Complaints & Chat
+app.get('/api/admin/complaints', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/chat/:complaintId', async (req, res) => {
+  const { message } = req.body;
+  try {
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [req.params.complaintId, message]);
+    await pool.query(`UPDATE complaints SET status = 'In Progress' WHERE id = $1`, [req.params.complaintId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// USER: Complaints & Chat
 app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
   const { userId, category, subject, message } = req.body;
   const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -439,6 +474,13 @@ app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
     await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [complaintId, autoReply]);
     res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/complaints/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/chat/:complaintId', async (req, res) => {

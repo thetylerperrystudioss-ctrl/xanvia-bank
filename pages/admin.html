@@ -33,10 +33,11 @@
     .btn-reject { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1; }
     .btn-outline { background: white; border: 1px solid var(--border); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1;}
 
-    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; }
-    .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; }
+    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
+    .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
     .msg.user { background: #E5E7EB; color: var(--text); align-self: flex-start; border-bottom-left-radius: 2px; }
     .msg.admin { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
 
     .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
     .user-info h4 { font-size: 0.95rem; color: var(--deep-green); margin-bottom: 2px; }
@@ -46,10 +47,9 @@
     .user-status.frozen { background: #FEE2E2; color: #991B1B; }
     .user-actions { display: flex; gap: 8px; }
 
-    /* Settings Form */
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
     .btn-save { width: 100%; padding: 14px; background: var(--emerald); color: white; border: none; border-radius: 8px; font-weight: 600; margin-top: 10px; cursor: pointer; }
   </style>
 </head>
@@ -73,6 +73,7 @@
       <div class="tab active" id="tab-requests" onclick="switchTab('requests')">Requests</div>
       <div class="tab" id="tab-users" onclick="switchTab('users')">Users</div>
       <div class="tab" id="tab-complaints" onclick="switchTab('complaints')">Complaints</div>
+      <div class="tab" id="tab-notify" onclick="switchTab('notify')">Notify</div>
       <div class="tab" id="tab-settings" onclick="switchTab('settings')">Settings</div>
     </div>
 
@@ -91,28 +92,38 @@
       <div class="panel"><h2>Support Tickets</h2><div id="complaint-list"></div></div>
     </div>
 
+    <!-- VIEW: NOTIFY -->
+    <div id="view-notify" class="view-section">
+      <div class="panel">
+        <h2>Send Notification</h2>
+        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">Send a message to a specific user or all users.</p>
+        
+        <div class="form-group">
+          <label>Recipient</label>
+          <select id="notify-target">
+            <option value="all">All Users (Broadcast)</option>
+            <!-- Populated by JS -->
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="notify-message" rows="4" placeholder="Type your notification here..."></textarea>
+        </div>
+        <button class="btn-save" onclick="sendNotification()">Send Notification</button>
+        <p id="notify-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
+      </div>
+    </div>
+
     <!-- VIEW: SETTINGS -->
     <div id="view-settings" class="view-section">
       <div class="panel">
         <h2>Deposit Bank Settings</h2>
         <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">These details will be shown to users on the Deposit page.</p>
         
-        <div class="form-group">
-          <label>Bank Name</label>
-          <input type="text" id="set-bank-name" placeholder="e.g. Chase Bank">
-        </div>
-        <div class="form-group">
-          <label>Account Number</label>
-          <input type="text" id="set-bank-account" placeholder="e.g. 123456789">
-        </div>
-        <div class="form-group">
-          <label>Routing Number</label>
-          <input type="text" id="set-bank-routing" placeholder="e.g. 021000021">
-        </div>
-        <div class="form-group" style="margin-top: 30px;">
-          <label>Bitcoin Wallet Address</label>
-          <input type="text" id="set-btc" placeholder="e.g. bc1q...xanvia">
-        </div>
+        <div class="form-group"><label>Bank Name</label><input type="text" id="set-bank-name"></div>
+        <div class="form-group"><label>Account Number</label><input type="text" id="set-bank-account"></div>
+        <div class="form-group"><label>Routing Number</label><input type="text" id="set-bank-routing"></div>
+        <div class="form-group" style="margin-top: 30px;"><label>Bitcoin Wallet Address</label><input type="text" id="set-btc"></div>
         
         <button class="btn-save" onclick="saveSettings()">Save Settings</button>
         <p id="settings-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
@@ -138,10 +149,11 @@
       if (tabName === 'requests') loadRequests();
       if (tabName === 'users') loadUsers();
       if (tabName === 'complaints') loadComplaints();
+      if (tabName === 'notify') loadNotifyDropdown();
       if (tabName === 'settings') loadSettings();
     }
 
-    // --- DATA LOADERS ---
+    // --- REQUESTS ---
     async function loadRequests() {
       const requests = await (await fetch('/api/admin/requests')).json();
       document.getElementById('req-list').innerHTML = requests.length > 0 ? requests.map(tx => `
@@ -157,12 +169,14 @@
       `).join('') : '<p style="color:var(--muted);">No pending requests.</p>';
     }
 
+    async function approveReq(id, action) {
+      await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txId: id, action }) });
+      loadRequests();
+    }
+
+    // --- USERS ---
     async function loadUsers() {
       const data = await (await fetch('/api/admin/users')).json();
-      if (data.error) {
-        document.getElementById('user-list').innerHTML = `<p style="color:var(--danger);">${data.error}</p>`;
-        return;
-      }
       document.getElementById('user-list').innerHTML = data.length > 0 ? data.map(u => `
         <div class="user-row">
           <div class="user-info">
@@ -172,31 +186,121 @@
           </div>
           <div class="user-actions">
             <button class="btn-outline" onclick="freezeUser(${u.id}, '${u.status}')">${u.status === 'Active' ? 'Freeze' : 'Unfreeze'}</button>
+            <button class="btn-reject" onclick="deleteUser(${u.id})">Delete</button>
           </div>
         </div>
       `).join('') : '<p style="color:var(--muted);">No users found.</p>';
     }
 
+    async function freezeUser(id, currentStatus) {
+      const newStatus = currentStatus === 'Active' ? 'Frozen' : 'Active';
+      await fetch('/api/admin/freeze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, status: newStatus }) });
+      loadUsers();
+    }
+
+    async function deleteUser(id) {
+      if (!confirm("Are you sure you want to delete this user?")) return;
+      await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+      loadUsers();
+    }
+
+    // --- NOTIFY ---
+    async function loadNotifyDropdown() {
+      const data = await (await fetch('/api/admin/users')).json();
+      const select = document.getElementById('notify-target');
+      select.innerHTML = '<option value="all">All Users (Broadcast)</option>' + 
+        data.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('');
+    }
+
+    async function sendNotification() {
+      const target = document.getElementById('notify-target').value;
+      const message = document.getElementById('notify-message').value;
+      const msg = document.getElementById('notify-msg');
+
+      if (!message) { msg.textContent = "Enter a message."; msg.style.color = "var(--danger)"; return; }
+
+      msg.textContent = "Sending..."; msg.style.color = "var(--muted)";
+
+      const res = await fetch('/api/admin/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target, message })
+      });
+      
+      const result = await res.json();
+      if (result.success) {
+        msg.textContent = "✅ Notification sent!";
+        msg.style.color = "var(--emerald)";
+        document.getElementById('notify-message').value = '';
+      } else {
+        msg.textContent = "❌ Failed to send.";
+        msg.style.color = "var(--danger)";
+      }
+      setTimeout(() => msg.textContent = "", 3000);
+    }
+
+    // --- COMPLAINTS ---
     async function loadComplaints() {
       const complaints = await (await fetch('/api/admin/complaints')).json();
       document.getElementById('complaint-list').innerHTML = complaints.length > 0 ? complaints.map(c => `
         <div class="req-item">
           <h4>${c.subject} (${c.ref_number})</h4>
           <p>From: ${c.name} | Category: ${c.category}</p>
-          <div class="chat-box">
-            <div class="msg user">${c.message}</div>
-            ${c.admin_response ? `<div class="msg admin">${c.admin_response}</div>` : ''}
+          
+          <div class="chat-box" id="admin-chat-${c.id}">
+            <p style="text-align:center; font-size:0.8rem; color:#888;">Loading chat...</p>
           </div>
+          
           <p style="margin-top:10px;">Status: <strong>${c.status}</strong></p>
+          
           ${c.status !== 'Resolved' ? `
-          <div style="margin-top: 10px; display: flex; gap: 10px;">
-            <button class="btn-outline" onclick="respondComplaint(${c.id})">Reply & Resolve</button>
-          </div>` : ''}
+          <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <input type="text" id="admin-reply-${c.id}" placeholder="Type reply..." style="flex:1; padding:10px; border:1px solid #ddd; border-radius:6px;">
+            <button class="btn-approve" onclick="sendAdminReply(${c.id})" style="flex:0 0 auto; padding: 10px 20px;">Send</button>
+          </div>
+          ` : ''}
         </div>
       `).join('') : '<p style="color:var(--muted);">No complaints.</p>';
+
+      complaints.forEach(c => {
+        if(c.status !== 'Resolved') loadAdminChat(c.id);
+      });
     }
 
-    // --- SETTINGS LOADERS ---
+    async function loadAdminChat(complaintId) {
+      const container = document.getElementById(`admin-chat-${complaintId}`);
+      if (!container) return;
+
+      const res = await fetch(`/api/chat/${complaintId}`);
+      const messages = await res.json();
+
+      container.innerHTML = messages.map(m => `
+        <div class="msg ${m.sender}">
+          ${m.message}
+          <span class="msg-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        </div>
+      `).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendAdminReply(complaintId) {
+      const input = document.getElementById(`admin-reply-${complaintId}`);
+      const message = input.value.trim();
+      if (!message) return;
+
+      input.value = "";
+      
+      await fetch(`/api/admin/chat/${complaintId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message })
+      });
+
+      loadAdminChat(complaintId);
+      setTimeout(loadComplaints, 500); 
+    }
+
+    // --- SETTINGS ---
     async function loadSettings() {
       const data = await (await fetch('/api/admin/settings')).json();
       document.getElementById('set-bank-name').value = data.bank_name || '';
@@ -207,8 +311,7 @@
 
     async function saveSettings() {
       const msg = document.getElementById('settings-msg');
-      msg.textContent = "Saving...";
-      msg.style.color = "var(--muted)";
+      msg.textContent = "Saving..."; msg.style.color = "var(--muted)";
 
       const payload = {
         bank_name: document.getElementById('set-bank-name').value,
@@ -225,32 +328,13 @@
       
       const result = await res.json();
       if (result.success) {
-        msg.textContent = "✅ Settings updated successfully!";
+        msg.textContent = "✅ Settings updated!";
         msg.style.color = "var(--emerald)";
       } else {
-        msg.textContent = "❌ Failed to update settings.";
+        msg.textContent = "❌ Failed to update.";
         msg.style.color = "var(--danger)";
       }
       setTimeout(() => msg.textContent = "", 3000);
-    }
-
-    // --- ACTIONS ---
-    async function approveReq(id, action) {
-      await fetch('/api/admin/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ txId: id, action }) });
-      loadRequests();
-    }
-
-    async function freezeUser(id, currentStatus) {
-      const newStatus = currentStatus === 'Active' ? 'Frozen' : 'Active';
-      await fetch('/api/admin/freeze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, status: newStatus }) });
-      loadUsers();
-    }
-
-    async function respondComplaint(id) {
-      const response = prompt("Enter your reply:");
-      if (response === null) return;
-      await fetch(`/api/admin/complaints/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'Resolved', response }) });
-      loadComplaints();
     }
   </script>
 </body>
