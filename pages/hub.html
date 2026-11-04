@@ -17,18 +17,11 @@
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
     .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
-    
-    /* FEE ALERT BANNER */
-    .fee-alert { display: none; background: #FEE2E2; color: #991B1B; padding: 15px; border-radius: 12px; text-align: left; border: 1px solid #F87171; }
-    .fee-alert h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
-    .fee-alert p { font-size: 0.85rem; margin-bottom: 12px; }
-    .fee-alert button { background: #DC2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; }
 
     .panel { background: white; border-radius: 16px; padding: 25px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); width: 100%; }
     .panel h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 10px; }
     .panel p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
     .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; display: block; text-align: center; text-decoration: none; font-size: 0.95rem; }
-    .btn-fee { background: var(--danger); color: white; }
   </style>
 </head>
 <body>
@@ -42,13 +35,6 @@
         </div>
       </div>
       <button class="btn-logout" onclick="logout()">Log Out</button>
-    </div>
-
-    <!-- Fee Alert Banner -->
-    <div id="fee-alert" class="fee-alert">
-      <h4>⚠️ Action Required</h4>
-      <p>You have a pending <strong>$25 Account Activation Fee</strong>. Your dashboard is locked until this fee is paid and approved by Admin.</p>
-      <button onclick="window.location.href='deposit.html?target=fee'">Pay $25 Fee Now</button>
     </div>
 
     <div class="panel">
@@ -77,42 +63,31 @@
     function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
 
     async function checkStatus() {
-      // Set safe defaults immediately so it never stays on "Loading..."
-      let data = { has_bank: false, has_loan: false, has_investment: false, needs_fee: false };
+      let data = { has_bank: false, has_loan: false, has_investment: false };
 
       try {
         const res = await fetch(`/api/user-status/${user.id}`);
         const serverData = await res.json();
         
-        // Merge server data
         data = serverData;
         
-        // Update localStorage to keep it in sync
         user.has_bank = data.has_bank;
         user.has_loan = data.has_loan;
         user.has_investment = data.has_investment;
-        user.needs_fee = data.needs_fee;
         localStorage.setItem("xanvia_user", JSON.stringify(user));
         
       } catch (err) {
-        console.warn("Server error, using fallback data.");
         data = {
           has_bank: user.has_bank || false,
           has_loan: user.has_loan || false,
-          has_investment: user.has_investment || false,
-          needs_fee: user.needs_fee || false
+          has_investment: user.has_investment || false
         };
       }
 
-      // Update Bank Card & Fee Banner
+      // Update Bank Card
       if (data.has_bank) {
-        document.getElementById('fee-alert').style.display = 'none';
         document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
-      } else if (data.needs_fee) {
-        document.getElementById('fee-alert').style.display = 'block';
-        document.getElementById('bank-action').innerHTML = `<a href="deposit.html?target=fee" class="btn-primary btn-fee">Pay $25 Fee to Unlock</a>`;
       } else {
-        document.getElementById('fee-alert').style.display = 'none';
         document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
       }
 
