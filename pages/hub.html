@@ -23,7 +23,8 @@
     .fee-alert h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
     .fee-alert p { font-size: 0.85rem; margin-bottom: 12px; }
     .fee-alert button { background: #DC2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; }
-    
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
     .panel { background: white; border-radius: 16px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
     .panel h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 10px; }
     .panel p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
@@ -47,7 +48,7 @@
     <!-- Fee Alert -->
     <div id="fee-alert" class="fee-alert">
       <h4>⚠️ Action Required</h4>
-      <p>You have a pending <strong>$25 Account Activation Fee</strong>. Your dashboard is locked until this fee is paid.</p>
+      <p>You have a pending <strong>$25 Account Activation Fee</strong>. Your dashboard is locked until this fee is paid and approved by Admin.</p>
       <button onclick="window.location.href='deposit.html?target=fee'">Pay $25 Fee Now</button>
     </div>
 
@@ -79,15 +80,20 @@
         const res = await fetch(`/api/user-status/${user.id}`);
         const data = await res.json();
 
+        // BANK ACCOUNT LOGIC
         if (data.has_bank) {
+          // User has fully paid and been approved
           document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
         } else if (data.needs_fee) {
+          // User has an unpaid or unapproved $25 Fee
           document.getElementById('fee-alert').style.display = 'block';
           document.getElementById('bank-action').innerHTML = `<a href="deposit.html?target=fee" class="btn-primary btn-fee">Pay $25 Fee to Unlock</a>`;
         } else {
+          // User hasn't applied for a bank account yet
           document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
         }
 
+        // LOAN & INVESTMENT LOGIC
         if (data.has_loan) {
           document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
         } else {

@@ -177,7 +177,7 @@ app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
 });
 
 // ==========================================
-// 3. ONBOARDING & STATUS
+// 3. ONBOARDING & STATUS (THE $25 FEE LOGIC)
 // ==========================================
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
@@ -187,6 +187,7 @@ app.post('/api/complete-onboarding', async (req, res) => {
     const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : type === 'investment' ? 'INVESTMENT_ACCOUNT' : 'KYC_COMPLETED';
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
 
+    // Generate $25 Fee if applying for a Bank Account
     if (type === 'bank') {
       const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status != 'Approved'`, [userId]);
       if (existingFee.rows.length === 0) {
@@ -204,14 +205,17 @@ app.get('/api/user-status/:userId', async (req, res) => {
     const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
     const isOnboarded = !!(userRes.rows[0].age && userRes.rows[0].address);
 
+    // Check Fee Status
     const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [userId]);
     const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
     const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
 
+    // Check Account Types
     const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
     const types = txRes.rows.map(r => r.type);
 
     res.json({
+      // User MUST have paid the fee to access the dashboard
       has_bank: types.includes('BANK_ACCOUNT') && hasPaidFee,
       has_loan: isOnboarded, 
       has_investment: isOnboarded,
