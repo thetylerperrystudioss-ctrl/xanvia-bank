@@ -22,7 +22,6 @@
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
     
     .nav-right { display: flex; align-items: center; gap: 10px; }
-    /* NOTIFICATION BELL */
     .bell-btn { position: relative; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
     .bell-btn:hover { background: rgba(255,255,255,0.2); }
     .bell-badge { position: absolute; top: 0px; right: 0px; background: var(--danger); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--deep-green); display: none; }
@@ -41,15 +40,20 @@
     .search-bar { background: white; border-radius: 12px; padding: 12px 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid var(--border); }
     .search-bar input { border: none; outline: none; width: 100%; font-size: 0.95rem; }
 
-    /* TRANSACTIONS */
-    .tx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 0; border-bottom: 1px solid var(--border); }
+    /* TRANSACTIONS (FIXED) */
+    .tx-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .tx-header h3 { font-size: 1.1rem; color: var(--deep-green); }
+    .transaction-list { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .tx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid var(--border); }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-left { display: flex; align-items: center; gap: 15px; }
     .tx-icon { width: 40px; height: 40px; background: #F4F7F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
-    .tx-details { flex: 1; margin-left: 15px; text-align: left; }
-    .tx-details h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 3px; text-transform: uppercase; }
+    .tx-details h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 3px; text-transform: uppercase; color: var(--text); }
     .tx-details p { font-size: 0.75rem; color: var(--muted); }
     .tx-amount { font-weight: 700; font-size: 1rem; }
     .tx-amount.credit { color: var(--emerald); }
-    .tx-amount.debit { color: #D32F2F; }
+    .tx-amount.debit { color: var(--danger); }
+    .empty-state { padding: 30px; text-align: center; color: var(--muted); font-size: 0.9rem; }
 
     /* SIDEBAR & MODALS */
     .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2500; display: none; }
@@ -61,16 +65,13 @@
     .profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: #eee; margin: 0 auto 10px; display: block; border: 3px solid var(--emerald); }
     .profile-name { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); }
     .profile-username { font-size: 0.85rem; color: var(--muted); margin-bottom: 15px; }
-    
     .account-card { background: #F4F7F6; border: 1px dashed var(--emerald); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
     .acc-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--muted); }
     .acc-number { font-size: 1.4rem; font-weight: 800; color: var(--deep-green); letter-spacing: 1px; }
     .acc-routing { font-size: 0.8rem; color: var(--muted); margin-top: 5px; }
-    
     .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
     .info-row span:first-child { color: var(--muted); font-weight: 600; }
     .info-row span:last-child { font-weight: 700; color: var(--text); word-break: break-all; text-align: right; max-width: 60%; }
-
     .edit-profile-btn { background: var(--emerald); color: white; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-top: auto; margin-bottom: 10px; }
     .logout-btn { background: #FEE2E2; color: #991B1B; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
 
@@ -81,22 +82,9 @@
     .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
     .form-group input { padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
-    
-    /* NOTIFICATIONS LIST */
     .notif-item { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
     .notif-item:last-child { border-bottom: none; }
     .notif-date { font-size: 0.7rem; color: var(--muted); display: block; margin-top: 5px; }
-    
-    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
-    .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
-    .msg.user { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-    .msg.admin { background: white; color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 2px; }
-    .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
-    
-    .chat-input-row { display: flex; gap: 10px; margin-top: auto; }
-    .chat-input-row input { flex-grow: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; }
-    .chat-send-btn { background: var(--emerald); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; }
-    .btn-resolve { width: 100%; padding: 12px; background: #FEE2E2; color: #991B1B; border: 1px solid #F87171; border-radius: 8px; font-weight: 600; margin-top: 10px; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -130,15 +118,10 @@
         </div>
       </div>
       <div class="nav-right">
-        <!-- NOTIFICATION BELL -->
         <button class="bell-btn" onclick="openNotifications(event)">
-          🔔
-          <span class="bell-badge" id="bell-badge">0</span>
+          🔔 <span class="bell-badge" id="bell-badge">0</span>
         </button>
-        <!-- LIVE CHAT -->
-        <button class="bell-btn" onclick="openSupport(event)" title="Support">
-          💬
-        </button>
+        <button class="bell-btn" onclick="openSupport(event)" title="Support">💬</button>
       </div>
     </div>
     <div class="balance-section">
@@ -155,7 +138,14 @@
 
   <main class="app-main">
     <div class="search-bar"><span>🔍</span><input type="text" id="search-input" placeholder="Search Transactions" onkeyup="filterTransactions()"></div>
-    <div class="transaction-container" id="transaction-list"></div>
+    
+    <!-- TRANSACTION HISTORY SECTION -->
+    <div class="tx-header">
+      <h3>Transaction History</h3>
+    </div>
+    <div class="transaction-list" id="transaction-list">
+      <div class="empty-state">Loading transactions...</div>
+    </div>
   </main>
 
   <!-- NOTIFICATIONS MODAL -->
@@ -189,12 +179,12 @@
       </div>
       <div id="chat-view" style="display: none; flex-direction: column; height: 60vh;">
         <h3 id="chat-title" style="color:var(--deep-green); margin-bottom:15px; font-size:1.1rem;"></h3>
-        <div class="chat-box" id="chat-messages"></div>
-        <div class="chat-input-row" id="chat-input-area">
-          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleChatEnter(event)">
-          <button class="chat-send-btn" onclick="sendMessage()">➤</button>
+        <div class="chat-box" id="chat-messages" style="background:#F4F7F6; border-radius:12px; padding:15px; flex-grow:1; overflow-y:auto; display:flex; flex-direction:column; gap:10px; margin-bottom:15px;"></div>
+        <div class="chat-input-row" id="chat-input-area" style="display:flex; gap:10px;">
+          <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleChatEnter(event)" style="flex-grow:1; padding:12px; border:1px solid var(--border); border-radius:20px; outline:none;">
+          <button class="chat-send-btn" onclick="sendMessage()" style="background:var(--emerald); color:white; border:none; border-radius:50%; width:44px; height:44px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:1.2rem;">➤</button>
         </div>
-        <button class="btn-resolve" id="resolve-btn" onclick="resolveTicket()">Mark as Resolved</button>
+        <button class="btn-resolve" id="resolve-btn" onclick="resolveTicket()" style="width:100%; padding:12px; background:#FEE2E2; color:#991B1B; border:1px solid #F87171; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Mark as Resolved</button>
       </div>
     </div>
   </div>
@@ -212,10 +202,9 @@
 
     // --- SIDEBAR LOGIC ---
     function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('sidebar-overlay');
-      if (sidebar.classList.contains('open')) { sidebar.classList.remove('open'); overlay.classList.remove('open'); } 
-      else { sidebar.classList.add('open'); overlay.classList.add('open'); fetchUserData(); }
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebar-overlay').classList.toggle('open');
+      if (document.getElementById('sidebar').classList.contains('open')) fetchUserData();
     }
 
     async function fetchUserData() {
@@ -232,6 +221,36 @@
       } catch (err) { console.error("Sidebar error:", err); }
     }
 
+    function openEditModal() {
+      document.getElementById('edit-name').value = document.getElementById('prof-name').textContent;
+      document.getElementById('edit-username').value = document.getElementById('prof-user').textContent.replace('@', '');
+      document.getElementById('edit-phone').value = document.getElementById('prof-phone').textContent === 'Not provided' ? '' : document.getElementById('prof-phone').textContent;
+      document.getElementById('edit-modal').classList.add('open');
+    }
+
+    async function saveProfile() {
+      const name = document.getElementById('edit-name').value;
+      const username = document.getElementById('edit-username').value;
+      const phone = document.getElementById('edit-phone').value;
+      const pic = document.getElementById('edit-pic').files[0];
+
+      const formData = new FormData();
+      formData.append('userId', user.id);
+      formData.append('name', name);
+      formData.append('username', username);
+      formData.append('phone', phone);
+      if(pic) formData.append('profile_pic', pic);
+
+      const res = await fetch('/api/user/update', { method: 'POST', body: formData });
+      const data = await res.json();
+      
+      if(data.success) {
+        alert("Profile updated!");
+        document.getElementById('edit-modal').classList.remove('open');
+        fetchUserData();
+      } else { alert(data.error); }
+    }
+
     // --- NOTIFICATIONS LOGIC ---
     async function loadNotifications() {
       try {
@@ -246,21 +265,15 @@
           return;
         }
 
-        // Check for unread to show badge and popup
         const unreadCount = notifs.filter(n => !n.is_read).length;
         if (unreadCount > 0) {
           badge.textContent = unreadCount;
           badge.style.display = 'block';
-          
-          // Pop up the most recent unread notification
           alert("New Notification from Admin:\n\n" + notifs[0].message);
-          
-          // Mark them as read in the DB (we'll do a quick fetch to clear them)
           await fetch(`/api/notifications/${user.id}/read`, { method: 'POST' });
           badge.style.display = 'none';
         }
 
-        // Render the list
         list.innerHTML = notifs.map(n => `
           <div class="notif-item" style="background:${n.is_read ? 'white' : '#F0FDF4'};">
             <p style="margin:0; font-weight:${n.is_read ? '400' : '600'};">${n.message}</p>
@@ -388,23 +401,36 @@
     }
 
     // --- DASHBOARD LOGIC ---
-    async function loadDashboard(isPolling = false) {
+    async function loadDashboard() {
       try {
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
-        const newBalance = parseFloat(data.checking) || 0;
-        document.getElementById('total-balance').textContent = formatUSD(newBalance);
+        document.getElementById('total-balance').textContent = formatUSD(parseFloat(data.checking) || 0);
         
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
-        allTransactions = txs.filter(tx => !tx.type.includes('INVESTMENT') && !tx.type.includes('LOAN'));
+        
+        // Filter out internal tracking types from main view
+        allTransactions = txs.filter(tx => 
+          !tx.type.includes('INVESTMENT') && 
+          !tx.type.includes('LOAN') &&
+          !tx.type.includes('KYC') &&
+          !tx.type.includes('BANK_ACCOUNT')
+        );
+
         renderTransactions(allTransactions);
       } catch (err) { console.error(err); }
     }
 
     function renderTransactions(txs) {
       const list = document.getElementById('transaction-list');
-      if (txs.length === 0) { list.innerHTML = '<p style="text-align:center; color:#888; padding:20px;">No transactions.</p>'; return; }
+      if (!list) return;
+
+      if (txs.length === 0) { 
+        list.innerHTML = '<div class="empty-state">No transactions yet.</div>'; 
+        return; 
+      }
+
       list.innerHTML = txs.map(tx => {
         const isCredit = tx.type.includes('DEPOSIT') || (tx.type === 'INTERNAL_TRANSFER' && tx.details === 'received');
         const amountClass = isCredit ? 'credit' : 'debit';
@@ -414,11 +440,19 @@
         if (tx.type.includes('WITHDRAWAL')) icon = '💸';
         if (tx.type === 'FEE') icon = '⚠️';
         if (tx.type === 'INTERNAL_TRANSFER') icon = '↗️';
+
         return `
           <div class="tx-item">
-            <div class="tx-icon">${icon}</div>
-            <div class="tx-details"><h4>${tx.type.replace(/_/g, ' ')}</h4><p>${new Date(tx.created_at).toLocaleDateString()}</p></div>
-            <div class="tx-amount ${amountClass}">${isCredit ? '+' : '-'}${formatUSD(safeAmount)}</div>
+            <div class="tx-left">
+              <div class="tx-icon">${icon}</div>
+              <div class="tx-details">
+                <h4>${tx.type.replace(/_/g, ' ')}</h4>
+                <p>${new Date(tx.created_at).toLocaleDateString()} • ${tx.status}</p>
+              </div>
+            </div>
+            <div class="tx-amount ${amountClass}">
+              ${isCredit ? '+' : '-'}${formatUSD(safeAmount)}
+            </div>
           </div>
         `;
       }).join('');
@@ -426,7 +460,10 @@
 
     function filterTransactions() {
       const query = document.getElementById('search-input').value.toLowerCase();
-      const filtered = allTransactions.filter(tx => tx.type.toLowerCase().includes(query) || tx.amount.toString().includes(query));
+      const filtered = allTransactions.filter(tx => 
+        tx.type.toLowerCase().includes(query) || 
+        tx.amount.toString().includes(query)
+      );
       renderTransactions(filtered);
     }
 
