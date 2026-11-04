@@ -34,7 +34,6 @@ async function updateMarketData() {
   if (isFetching) return;
   isFetching = true;
   try {
-    // 1. Fetch Crypto (CoinGecko)
     const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd&include_24hr_change=true');
     const cryptoData = await cryptoRes.json();
     
@@ -45,7 +44,6 @@ async function updateMarketData() {
       { name: 'XRP', ticker: 'XRP', price: cryptoData.ripple?.usd || 0, change: cryptoData.ripple?.usd_24h_change || 0, icon: 'X' }
     ];
 
-    // 2. Fetch Stocks (Alpaca - Uses Fallback if no keys)
     const ALPACA_KEY = process.env.ALPACA_KEY || 'YOUR_ALPACA_KEY';
     const ALPACA_SECRET = process.env.ALPACA_SECRET || 'YOUR_ALPACA_SECRET';
     
@@ -79,7 +77,7 @@ async function updateMarketData() {
 }
 
 updateMarketData();
-setInterval(updateMarketData, 60000); // Refresh every 60 seconds
+setInterval(updateMarketData, 60000);
 
 // ==========================================
 // 1. DATABASE SETUP
@@ -228,23 +226,38 @@ app.get('/api/user-status/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 4. ACCOUNTS & INVESTMENTS
+// 4. ACCOUNTS (THE FIX IS HERE)
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
+    // This query now correctly calculates BOTH checking and loan balances
     const query = `
-      SELECT COALESCE(SUM(CASE 
-        WHEN type IN ('DEPOSIT') THEN amount 
-        WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
-        WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
-        ELSE 0 
-      END), 0) AS checking_balance FROM transactions WHERE user_id = $1 AND status = 'Approved';
+      SELECT 
+        COALESCE(SUM(CASE 
+          WHEN type IN ('DEPOSIT') THEN amount 
+          WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
+          WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
+          ELSE 0 
+        END), 0) AS checking_balance,
+        
+        COALESCE(SUM(CASE 
+          WHEN type = 'LOAN_APPLICATION' THEN amount 
+          WHEN type IN ('LOAN_REPAYMENT', 'LOAN_TRANSFER') THEN -amount
+          ELSE 0 
+        END), 0) AS loan_balance
+      FROM transactions WHERE user_id = $1 AND status = 'Approved';
     `;
     const result = await pool.query(query, [req.params.userId]);
-    res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0 });
+    res.json({ 
+      checking: parseFloat(result.rows[0].checking_balance) || 0,
+      loan: parseFloat(result.rows[0].loan_balance) || 0 
+    });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
+// ==========================================
+// 5. TRANSACTIONS & LOANS
+// ==========================================
 app.get('/api/investments/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -272,6 +285,31 @@ app.get('/api/investments/:userId', async (req, res) => {
 
 app.get('/api/market', (req, res) => { res.json(marketCache); });
 
+app.post('/api/loans/apply', async (req, res) => {
+  const { userId, amount } = req.body;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
+    res.json({ success: true, message: 'Application received.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/loans/transfer', async (req, res) => {
+  const { userId, amount, destination, bankDetails } = req.body;
+  try {
+    const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
+    res.json({ success: true, message: 'Transfer pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/loans/repay', async (req, res) => {
+  const { userId, amount } = req.body;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
+    res.json({ success: true, message: 'Repayment pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
 app.get('/api/admin/settings', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM system_settings');
@@ -293,7 +331,7 @@ app.post('/api/admin/settings/update', async (req, res) => {
 });
 
 // ==========================================
-// 5. TRANSFERS & DEPOSITS
+// 6. TRANSFERS & DEPOSITS
 // ==========================================
 app.post('/api/transfer/internal', async (req, res) => {
   const { userId, recipientAccount, amount } = req.body;
@@ -347,7 +385,7 @@ app.post('/api/investments/withdraw', async (req, res) => {
 });
 
 // ==========================================
-// 6. TRANSACTIONS & ADMIN
+// 7. TRANSACTIONS & ADMIN
 // ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try { 
@@ -425,7 +463,6 @@ app.post('/api/chat/:complaintId/resolve', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// Fallback to index
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
 const PORT = process.env.PORT || 3000;

@@ -41,7 +41,7 @@
     .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 10px rgba(15,138,95,0.3); }
     .btn-withdraw { background: white; color: var(--deep-green); border: 1px solid var(--border); }
 
-    /* MARKETPLACE TABS */
+    /* MARKETPLACE */
     .marketplace { padding: 0 20px 20px; }
     .marketplace h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
     .tab-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
@@ -65,8 +65,8 @@
     /* HISTORY & MODALS */
     .history-panel { padding: 0 20px 30px; }
     .history-panel h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
-    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-    .tx-info h4 { font-size: 0.95rem; margin: 0 0 4px 0; color: var(--text); }
+    .tx-item { background: font white; padding: 15px; border-radius:-size 12px; margin-bottom: 10px;: border: 1px solid var(--border); display:  flex; justify-content: space-between;0 align-items: center; box-shadow: .0 2px 5px rgba(0,0,0,0.02); }
+    .tx-info h4 {95rem; margin: 0 0 4px 0; color: var(--text); }
     .tx-info p { font-size: 0.75rem; color: var(--muted); margin: 0; }
     .tx-amount { font-weight: 800; text-align: right; font-family: var(--font-mono); }
     
@@ -140,7 +140,7 @@
     </main>
   </div>
 
-  <!-- MODALS (Keep as they were) -->
+  <!-- DEPOSIT MODAL -->
   <div id="modal-deposit" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
@@ -161,6 +161,7 @@
     </div>
   </div>
 
+  <!-- WITHDRAW MODAL -->
   <div id="modal-withdraw" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
@@ -191,30 +192,24 @@
     let profitTickRate = 0;
     let liveMarketData = { crypto: [], stocks: [] };
 
-    // 1. FETCH LIVE MARKET DATA FROM SERVER
     async function fetchMarketData() {
       try {
         const res = await fetch('/api/market');
         liveMarketData = await res.json();
         
-        // Update the scrolling ticker
         const track = document.getElementById('ticker-track');
         if(liveMarketData.crypto && liveMarketData.crypto.length > 0) {
           const tickerHtml = liveMarketData.crypto.map(coin => `
             <div class="ticker-item">${coin.ticker} <span class="${coin.change >= 0 ? 'up' : 'down'}">$${coin.price.toLocaleString()} (${coin.change > 0 ? '+' : ''}${coin.change.toFixed(2)}%)</span></div>
           `).join('');
-          // Duplicate for seamless loop
           track.innerHTML = tickerHtml + tickerHtml;
         }
 
-        // Refresh the current tab view
         const activeTab = document.querySelector('.tab-btn.active').innerText.toLowerCase();
         if (activeTab === 'crypto') switchTab('crypto', document.querySelector('.tab-btn.active'));
         if (activeTab === 'us stocks') switchTab('stocks', document.querySelector('.tab-btn.active'));
 
-      } catch (err) {
-        console.log("Market data failed to load", err);
-      }
+      } catch (err) { console.log("Market data failed to load", err); }
     }
 
     function switchTab(category, btn) {
@@ -311,16 +306,56 @@
       }
     }, 1000);
 
-    // Refresh market data every 60 seconds
     setInterval(fetchMarketData, 60000);
 
     function openModal(type) { document.getElementById(`modal-${type}`).classList.add('open'); }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
 
-    async function submitDeposit() { /* ... Same as before ... */ }
-    async function submitWithdraw() { /* ... Same as before ... */ }
+    async function submitDeposit() {
+      const amount = parseFloat(document.getElementById('dep-amount').value);
+      const ref = document.getElementById('dep-ref').value;
+      const file = document.getElementById('dep-screenshot').files[0];
+      const msg = document.getElementById('dep-msg');
 
-    // Initialization
+      if (!amount || !file) { msg.textContent = "Enter amount and upload receipt."; msg.style.color = "red"; return; }
+
+      const formData = new FormData();
+      formData.append('userId', user.id);
+      formData.append('amount', amount);
+      formData.append('reference', ref);
+      formData.append('screenshot', file);
+
+      const res = await fetch('/api/investments/deposit', { method: 'POST', body: formData });
+      const data = await res.json();
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
+      
+      if(data.success) {
+        // Updated message
+        msg.textContent = "Payment processing. Please wait for Admin approval."; 
+        setTimeout(() => { closeModal(); loadDashboardData(); }, 2500);
+      }
+    }
+
+    async function submitWithdraw() {
+      const amount = parseFloat(document.getElementById('withdraw-amount').value);
+      const timeline = document.getElementById('withdraw-timeline').value;
+      const msg = document.getElementById('withdraw-msg');
+
+      if (!amount || amount <= 0) { msg.textContent = "Enter a valid amount."; msg.style.color = "red"; return; }
+
+      const res = await fetch('/api/investments/withdraw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, amount, timeline })
+      });
+      
+      const data = await res.json();
+      msg.textContent = data.message || data.error;
+      msg.style.color = data.success ? "var(--emerald)" : "red";
+      if(data.success) setTimeout(() => { closeModal(); loadDashboardData(); }, 2500);
+    }
+
     fetchMarketData();
     loadDashboardData();
   </script>

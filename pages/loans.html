@@ -23,7 +23,7 @@
     .deposit-warning { background: #FFFBEB; border-left: 4px solid #C9A24B; padding: 15px; margin: 0 20px 20px; border-radius: 8px; color: #92400E; font-size: 0.85rem; line-height: 1.5; }
     .deposit-warning strong { color: #78350F; }
 
-    /* ACTION BUTTONS FIX */
+    /* ACTION BUTTONS */
     .action-grid { display: flex; flex-direction: column; gap: 15px; padding: 0 20px 20px; }
     .row-btns { display: flex; gap: 15px; }
     .action-btn { padding: 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-align: center; border: none; cursor: pointer; width: 100%; display: block; }
@@ -36,7 +36,7 @@
     .tx-info p { font-size: 0.75rem; color: #6B7280; margin: 0; }
     .tx-amount { font-weight: 700; text-align: right; }
     
-    /* MODAL FIXES */
+    /* MODAL */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
@@ -84,7 +84,6 @@
         </div>
       </div>
 
-      <!-- ACTION BUTTONS -->
       <div class="action-grid">
         <button class="action-btn btn-primary" onclick="openModal('apply')">Apply for Loan</button>
         <div class="row-btns">
@@ -175,7 +174,6 @@
       const res = await fetch(`/api/accounts/${user.id}`);
       const data = await res.json();
       
-      // Update Available Loan Balance
       const loanBalance = data.loan || 0;
       document.getElementById('loan-balance').textContent = formatUSD(loanBalance);
       
@@ -236,7 +234,7 @@
       const res = await fetch('/api/loans/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 2500);
     }
 
     async function submitTransfer() {
@@ -261,7 +259,7 @@
       const res = await fetch('/api/loans/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, destination: dest, bankDetails }) });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 2500);
     }
 
     async function submitRepay() {
@@ -271,7 +269,7 @@
       const res = await fetch('/api/loans/repay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
       msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
+      if(data.success) setTimeout(() => { closeModal(); loadData(); }, 2500);
     }
 
     loadData();
