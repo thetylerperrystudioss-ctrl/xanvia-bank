@@ -6,23 +6,29 @@
   <title>My Accounts | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 50px; }
     .grid { display: grid; grid-template-columns: 1fr; gap: 20px; max-width: 600px; margin: 0 auto; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    
     .logo { display: flex; align-items: center; gap: 10px; }
     .logo-icon { background: var(--emerald); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; }
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
-
     .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    
+    /* FEE ALERT BANNER */
+    .fee-alert { display: none; background: #FEE2E2; color: #991B1B; padding: 15px; border-radius: 12px; margin-bottom: 10px; text-align: left; border: 1px solid #F87171; animation: slideDown 0.3s ease-out; }
+    .fee-alert h4 { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .fee-alert p { font-size: 0.85rem; margin-bottom: 12px; }
+    .fee-alert button { background: #DC2626; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.85rem; cursor: pointer; width: 100%; }
+    
     .panel { background: white; border-radius: 16px; padding: 25px; margin-bottom: 20px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
     .panel h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 10px; }
     .panel p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
     .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; display: block; text-align: center; text-decoration: none; font-size: 0.95rem; }
+    .btn-fee { background: var(--danger); color: white; }
   </style>
 </head>
 <body>
@@ -36,6 +42,13 @@
         </div>
       </div>
       <button class="btn-logout" onclick="logout()">Log Out</button>
+    </div>
+
+    <!-- Fee Alert -->
+    <div id="fee-alert" class="fee-alert">
+      <h4>⚠️ Action Required</h4>
+      <p>You have a pending <strong>$25 Account Activation Fee</strong>. Your dashboard is locked until this fee is paid.</p>
+      <button onclick="window.location.href='deposit.html?target=fee'">Pay $25 Fee Now</button>
     </div>
 
     <div class="panel">
@@ -59,10 +72,7 @@
     let user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
-    function logout() {
-      localStorage.removeItem("xanvia_user");
-      window.location.replace("../index.html"); 
-    }
+    function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
 
     async function checkStatus() {
       try {
@@ -71,6 +81,9 @@
 
         if (data.has_bank) {
           document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
+        } else if (data.needs_fee) {
+          document.getElementById('fee-alert').style.display = 'block';
+          document.getElementById('bank-action').innerHTML = `<a href="deposit.html?target=fee" class="btn-primary btn-fee">Pay $25 Fee to Unlock</a>`;
         } else {
           document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
         }
@@ -88,21 +101,8 @@
         }
       } catch (err) {
         console.error("Error fetching status:", err);
-        // Fallback if the server fails
-        document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
-        document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
-        document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
       }
     }
-
-    // Add a timeout fallback to remove "Loading..." if the server is too slow
-    setTimeout(() => {
-      if(document.getElementById('loan-action').innerHTML === "Loading...") {
-        document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
-        document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
-        document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
-      }
-    }, 2000);
 
     checkStatus();
   </script>

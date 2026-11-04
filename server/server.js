@@ -116,7 +116,7 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// 2. AUTHENTICATION & USERS
+// 2. AUTHENTICATION & PROFILE
 // ==========================================
 app.post('/api/register', async (req, res) => {
   try {
@@ -183,22 +183,45 @@ app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
     await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
-    const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : 'INVESTMENT_ACCOUNT';
+    
+    const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : type === 'investment' ? 'INVESTMENT_ACCOUNT' : 'KYC_COMPLETED';
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
+
+    if (type === 'bank') {
+      const existingFee = await pool.query(`SELECT * FROM transactions WHERE user_id = $1 AND type = 'FEE' AND status != 'Approved'`, [userId]);
+      if (existingFee.rows.length === 0) {
+        await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'FEE', 25.00, 'Pending', 'Account Activation Fee')`, [userId]);
+      }
+    }
+
     res.json({ success: true, message: 'Application approved!' });
   } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
 });
 
 app.get('/api/user-status/:userId', async (req, res) => {
   try {
-    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [req.params.userId]);
+    const userId = req.params.userId;
+    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
     const isOnboarded = !!(userRes.rows[0].age && userRes.rows[0].address);
-    res.json({ has_bank: isOnboarded, has_loan: isOnboarded, has_investment: isOnboarded, needs_fee: false });
+
+    const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [userId]);
+    const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
+    const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
+
+    const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
+    const types = txRes.rows.map(r => r.type);
+
+    res.json({
+      has_bank: types.includes('BANK_ACCOUNT') && hasPaidFee,
+      has_loan: isOnboarded, 
+      has_investment: isOnboarded,
+      needs_fee: hasPendingFee
+    });
   } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
 });
 
 // ==========================================
-// 4. ACCOUNTS & NOTIFICATIONS
+// 4. ACCOUNTS & INVESTMENTS
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
@@ -226,16 +249,6 @@ app.get('/api/accounts/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-app.get('/api/notifications/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-// ==========================================
-// 5. TRANSACTIONS & INVESTMENTS
-// ==========================================
 app.get('/api/investments/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -263,6 +276,9 @@ app.get('/api/investments/:userId', async (req, res) => {
 
 app.get('/api/market', (req, res) => { res.json(marketCache); });
 
+// ==========================================
+// 5. LOANS, DEPOSITS & TRANSFERS
+// ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
@@ -288,29 +304,6 @@ app.post('/api/loans/repay', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.get('/api/admin/settings', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM system_settings');
-    const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
-    res.json(settings);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/admin/settings/update', async (req, res) => {
-  const { btc_address, bank_name, bank_account, bank_routing } = req.body;
-  try {
-    await pool.query(`
-      INSERT INTO system_settings (key, value) VALUES 
-      ('btc_address', $1), ('bank_name', $2), ('bank_account', $3), ('bank_routing', $4)
-      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
-    `, [btc_address, bank_name, bank_account, bank_routing]);
-    res.json({ success: true, message: 'Settings updated successfully.' });
-  } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
-});
-
-// ==========================================
-// 6. TRANSFERS & DEPOSITS
-// ==========================================
 app.post('/api/transfer/internal', async (req, res) => {
   const { userId, recipientAccount, amount } = req.body;
   try {
@@ -363,106 +356,15 @@ app.post('/api/investments/withdraw', async (req, res) => {
 });
 
 // ==========================================
-// 7. TRANSACTIONS & ADMIN
+// 6. NOTIFICATIONS & CHAT
 // ==========================================
-app.get('/api/transactions/:userId', async (req, res) => {
-  try { 
-    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 }))); 
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.get('/api/admin/requests', async (req, res) => {
+app.get('/api/notifications/:userId', async (req, res) => {
   try {
-    const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
+    const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.post('/api/admin/approve', async (req, res) => {
-  const { txId, action } = req.body;
-  const client = await pool.connect();
-  try {
-    const tx = (await client.query('SELECT * FROM transactions WHERE id = $1', [txId])).rows[0];
-    await client.query('BEGIN');
-    if (action === 'approve') {
-      await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
-      if (tx.type === 'INTERNAL_TRANSFER') {
-        const recipient = await client.query('SELECT id FROM users WHERE account_number = $1', [tx.reference]);
-        if (recipient.rows.length > 0) {
-           await client.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'DEPOSIT', $2, 'Approved')`, [recipient.rows[0].id, tx.amount]);
-        }
-      }
-      if (tx.type === 'INVESTMENT_DEPOSIT') {
-        const now = new Date();
-        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); 
-        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, 0]);
-      }
-    } else {
-      await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
-    }
-    await client.query('COMMIT');
-    res.json({ success: true });
-  } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); } finally { client.release(); }
-});
-
-// ADMIN: User Management
-app.get('/api/admin/users', async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT id, name, COALESCE(username, 'N/A') as username, email, status, created_at FROM users WHERE deleted = false ORDER BY created_at DESC`);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
-});
-
-app.post('/api/admin/freeze', async (req, res) => {
-  const { userId, status } = req.body;
-  try {
-    await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.delete('/api/admin/users/:id', async (req, res) => {
-  try {
-    await pool.query(`UPDATE users SET deleted = true WHERE id = $1`, [req.params.id]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-// ADMIN: Send Notifications
-app.post('/api/admin/notify', async (req, res) => {
-  const { target, message } = req.body;
-  try {
-    if (target === 'all') {
-      const users = await pool.query('SELECT id FROM users WHERE deleted = false');
-      for (let u of users.rows) {
-        await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [u.id, message]);
-      }
-    } else {
-      await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [target, message]);
-    }
-    res.json({ success: true, message: 'Notification(s) sent!' });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-// ADMIN: Complaints & Chat
-app.get('/api/admin/complaints', async (req, res) => {
-  try {
-    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/admin/chat/:complaintId', async (req, res) => {
-  const { message } = req.body;
-  try {
-    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [req.params.complaintId, message]);
-    await pool.query(`UPDATE complaints SET status = 'In Progress' WHERE id = $1`, [req.params.complaintId]);
-    res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
-});
-
-// USER: Complaints & Chat
 app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
   const { userId, category, subject, message } = req.body;
   const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -501,6 +403,116 @@ app.post('/api/chat/:complaintId', async (req, res) => {
 app.post('/api/chat/:complaintId/resolve', async (req, res) => {
   try {
     await pool.query(`UPDATE complaints SET status = 'Resolved' WHERE id = $1`, [req.params.complaintId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// ==========================================
+// 7. ADMIN ROUTES
+// ==========================================
+app.get('/api/admin/settings', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM system_settings');
+    const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
+    res.json(settings);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/settings/update', async (req, res) => {
+  const { btc_address, bank_name, bank_account, bank_routing } = req.body;
+  try {
+    await pool.query(`
+      INSERT INTO system_settings (key, value) VALUES 
+      ('btc_address', $1), ('bank_name', $2), ('bank_account', $3), ('bank_routing', $4)
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+    `, [btc_address, bank_name, bank_account, bank_routing]);
+    res.json({ success: true, message: 'Settings updated successfully.' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
+});
+
+app.get('/api/admin/requests', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/approve', async (req, res) => {
+  const { txId, action } = req.body;
+  const client = await pool.connect();
+  try {
+    const tx = (await client.query('SELECT * FROM transactions WHERE id = $1', [txId])).rows[0];
+    await client.query('BEGIN');
+    if (action === 'approve') {
+      await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
+      if (tx.type === 'INTERNAL_TRANSFER') {
+        const recipient = await client.query('SELECT id FROM users WHERE account_number = $1', [tx.reference]);
+        if (recipient.rows.length > 0) {
+           await client.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'DEPOSIT', $2, 'Approved')`, [recipient.rows[0].id, tx.amount]);
+        }
+      }
+      if (tx.type === 'INVESTMENT_DEPOSIT') {
+        const now = new Date();
+        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); 
+        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, 0]);
+      }
+    } else {
+      await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
+    }
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); } finally { client.release(); }
+});
+
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT id, name, COALESCE(username, 'N/A') as username, email, status, created_at FROM users WHERE deleted = false ORDER BY created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
+});
+
+app.post('/api/admin/freeze', async (req, res) => {
+  const { userId, status } = req.body;
+  try {
+    await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.delete('/api/admin/users/:id', async (req, res) => {
+  try {
+    await pool.query(`UPDATE users SET deleted = true WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/notify', async (req, res) => {
+  const { target, message } = req.body;
+  try {
+    if (target === 'all') {
+      const users = await pool.query('SELECT id FROM users WHERE deleted = false');
+      for (let u of users.rows) {
+        await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [u.id, message]);
+      }
+    } else {
+      await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [target, message]);
+    }
+    res.json({ success: true, message: 'Notification(s) sent!' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/admin/complaints', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/chat/:complaintId', async (req, res) => {
+  const { message } = req.body;
+  try {
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [req.params.complaintId, message]);
+    await pool.query(`UPDATE complaints SET status = 'In Progress' WHERE id = $1`, [req.params.complaintId]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });

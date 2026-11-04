@@ -9,9 +9,7 @@
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    
     .reg-card { background: white; width: 100%; max-width: 450px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
-    
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; justify-content: center; }
     .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; }
@@ -32,15 +30,12 @@
     
     .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
     .footer-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
-    
     .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); text-decoration: none; }
   </style>
 </head>
 <body>
-
   <div class="reg-card">
     <a href="../index.html" class="back-btn">←</a>
-    
     <div class="logo">
       <div class="logo-icon">X</div>
       <div class="logo-text">
@@ -50,39 +45,20 @@
     </div>
 
     <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 10px;">Create an Account</h2>
-    <p style="text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 25px;">Join Xanvia Credit Union today.</p>
-
     <div id="msg" class="msg"></div>
 
     <form id="register-form">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="reg-name" placeholder="John Doe" required>
-      </div>
-      <div class="form-group">
-        <label>Gmail Address</label>
-        <input type="email" id="reg-email" placeholder="john@gmail.com" required>
-      </div>
-      <div class="form-group">
-        <label>Phone Number</label>
-        <input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="reg-password" placeholder="Create a strong password" required>
-      </div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe" required></div>
+      <div class="form-group"><label>Gmail Address</label><input type="email" id="reg-email" placeholder="john@gmail.com" required></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required></div>
+      <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create a strong password" required></div>
       <button type="submit" class="btn-primary" id="reg-btn">Sign Up</button>
     </form>
-
-    <div class="footer-link">
-      Already have an account? <a href="login.html">Log In</a>
-    </div>
   </div>
 
   <script>
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      
       const btn = document.getElementById('reg-btn');
       const msg = document.getElementById('msg');
       
@@ -91,39 +67,35 @@
       const phone = document.getElementById('reg-phone').value;
       const password = document.getElementById('reg-password').value;
 
-      // GMAIL VALIDATION CHECK
       if (!email.endsWith('@gmail.com')) {
-        msg.className = "msg error";
-        msg.textContent = "Please enter a valid Gmail address (e.g., yourname@gmail.com).";
-        return; // Stop the form from submitting
+        msg.className = "msg error"; msg.textContent = "Please enter a valid Gmail address."; return;
       }
 
-      btn.textContent = "Creating Account...";
-      msg.style.display = "none";
+      btn.textContent = "Creating Account..."; msg.style.display = "none";
 
       try {
         const res = await fetch('/api/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, phone, password })
         });
-
         const data = await res.json();
 
         if (data.success) {
           msg.className = "msg success";
-          msg.textContent = "Account created successfully! Redirecting to login...";
+          msg.textContent = "Account created! Redirecting to verification...";
+          
+          // Save temp user for onboarding
+          localStorage.setItem("temp_user", JSON.stringify({ id: data.userId, email }));
+          
           setTimeout(() => {
-            window.location.href = "login.html";
+            window.location.href = "onboarding.html?type=kyc";
           }, 1500);
         } else {
-          msg.className = "msg error";
-          msg.textContent = data.error || "Registration failed.";
+          msg.className = "msg error"; msg.textContent = data.error || "Registration failed.";
           btn.textContent = "Sign Up";
         }
       } catch (err) {
-        msg.className = "msg error";
-        msg.textContent = "Server error. Try again.";
+        msg.className = "msg error"; msg.textContent = "Server error. Try again.";
         btn.textContent = "Sign Up";
       }
     });
