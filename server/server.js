@@ -8,9 +8,6 @@ const fetch = require('node-fetch');
 
 const app = express();
 app.use(express.json());
-
-// CRITICAL FIX: Serve static files from the root folder (Xanviaa)
-// This ensures /js, /css, and /pages are accessible
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -170,12 +167,11 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// CRITICAL FIX: THE MISSING DASHBOARD ROUTE
+// DASHBOARD DATA
 app.get('/api/dashboard/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
     
-    // 1. Fetch Balances from Accounts table
     const accRes = await pool.query('SELECT type, balance FROM accounts WHERE user_id = $1', [userId]);
     const balances = { checking: 0, savings: 0, brokerage: 0, loan: 0 };
     
@@ -186,26 +182,16 @@ app.get('/api/dashboard/:userId', async (req, res) => {
       if (acc.type === 'loan') balances.loan = parseFloat(acc.balance);
     });
 
-    // 2. Fetch Transactions for the Table
     const txRes = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10', [userId]);
     const transactions = txRes.rows.map(tx => ({
       ...tx,
       amount: parseFloat(tx.amount)
     }));
 
-    // 3. Cashflow Chart Data (Simulated for now)
     const cashflow = [20, 45, 30, 80, 50, 90, 60];
 
-    res.json({
-      balances,
-      transactions,
-      cashflow
-    });
-
-  } catch (err) { 
-    console.error(err);
-    res.status(500).json({ error: 'Failed to load dashboard data.' }); 
-  }
+    res.json({ balances, transactions, cashflow });
+  } catch (err) { res.status(500).json({ error: 'Failed to load dashboard data.' }); }
 });
 
 app.get('/api/user/:userId', async (req, res) => {
@@ -274,7 +260,7 @@ app.get('/api/user-status/:userId', async (req, res) => {
   }
 });
 
-// ACCOUNTS & INVESTMENTS
+// ACCOUNTS & TRANSACTIONS (FIXED)
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const query = `
@@ -299,6 +285,20 @@ app.get('/api/accounts/:userId', async (req, res) => {
       loan: parseFloat(result.rows[0].loan_balance) || 0 
     });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+app.get('/api/transactions/:userId', async (req, res) => {
+  try { 
+    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    const cleanRows = result.rows.map(row => ({
+      ...row,
+      amount: parseFloat(row.amount) || 0
+    }));
+    res.json(cleanRows); 
+  } catch (err) { 
+    console.error("Trans fetch error:", err);
+    res.status(500).json({ error: 'Failed to fetch transactions' }); 
+  }
 });
 
 app.get('/api/investments/:userId', async (req, res) => {
