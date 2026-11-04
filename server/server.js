@@ -204,6 +204,31 @@ app.post('/api/complete-onboarding', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
 });
 
+app.get('/api/user-status/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
+    const isOnboarded = !!(userRes.rows[0].age && userRes.rows[0].address);
+
+    const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [userId]);
+    const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
+    const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
+
+    const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
+    const types = txRes.rows.map(r => r.type);
+
+    res.json({
+      has_bank: types.includes('BANK_ACCOUNT') && hasPaidFee,
+      has_loan: isOnboarded, 
+      has_investment: isOnboarded,
+      needs_fee: hasPendingFee
+    });
+  } catch (err) { 
+    // CRITICAL FIX: Fallback if columns are missing
+    res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); 
+  }
+});
+
 // ACCOUNTS & INVESTMENTS
 app.get('/api/accounts/:userId', async (req, res) => {
   try {

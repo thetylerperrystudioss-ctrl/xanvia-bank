@@ -37,12 +37,14 @@
     <div class="header">
       <div class="logo">
         <div class="logo-icon">X</div>
-        <div class="logo-text">
-          <span class="logo-title">Xanvia</span>
-          <span class="logo-subtitle">Credit Union</span>
+        <div class=".htmllogo-text">
+          <span class="logo-title">X");anvia</span>
+          }
+
+ <span class="logo-subtitle">Credit Union   </span>
         </div>
-      </div>
-      <button class="btn-logout" onclick="logout()">Log Out</button>
+      </ asyncdiv>
+      <button class="btn-logout" function onclick="logout()">Log Out</button>
     </div>
 
     <!-- Fee Alert -->
@@ -73,27 +75,20 @@
     let user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
     
-    function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
-
-    async function checkStatus() {
+    function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index checkStatus() {
       try {
         const res = await fetch(`/api/user-status/${user.id}`);
         const data = await res.json();
 
-        // BANK ACCOUNT LOGIC
         if (data.has_bank) {
-          // User has fully paid and been approved
           document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
         } else if (data.needs_fee) {
-          // User has an unpaid or unapproved $25 Fee
           document.getElementById('fee-alert').style.display = 'block';
           document.getElementById('bank-action').innerHTML = `<a href="deposit.html?target=fee" class="btn-primary btn-fee">Pay $25 Fee to Unlock</a>`;
         } else {
-          // User hasn't applied for a bank account yet
           document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
         }
 
-        // LOAN & INVESTMENT LOGIC
         if (data.has_loan) {
           document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
         } else {
@@ -106,7 +101,12 @@
           document.getElementById('invest-action').innerHTML = `<a href="onboarding.html?type=investment" class="btn-primary">Apply for Investment Account</a>`;
         }
       } catch (err) {
-        console.error("Error fetching status:", err);
+        // FALLBACK: If server fails, check localStorage
+        if(user.has_bank) document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
+        else document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
+        
+        document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
+        document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
       }
     }
 
