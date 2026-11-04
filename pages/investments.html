@@ -38,26 +38,40 @@
     .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
     .action-btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 1rem; text-align: center; border: none; cursor: pointer; transition: 0.2s; }
     .action-btn:active { transform: scale(0.98); }
-    .btn-deposit { background: var(--emerald); color: white; box-shadow: :0 4px 10px rgba(15,138,95,0active.3); }
-    . {btn-withdraw { background transform: scale: white; color: var(--deep-green); border: 1px solid var(--border); }
+    .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 10px rgba(15,138,95,0.3); }
+    .btn-withdraw { background: white; color: var(--deep-green); border: 1px solid var(--border); }
 
-    /* MARKETPLACE */
+    /* MARKETPLACE FIX */
     .marketplace { padding: 0 20px 20px; }
     .marketplace h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
-    .tab-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+    
+    /* FIXED TAB CONTAINER */
+    .tab-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
     .tab-container::-webkit-scrollbar { display: none; }
-    .tab-btn { background: white; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--muted); white-space: nowrap; cursor: pointer; transition: 0.2s; }
+    .tab-btn { 
+      background: white; 
+      border: 1px solid var(--border); 
+      padding: 8px 16px; 
+      border-radius: 20px; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      color: var(--muted); 
+      white-space: nowrap; 
+      cursor: pointer; 
+      transition: 0.2s;
+      flex-shrink: 0;
+    }
     .tab-btn.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
 
     .asset-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
     .asset-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-    .asset-card(0.99); }
+    .asset-card:active { transform: scale(0.99); }
     .asset-info { display: flex; align-items: center; gap: 12px; }
     .asset-icon { width: 40px; height: 40px; background: #F4F7F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--deep-green); font-size: 1.1rem; }
-    .asset-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
+    .asset-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; color: var(--text); }
     .asset-ticker { font-size: 0.75rem; color: var(--muted); }
     .asset-price { text-align: right; }
-    .asset-price h4 { font-family: var(--font-mono); font-size: 1rem; margin: 0 0 2px 0; }
+    .asset-price h4 { font-family: var(--font-mono); font-size: 1rem; margin: 0 0 2px 0; color: var(--text); }
     .asset-price span { font-size: 0.75rem; font-weight: 600; }
     .asset-price span.up { color: var(--emerald); }
     .asset-price span.down { color: var(--danger); }
@@ -173,11 +187,11 @@
           <option value="7">7 Days (Standard)</option>
           <option value="14">14 Days (Extended)</option>
           <option value="30">30 Days (Premium)</option>
-          <:option value="60">60 Days (VIP)</option>
+          <option value="60">60 Days (VIP)</option>
         </select>
       </div>
       <div class="form-group"><label>Amount to Withdraw ($)</label><input type="number" id="withdraw-amount" placeholder="0.00"></div>
-      <button onclick="submitWithdraw()" style="width:100%; padding:16px; backgroundvar(--deep-green); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Confirm Request</button>
+      <button onclick="submitWithdraw()" style="width:100%; padding:16px; background:var(--deep-green); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Confirm Request</button>
       <div id="withdraw-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -192,13 +206,11 @@
     let profitTickRate = 0;
     let liveMarketData = { crypto: [], stocks: [] };
 
-    // 1. FETCH LIVE MARKET DATA
     async function fetchMarketData() {
       try {
         const res = await fetch('/api/market');
         liveMarketData = await res.json();
         
-        // Populate ticker
         const track = document.getElementById('ticker-track');
         if(liveMarketData.crypto && liveMarketData.crypto.length > 0) {
           const tickerHtml = liveMarketData.crypto.map(coin => `
@@ -207,14 +219,11 @@
           track.innerHTML = tickerHtml + tickerHtml;
         }
 
-        // Populate currently active tab
         const activeTab = document.querySelector('.tab-btn.active').innerText.toLowerCase();
         if (activeTab === 'crypto') switchTab('crypto', document.querySelector('.tab-btn.active'));
         if (activeTab === 'us stocks') switchTab('stocks', document.querySelector('.tab-btn.active'));
 
-      } catch (err) { 
-        console.warn("Market API failed. Showing fallback.");
-      }
+      } catch (err) { console.log("Market data failed to load", err); }
     }
 
     function switchTab(category, btn) {
@@ -246,7 +255,6 @@
       `).join('');
     }
 
-    // 2. FETCH USER PORTFOLIO & HISTORY
     async function loadDashboardData() {
       try {
         const setRes = await fetch('/api/admin/settings');

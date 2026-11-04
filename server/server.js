@@ -24,7 +24,9 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// --- BULLETPROOF MARKET DATA CACHE ---
+// ==========================================
+// 1. MARKET DATA CACHE
+// ==========================================
 let marketCache = { 
   crypto: [
     { name: 'Bitcoin', ticker: 'BTC', price: 64230.50, change: 2.4, icon: '₿' },
@@ -49,7 +51,6 @@ async function updateMarketData() {
     if (!cryptoRes.ok) throw new Error("API Error");
     const cryptoData = await cryptoRes.json();
     
-    // Only update if we got valid data
     if (cryptoData.bitcoin) {
       marketCache.crypto = [
         { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin.usd, change: cryptoData.bitcoin.usd_24h_change, icon: '₿' },
@@ -69,7 +70,9 @@ async function updateMarketData() {
 updateMarketData();
 setInterval(updateMarketData, 60000);
 
-// DATABASE SETUP
+// ==========================================
+// 2. DATABASE SETUP
+// ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
   else {
@@ -129,7 +132,9 @@ pool.connect((err, client, release) => {
   }
 });
 
-// AUTHENTICATION
+// ==========================================
+// 3. AUTHENTICATION
+// ==========================================
 app.post('/api/register', async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -194,18 +199,26 @@ app.get('/api/user/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+// ==========================================
+// 4. INVESTMENTS
+// ==========================================
 app.get('/api/investments/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    
     const investments = result.rows.map(inv => {
       let currentProfit = 0;
+      
       if (inv.status === 'Active' && inv.start_date && inv.maturity_date) {
         const start = new Date(inv.start_date).getTime();
         const maturity = new Date(inv.maturity_date).getTime();
         const now = new Date().getTime();
+        
         const totalExpectedProfit = parseFloat(inv.amount) * 1.4; 
-        if (now >= maturity) currentProfit = totalExpectedProfit;
-        else if (now > start) {
+        
+        if (now >= maturity) {
+          currentProfit = totalExpectedProfit; 
+        } else if (now > start) {
           const totalDuration = maturity - start;
           const elapsed = now - start;
           currentProfit = totalExpectedProfit * (elapsed / totalDuration);
@@ -213,12 +226,24 @@ app.get('/api/investments/:userId', async (req, res) => {
       } else if (inv.status === 'Completed') {
          currentProfit = parseFloat(inv.profit) || 0;
       }
-      return { ...inv, amount: parseFloat(inv.amount), profit: currentProfit.toFixed(2) };
+      
+      return { 
+        ...inv, 
+        amount: parseFloat(inv.amount), 
+        profit: currentProfit.toFixed(2) 
+      };
     });
+    
     res.json(investments);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
+  } catch (err) { 
+    console.error("Investment fetch error:", err);
+    res.status(500).json({ error: 'Error' }); 
+  }
 });
 
+// ==========================================
+// 5. TRANSACTIONS & ACCOUNTS
+// ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try { 
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -260,7 +285,9 @@ app.get('/api/admin/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// ONBOARDING & STATUS
+// ==========================================
+// 6. ONBOARDING & STATUS
+// ==========================================
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
@@ -277,7 +304,9 @@ app.post('/api/complete-onboarding', async (req, res) => {
     }
 
     res.json({ success: true, message: 'Application approved!' });
-  } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
+  } catch (err) { 
+    res.status(500).json({ error: 'Failed: ' + err.message }); 
+  }
 });
 
 app.get('/api/user-status/:userId', async (req, res) => {
@@ -306,6 +335,9 @@ app.get('/api/user-status/:userId', async (req, res) => {
   }
 });
 
+// ==========================================
+// 7. LOANS, DEPOSITS & TRANSFERS
+// ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
@@ -382,7 +414,9 @@ app.post('/api/investments/withdraw', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// NOTIFICATIONS & CHAT
+// ==========================================
+// 8. NOTIFICATIONS & CHAT
+// ==========================================
 app.get('/api/notifications/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -439,7 +473,9 @@ app.post('/api/chat/:complaintId/resolve', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ADMIN ROUTES
+// ==========================================
+// 9. ADMIN ROUTES
+// ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
     const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
@@ -481,12 +517,15 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
 });
 
+// FIXED: The syntax error was here
 app.post('/api/admin/freeze', async (req, res) => {
   const { userId, status } = req.body;
   try {
     await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
     res.json({ success: true });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
+  } catch (err) { 
+    res.status(500).json({ error: 'Error' }); 
+  }
 });
 
 app.delete('/api/admin/users/:id', async (req, res) => {
