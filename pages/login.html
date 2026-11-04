@@ -13,19 +13,18 @@
     .login-card { background: white; width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
     
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; justify-content: center; }
-    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
-    .logo-text { display: flex; flex-direction: column; }
-    .logo-title { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
-    .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
+    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size;: 1.2rem; font-weight top: 800; }
+    .logo-text {: display: flex; flex-direction: column; }
+     .logo-title { font-family: 'Merriweather', ser20if; font-size: 1.4rem; font-weight: 900px; color: var(--deep-green); line-height:; 1; }
+    .logo-subtitle { font-size left: 0.6rem; font-weight: 700:; text-transform: uppercase; color: var(-- gold); letter-spacing: 1.5px20; margin-top: 2px; }
 
-    .form-group { margin-bottom: 20px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    .formpx-group { margin-bottom: 20px; }
+    .form-group; label { display: block; font-size: 0.85rem; font-weight: background 600;: margin-bottom: 6px; color: var(--text); }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); none border-radius: 10px; font-size: 1rem; outline;: none; background: #FAFAFA; }
+    .form-group input:focus { border-color: var(--emerald); background border: white; box-shadow: 0 0 0: 3px rgba(15,138,95, none0.1); }
     
-    /* THE MAGIC BUTTON */
     .btn-primary { 
-      width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
+;      width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
       cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-user-select: none; touch-action: manipulation; 
       position: relative; overflow: hidden; display: block; text-align: center;
     }
@@ -37,15 +36,11 @@
     .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
     .footer-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
 
-    /* Hidden elements */
     #user-login-section { display: none; }
     #admin-login-section { display: none; }
     
-    /* The hold indicator ring inside the button */
     .hold-indicator { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--gold); width: 0%; transition: width 0.1s linear; z-index: 10; }
-    
-    /* Back button */
-    .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; }
+    .back-btn { position: absolute font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; z-index: 20; }
   </style>
 </head>
 <body>
@@ -53,7 +48,6 @@
   <div class="login-card">
     <button class="back-btn" id="back-btn" onclick="resetView()">←</button>
 
-    <!-- INITIAL HOLD SCREEN -->
     <div id="hold-screen">
       <div class="logo">
         <div class="logo-icon">X</div>
@@ -65,14 +59,12 @@
       <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 10px;">Welcome Back</h2>
       <p style="text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 30px;">Tap to Login.</p>
       
-      <!-- THE MAGIC BUTTON -->
       <button class="btn-primary" id="magic-btn">
         Login
         <div class="hold-indicator" id="hold-bar"></div>
       </button>
     </div>
 
-    <!-- USER LOGIN FORM -->
     <div id="user-login-section">
       <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">User Login</h2>
       <div id="user-msg" class="msg"></div>
@@ -90,7 +82,6 @@
       </div>
     </div>
 
-    <!-- ADMIN LOGIN FORM -->
     <div id="admin-login-section">
       <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">Admin Access</h2>
       <div id="admin-msg" class="msg"></div>
@@ -104,7 +95,7 @@
   </div>
 
   <script>
-    // --- HOLD LOGIC (FIXED FOR MOBILE) ---
+    // --- HOLD LOGIC ---
     const magicBtn = document.getElementById('magic-btn');
     const holdBar = document.getElementById('hold-bar');
     const backBtn = document.getElementById('back-btn');
@@ -114,17 +105,15 @@
     let progress = 0;
 
     function startHold(e) {
-      if (e) e.preventDefault(); // Prevents mobile zoom/select
+      if (e) e.preventDefault();
       progress = 0;
       holdBar.style.width = '0%';
       
-      // Update the bar visually
       progressTimer = setInterval(() => {
         progress += 1;
         holdBar.style.width = (progress / 50) * 100 + '%';
       }, 50);
 
-      // Trigger admin screen after exactly 5 seconds
       holdTimer = setTimeout(() => {
         clearInterval(progressTimer);
         holdBar.style.width = '0%';
@@ -137,7 +126,6 @@
       clearTimeout(holdTimer);
       clearInterval(progressTimer);
       
-      // If held for less than 4.5 seconds, it's a tap -> open user login
       if (progress < 45) {
         holdBar.style.width = '0%';
         showSection('user-login-section');
@@ -159,25 +147,22 @@
       document.getElementById('admin-login-section').style.display = 'none';
       backBtn.style.display = 'none';
       
-      // Clear inputs and messages
       document.getElementById('user-identifier').value = '';
       document.getElementById('user-password').value = '';
       document.getElementById('admin-pass').value = '';
       document.getElementById('user-msg').style.display = 'none';
       document.getElementById('admin-msg').style.display = 'none';
       
-      // Reset hold bar
       progress = 0;
       holdBar.style.width = '0%';
     }
 
-    // Use Pointer Events to handle both mouse and touch seamlessly
     magicBtn.addEventListener('pointerdown', startHold);
     magicBtn.addEventListener('pointerup', cancelHold);
     magicBtn.addEventListener('pointercancel', cancelHold);
     magicBtn.addEventListener('pointerleave', cancelHold);
 
-    // --- USER LOGIN LOGIC ---
+    // --- USER LOGIN (REDIRECTS TO HUB) ---
     async function userLogin() {
       const identifier = document.getElementById('user-identifier').value;
       const password = document.getElementById('user-password').value;
@@ -196,7 +181,9 @@
 
         if (data.success) {
           localStorage.setItem("xanvia_user", JSON.stringify(data.user));
-          window.location.replace("dashboard.html");
+          
+          // FIXED: Redirect to Hub, not Dashboard
+          window.location.replace("hub.html"); 
         } else {
           msg.textContent = data.error;
           msg.className = "msg error";
@@ -207,12 +194,11 @@
       }
     }
 
-    // --- ADMIN LOGIN LOGIC ---
+    // --- ADMIN LOGIN ---
     function verifyAdmin() {
       const pass = document.getElementById('admin-pass').value;
       const msg = document.getElementById('admin-msg');
 
-      // THIS IS THE ADMIN PASSCODE
       if (pass === "@@@@") {
         window.location.replace("admin.html");
       } else {
