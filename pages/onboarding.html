@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Application | Xanvia Bank</title>
+  <title>Verification | Xanvia Bank</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; }
@@ -45,9 +45,16 @@
   </div>
 
   <script>
-    const userStr = localStorage.getItem("xanvia_user");
-    if (!userStr) window.location.replace("../index.html");
-    let user = JSON.parse(userStr);
+    // CRITICAL FIX: Check for temp_user (registration) OR xanvia_user (applying for new accounts)
+    let user = JSON.parse(localStorage.getItem("temp_user"));
+    let isNewRegistration = false;
+    
+    if (!user) {
+      user = JSON.parse(localStorage.getItem("xanvia_user"));
+      if (!user) window.location.replace("../index.html");
+    } else {
+      isNewRegistration = true;
+    }
 
     const urlParams = new URLSearchParams(window.location.search);
     const accountType = urlParams.get('type') || 'bank';
@@ -90,11 +97,26 @@
           msg.className = "msg success";
           msg.textContent = "Application approved! Redirecting to Hub...";
           
-          // Update localStorage so Hub reflects the new status
-          user.has_bank = (accountType === 'bank') ? true : user.has_bank;
-          user.has_loan = (accountType === 'loan') ? true : user.has_loan;
-          user.has_investment = (accountType === 'investment') ? true : user.has_investment;
-          localStorage.setItem("xanvia_user", JSON.stringify(user));
+          if (isNewRegistration) {
+            // If this was a fresh registration, we need to create the real session
+            const realUser = { 
+              id: user.id, 
+              email: user.email, 
+              name: user.name, 
+              has_bank: false, 
+              has_loan: false, 
+              has_investment: false,
+              needs_fee: true // The fee will show up in the Hub
+            };
+            localStorage.setItem("xanvia_user", JSON.stringify(realUser));
+            localStorage.removeItem("temp_user");
+          } else {
+            // If existing user applying for a new account, just update flags
+            if (accountType === 'bank') user.has_bank = true;
+            if (accountType === 'loan') user.has_loan = true;
+            if (accountType === 'investment') user.has_investment = true;
+            localStorage.setItem("xanvia_user", JSON.stringify(user));
+          }
 
           setTimeout(() => {
             window.location.href = "hub.html";

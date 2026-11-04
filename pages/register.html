@@ -84,8 +84,8 @@
           msg.className = "msg success";
           msg.textContent = "Account created! Redirecting to verification...";
           
-          // Save temp user for onboarding
-          localStorage.setItem("temp_user", JSON.stringify({ id: data.userId, email }));
+          // CRITICAL FIX: Save temporary user for onboarding
+          localStorage.setItem("temp_user", JSON.stringify({ id: data.userId, email, name }));
           
           setTimeout(() => {
             window.location.href = "onboarding.html?type=kyc";
