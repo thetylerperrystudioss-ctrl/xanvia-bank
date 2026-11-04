@@ -144,6 +144,7 @@ app.post('/api/register', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
 });
 
+// --- FIXED LOGIN ROUTE ---
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body; 
   try {
@@ -152,6 +153,7 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
     
+    // Check status for Hub
     const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [user.id]);
     const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
     const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
@@ -160,6 +162,7 @@ app.post('/api/login', async (req, res) => {
     const types = txRes.rows.map(r => r.type);
     const isOnboarded = !!(user.age && user.address);
 
+    // Attach status to user object
     user.has_bank = types.includes('BANK_ACCOUNT') && hasPaidFee;
     user.has_loan = isOnboarded;
     user.has_investment = isOnboarded;
@@ -379,7 +382,6 @@ app.get('/api/notifications/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// NEW: Mark notifications as read
 app.post('/api/notifications/:userId/read', async (req, res) => {
   try {
     await pool.query(`UPDATE notifications SET is_read = true WHERE user_id = $1`, [req.params.userId]);

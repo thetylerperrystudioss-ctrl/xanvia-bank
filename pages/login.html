@@ -178,7 +178,7 @@
         const data = await res.json();
 
         if (data.success) {
-          // FIXED: Saves user data correctly and routes to Hub
+          // FIXED: Save the full user object
           localStorage.setItem("xanvia_user", JSON.stringify(data.user));
           window.location.replace("hub.html"); 
         } else {
