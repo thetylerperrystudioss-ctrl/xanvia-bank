@@ -24,9 +24,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// ==========================================
 // MARKET DATA CACHE
-// ==========================================
 let marketCache = { crypto: [], stocks: [], lastUpdated: null };
 let isFetching = false;
 
@@ -53,9 +51,7 @@ async function updateMarketData() {
 updateMarketData();
 setInterval(updateMarketData, 60000);
 
-// ==========================================
-// 1. DATABASE SETUP
-// ==========================================
+// DATABASE SETUP
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
   else {
@@ -115,9 +111,7 @@ pool.connect((err, client, release) => {
   }
 });
 
-// ==========================================
-// 2. AUTHENTICATION & PROFILE
-// ==========================================
+// AUTHENTICATION & PROFILE
 app.post('/api/register', async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -144,7 +138,6 @@ app.post('/api/register', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
 });
 
-// --- FIXED LOGIN ROUTE ---
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body; 
   try {
@@ -153,7 +146,6 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
     
-    // Check status for Hub
     const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [user.id]);
     const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
     const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
@@ -162,7 +154,6 @@ app.post('/api/login', async (req, res) => {
     const types = txRes.rows.map(r => r.type);
     const isOnboarded = !!(user.age && user.address);
 
-    // Attach status to user object
     user.has_bank = types.includes('BANK_ACCOUNT') && hasPaidFee;
     user.has_loan = isOnboarded;
     user.has_investment = isOnboarded;
@@ -193,9 +184,7 @@ app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
 });
 
-// ==========================================
-// 3. ONBOARDING & STATUS
-// ==========================================
+// ONBOARDING & STATUS
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
@@ -215,31 +204,7 @@ app.post('/api/complete-onboarding', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
 });
 
-app.get('/api/user-status/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
-    const isOnboarded = !!(userRes.rows[0].age && userRes.rows[0].address);
-
-    const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [userId]);
-    const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
-    const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
-
-    const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
-    const types = txRes.rows.map(r => r.type);
-
-    res.json({
-      has_bank: types.includes('BANK_ACCOUNT') && hasPaidFee,
-      has_loan: isOnboarded, 
-      has_investment: isOnboarded,
-      needs_fee: hasPendingFee
-    });
-  } catch (err) { res.status(500).json({ error: 'Failed to fetch status' }); }
-});
-
-// ==========================================
-// 4. ACCOUNTS & INVESTMENTS
-// ==========================================
+// ACCOUNTS & INVESTMENTS
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const query = `
@@ -291,11 +256,7 @@ app.get('/api/investments/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.get('/api/market', (req, res) => { res.json(marketCache); });
-
-// ==========================================
-// 5. LOANS, DEPOSITS & TRANSFERS
-// ==========================================
+// LOANS, DEPOSITS & TRANSFERS
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
@@ -372,9 +333,7 @@ app.post('/api/investments/withdraw', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ==========================================
-// 6. NOTIFICATIONS & CHAT
-// ==========================================
+// NOTIFICATIONS & CHAT
 app.get('/api/notifications/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -431,9 +390,7 @@ app.post('/api/chat/:complaintId/resolve', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ==========================================
-// 7. ADMIN ROUTES
-// ==========================================
+// ADMIN ROUTES
 app.get('/api/admin/settings', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM system_settings');
