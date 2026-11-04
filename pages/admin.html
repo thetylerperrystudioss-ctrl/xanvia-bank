@@ -20,18 +20,22 @@
     .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; }
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
-    .tab { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; }
+    .tab { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 0.85rem; }
     .tab.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
     .view-section { display: none; }
     .view-section.active { display: block; }
-    .panel { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
+    .panel { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; }
     
     .req-item { display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: #FAFAFA; }
     .proof-img { width: 100%; max-width: 200px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; display: block; }
     .btn-approve { background: var(--emerald); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1; }
     .btn-reject { background: var(--danger); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1; }
-    .btn-outline { background: white; border: 1px solid var(--border); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1;}
+    
+    /* NEW BUTTON STYLES */
+    .btn-outline { background: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
+    .btn-notify { background: #F3F4F6; border: 1px solid #D1D5DB; color: #374151; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
+    .btn-delete { background: #FEE2E2; border: 1px solid #F87171; color: #991B1B; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; }
 
     .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
     .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
@@ -42,10 +46,10 @@
     .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
     .user-info h4 { font-size: 0.95rem; color: var(--deep-green); margin-bottom: 2px; }
     .user-info p { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
-    .user-status { font-weight: 700; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    .user-status { font-weight: 700; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-top: 5px;}
     .user-status.active { background: #D1FAE5; color: #065F46; }
     .user-status.frozen { background: #FEE2E2; color: #991B1B; }
-    .user-actions { display: flex; gap: 8px; }
+    .user-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
@@ -66,36 +70,42 @@
   <div id="dashboard-area" class="app-container">
     <div class="header">
       <h1>Admin Panel</h1>
-      <button onclick="window.location.replace('../index.html')">Exit</button>
+      <button onclick="window.location.replace('../index.html')" style="background:none; border:none; font-weight:600; color:var(--emerald);">Exit</button>
     </div>
 
     <div class="tabs">
       <div class="tab active" id="tab-requests" onclick="switchTab('requests')">Requests</div>
       <div class="tab" id="tab-users" onclick="switchTab('users')">Users</div>
       <div class="tab" id="tab-complaints" onclick="switchTab('complaints')">Complaints</div>
-      <div class="tab" id="tab-notify" onclick="switchTab('notify')">Notify</div>
+      <div class="tab" id="tab-notify" onclick="switchTab('notify')">Broadcast</div>
       <div class="tab" id="tab-settings" onclick="switchTab('settings')">Settings</div>
     </div>
 
     <!-- VIEW: REQUESTS -->
     <div id="view-requests" class="view-section active">
-      <div class="panel"><h2>Pending Approvals</h2><div id="req-list"></div></div>
+      <div class="panel"><h2 style="margin-bottom:15px;">Pending Approvals</h2><div id="req-list"></div></div>
     </div>
 
     <!-- VIEW: USERS -->
     <div id="view-users" class="view-section">
-      <div class="panel"><h2>Registered Users</h2><div id="user-list"></div></div>
+      <div class="panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+          <h2>Registered Users</h2>
+          <button class="btn-save" onclick="switchTab('notify')" style="width:auto; padding:8px 12px; font-size:0.8rem; margin:0;">Notify All</button>
+        </div>
+        <div id="user-list"></div>
+      </div>
     </div>
 
     <!-- VIEW: COMPLAINTS -->
     <div id="view-complaints" class="view-section">
-      <div class="panel"><h2>Support Tickets</h2><div id="complaint-list"></div></div>
+      <div class="panel"><h2 style="margin-bottom:15px;">Support Tickets</h2><div id="complaint-list"></div></div>
     </div>
 
-    <!-- VIEW: NOTIFY -->
+    <!-- VIEW: BROADCAST NOTIFY -->
     <div id="view-notify" class="view-section">
       <div class="panel">
-        <h2>Send Notification</h2>
+        <h2 style="margin-bottom:15px;">Send Notification</h2>
         <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">Send a message to a specific user or all users.</p>
         
         <div class="form-group">
@@ -117,13 +127,12 @@
     <!-- VIEW: SETTINGS -->
     <div id="view-settings" class="view-section">
       <div class="panel">
-        <h2>Deposit Bank Settings</h2>
-        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">These details will be shown to users on the Deposit page.</p>
+        <h2 style="margin-bottom:15px;">Deposit Bank Settings</h2>
         
         <div class="form-group"><label>Bank Name</label><input type="text" id="set-bank-name"></div>
         <div class="form-group"><label>Account Number</label><input type="text" id="set-bank-account"></div>
         <div class="form-group"><label>Routing Number</label><input type="text" id="set-bank-routing"></div>
-        <div class="form-group" style="margin-top: 30px;"><label>Bitcoin Wallet Address</label><input type="text" id="set-btc"></div>
+        <div class="form-group" style="margin-top: 20px;"><label>Bitcoin Wallet Address</label><input type="text" id="set-btc"></div>
         
         <button class="btn-save" onclick="saveSettings()">Save Settings</button>
         <p id="settings-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
@@ -135,12 +144,12 @@
     function verifyPasscode() {
       if (document.getElementById('admin-pass').value === "@@@@") {
         document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('dashboard-area').style.display = 'block';
-        loadRequests();
-      } else { alert("Access Denied"); }
+        document.getElementById('dashboard-area').="style.display = 'block';
+        loadsendRequests();
+      } else { alert("Access DenAdminied"); }
     }
 
-    function switchTab(tabName) {
+    function switchTab(tReplyabName) {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`tab-${tabName}`).classList.add('active');
       document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
@@ -174,7 +183,7 @@
       loadRequests();
     }
 
-    // --- USERS ---
+    // --- USERS (WITH NOTIFY & DELETE) ---
     async function loadUsers() {
       const data = await (await fetch('/api/admin/users')).json();
       document.getElementById('user-list').innerHTML = data.length > 0 ? data.map(u => `
@@ -185,8 +194,9 @@
             <span class="user-status ${u.status === 'Active' ? 'active' : 'frozen'}">${u.status}</span>
           </div>
           <div class="user-actions">
+            <button class="btn-notify" onclick="promptNotify('${u.id}')">Notify</button>
             <button class="btn-outline" onclick="freezeUser(${u.id}, '${u.status}')">${u.status === 'Active' ? 'Freeze' : 'Unfreeze'}</button>
-            <button class="btn-reject" onclick="deleteUser(${u.id})">Delete</button>
+            <button class="btn-delete" onclick="deleteUser(${u.id})">Delete</button>
           </div>
         </div>
       `).join('') : '<p style="color:var(--muted);">No users found.</p>';
@@ -204,7 +214,21 @@
       loadUsers();
     }
 
-    // --- NOTIFY ---
+    // Quick Notify Single User
+    async function promptNotify(userId) {
+      const message = prompt("Enter notification message for this user:");
+      if (!message) return;
+
+      const res = await fetch('/api/admin/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: userId, message })
+      });
+      
+      if (res.ok) alert("Notification sent successfully!");
+    }
+
+    // --- BROADCAST NOTIFY TAB ---
     async function loadNotifyDropdown() {
       const data = await (await fetch('/api/admin/users')).json();
       const select = document.getElementById('notify-target');
@@ -256,7 +280,7 @@
           ${c.status !== 'Resolved' ? `
           <div style="display: flex; gap: 10px; margin-top: 10px;">
             <input type="text" id="admin-reply-${c.id}" placeholder="Type reply..." style="flex:1; padding:10px; border:1px solid #ddd; border-radius:6px;">
-            <button class="btn-approve" onclick="sendAdminReply(${c.id})" style="flex:0 0 auto; padding: 10px 20px;">Send</button>
+            <button class="btn-approve" onclick(${c.id})" style="flex:0 0 auto; padding: 10px 20px;">Send</button>
           </div>
           ` : ''}
         </div>
