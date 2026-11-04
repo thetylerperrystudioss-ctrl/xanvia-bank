@@ -184,7 +184,7 @@ app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
 });
 
-// ONBOARDING & STATUS
+// ONBOARDING & STATUS (STRICT ERROR HANDLING)
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
@@ -207,13 +207,17 @@ app.post('/api/complete-onboarding', async (req, res) => {
 app.get('/api/user-status/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
+    
+    // Safely check for onboarding
     const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
-    const isOnboarded = !!(userRes.rows[0].age && userRes.rows[0].address);
+    const isOnboarded = !!(userRes.rows[0]?.age && userRes.rows[0]?.address);
 
+    // Safely check for fee
     const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [userId]);
     const hasPaidFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status === 'Approved';
     const hasPendingFee = feeCheck.rows.length > 0 && feeCheck.rows[0].status !== 'Approved';
 
+    // Safely check for account types
     const txRes = await pool.query('SELECT type FROM transactions WHERE user_id = $1', [userId]);
     const types = txRes.rows.map(r => r.type);
 
@@ -224,7 +228,8 @@ app.get('/api/user-status/:userId', async (req, res) => {
       needs_fee: hasPendingFee
     });
   } catch (err) { 
-    // CRITICAL FIX: Fallback if columns are missing
+    console.error("STATUS ERROR:", err.message);
+    // Fallback so it never crashes the frontend
     res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); 
   }
 });
