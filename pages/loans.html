@@ -6,54 +6,52 @@
   <title>Loan Center | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #F4F7F6; display: flex; justify-content: center; }
+    body { background-color: #F4F7F6; display: flex; justify-content: center; font-family: 'Inter', sans-serif; margin: 0; padding: 0;}
     .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
-    .loan-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; }
+    .loan-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; text-align: center; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
-    .loan-summary { text-align: center; }
-    .loan-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; }
-    .loan-summary h2 { font-size: 3rem; font-weight: 700; margin: 5px 0 15px; letter-spacing: -1px; }
+    .loan-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 5px 0; }
+    .loan-summary h2 { font-size: 3rem; font-weight: 700; margin: 0; letter-spacing: -1px; }
     
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
     .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
-    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; margin-bottom: 8px; }
-    .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
-    .stat-card h3.debt { color: var(--danger); }
+    .stat-card p { font-size: 0.75rem; color: #6B7280; font-weight: 600; text-transform: uppercase; margin: 0 0 8px 0; }
+    .stat-card h3 { font-size: 1.4rem; color: #0B2E23; font-weight: 700; margin: 0; }
+    .stat-card h3.debt { color: #EF4444; }
     
-    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 0 20px 20px; }
-    .action-btn { padding: 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-align: center; border: none; cursor: pointer; }
-    .btn-primary { background: var(--emerald); color: white; }
-    .btn-outline { background: white; color: var(--text); border: 1px solid var(--border); }
-    .btn-full { grid-column: span 2; }
+    .deposit-warning { background: #FFFBEB; border-left: 4px solid #C9A24B; padding: 15px; margin: 0 20px 20px; border-radius: 8px; color: #92400E; font-size: 0.85rem; line-height: 1.5; }
+    .deposit-warning strong { color: #78350F; }
+
+    /* ACTION BUTTONS FIX */
+    .action-grid { display: flex; flex-direction: column; gap: 15px; padding: 0 20px 20px; }
+    .row-btns { display: flex; gap: 15px; }
+    .action-btn { padding: 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-align: center; border: none; cursor: pointer; width: 100%; display: block; }
+    .btn-primary { background: #0F8A5F; color: white; }
+    .btn-outline { background: white; color: #1A1A1A; border: 1px solid #E5E7EB; }
     
     .history-panel { padding: 0 20px 30px; }
-    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .tx-info h4 { font-size: 0.95rem; margin-bottom: 4px; }
-    .tx-info p { font-size: 0.75rem; color: var(--muted); }
+    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
+    .tx-info h4 { font-size: 0.95rem; margin: 0 0 4px 0; color: #1A1A1A; }
+    .tx-info p { font-size: 0.75rem; color: #6B7280; margin: 0; }
     .tx-amount { font-weight: 700; text-align: right; }
     
     /* MODAL FIXES */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-content h2 { color: var(--deep-green); margin-bottom: 10px; font-size: 1.3rem; }
-    .modal-content p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+    .modal-content h2 { color: #0B2E23; margin: 0 0 10px 0; font-size: 1.3rem; }
+    .modal-content p { color: #6B7280; font-size: 0.9rem; margin: 0 0 20px 0; line-height: 1.5; }
     
     .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #333; }
     .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; }
     
-    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
-    
-    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.5; }
-    .admin-details-box strong { color: var(--deep-green); }
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6B7280; }
+    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #E5E7EB; font-size: 0.9rem; line-height: 1.5; }
+    .admin-details-box strong { color: #0B2E23; }
     .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
-
-    .deposit-warning { background: #FFFBEB; border-left: 4px solid var(--gold); padding: 15px; margin: 0 20px 20px; border-radius: 8px; color: #92400E; font-size: 0.85rem; line-height: 1.5; }
-    .deposit-warning strong { color: #78350F; }
-
-    .external-fields { display: none; padding-top: 15px; border-top: 1px dashed var(--border); margin-top: 15px; }
+    .external-fields { display: none; padding-top: 15px; border-top: 1px dashed #E5E7EB; margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -61,7 +59,7 @@
     <header class="loan-header">
       <div class="header-top">
         <a href="hub.html">←</a>
-        <div class="logo" style="color: white; font-family: var(--font-serif); font-weight: 700;">Xanvia</div>
+        <div class="logo" style="font-weight: 700;">Xanvia</div>
         <div style="width: 24px;"></div>
       </div>
       <div class="loan-summary">
@@ -86,14 +84,17 @@
         </div>
       </div>
 
+      <!-- ACTION BUTTONS -->
       <div class="action-grid">
-        <button class="action-btn btn-primary btn-full" onclick="openModal('apply')">Apply for Loan</button>
-        <button class="action-btn btn-outline" onclick="openModal('transfer')">Transfer Funds</button>
-        <button class="action-btn btn-outline" onclick="openModal('repay')">Repay Loan</button>
+        <button class="action-btn btn-primary" onclick="openModal('apply')">Apply for Loan</button>
+        <div class="row-btns">
+          <button class="action-btn btn-outline" onclick="openModal('transfer')">Transfer Funds</button>
+          <button class="action-btn btn-outline" onclick="openModal('repay')">Repay Loan</button>
+        </div>
       </div>
 
       <div class="history-panel">
-        <h3 style="color: var(--deep-green); margin-bottom: 15px;">Loan Transaction History</h3>
+        <h3 style="color: #0B2E23; margin-bottom: 15px;">Loan Transaction History</h3>
         <div id="history-list"></div>
       </div>
     </main>
@@ -111,7 +112,7 @@
       </div>
 
       <div class="form-group"><label>Loan Amount Requested ($)</label><input type="number" id="apply-amount" placeholder="e.g. 5000"></div>
-      <button onclick="submitApply()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
+      <button onclick="submitApply()" style="width:100%; padding:14px; background:#0F8A5F; color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
       <div id="apply-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -140,7 +141,7 @@
         <div class="form-group"><label>Routing Number</label><input type="text" id="ext-rout-num" placeholder="021000021"></div>
       </div>
 
-      <button onclick="submitTransfer()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Transfer</button>
+      <button onclick="submitTransfer()" style="width:100%; padding:14px; background:#0F8A5F; color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Transfer</button>
       <div id="transfer-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -159,7 +160,7 @@
       </div>
 
       <div class="form-group"><label>Amount to Repay ($)</label><input type="number" id="repay-amount" placeholder="Enter amount"></div>
-      <button onclick="submitRepay()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
+      <button onclick="submitRepay()" style="width:100%; padding:14px; background:#0F8A5F; color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
       <div id="repay-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -173,7 +174,10 @@
     async function loadData() {
       const res = await fetch(`/api/accounts/${user.id}`);
       const data = await res.json();
+      
+      // Update Available Loan Balance
       const loanBalance = data.loan || 0;
+      document.getElementById('loan-balance').textContent = formatUSD(loanBalance);
       
       const txRes = await fetch(`/api/transactions/${user.id}`);
       const txs = await txRes.json();
@@ -188,7 +192,6 @@
       });
 
       document.getElementById('total-approved').textContent = formatUSD(totalBorrowed);
-      document.getElementById('loan-balance').textContent = formatUSD(loanBalance);
       
       totalOutstanding = totalBorrowed - totalRepaid;
       document.getElementById('total-debt').textContent = formatUSD(totalOutstanding > 0 ? totalOutstanding : 0);
@@ -199,12 +202,12 @@
             <h4>${tx.type.replace('_', ' ')}</h4>
             <p>${new Date(tx.created_at).toLocaleDateString()}</p>
           </div>
-          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : 'var(--warning)'}">
+          <div class="tx-amount" style="color:${tx.status === 'Approved' ? '#0F8A5F' : '#F59E0B'}">
             ${formatUSD(tx.amount)}
-            <div style="font-size:0.7rem; color:var(--muted);">${tx.status}</div>
+            <div style="font-size:0.7rem; color:#6B7280;">${tx.status}</div>
           </div>
         </div>
-      `).join('') || '<p style="color:var(--muted); font-size:0.9rem;">No loan history.</p>';
+      `).join('') || '<p style="color:#6B7280; font-size:0.9rem;">No loan history.</p>';
     }
 
     async function fetchAdminDetails() {
@@ -232,7 +235,7 @@
       const msg = document.getElementById('apply-msg');
       const res = await fetch('/api/loans/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
     }
 
@@ -253,11 +256,11 @@
           msg.textContent = "Please fill all external bank details."; msg.style.color = "red"; return;
         }
       }
-      msg.textContent = "Processing..."; msg.style.color = "var(--emerald)";
+      msg.textContent = "Processing..."; msg.style.color = "#0F8A5F";
 
       const res = await fetch('/api/loans/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, destination: dest, bankDetails }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
     }
 
@@ -267,7 +270,7 @@
       if (amount > totalOutstanding) { msg.textContent = "Amount exceeds outstanding debt."; msg.style.color = "red"; return; }
       const res = await fetch('/api/loans/repay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 1500);
     }
 

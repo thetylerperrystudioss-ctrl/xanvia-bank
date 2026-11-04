@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
+const fetch = require('node-fetch');
 
 const app = express();
 app.use(express.json());
@@ -24,6 +25,63 @@ const pool = new Pool({
 });
 
 // ==========================================
+// MARKET DATA CACHE & FETCHING
+// ==========================================
+let marketCache = { crypto: [], stocks: [], lastUpdated: null };
+let isFetching = false;
+
+async function updateMarketData() {
+  if (isFetching) return;
+  isFetching = true;
+  try {
+    // 1. Fetch Crypto (CoinGecko)
+    const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd&include_24hr_change=true');
+    const cryptoData = await cryptoRes.json();
+    
+    const cryptoList = [
+      { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin?.usd || 0, change: cryptoData.bitcoin?.usd_24h_change || 0, icon: '₿' },
+      { name: 'Ethereum', ticker: 'ETH', price: cryptoData.ethereum?.usd || 0, change: cryptoData.ethereum?.usd_24h_change || 0, icon: 'Ξ' },
+      { name: 'Solana', ticker: 'SOL', price: cryptoData.solana?.usd || 0, change: cryptoData.solana?.usd_24h_change || 0, icon: 'S' },
+      { name: 'XRP', ticker: 'XRP', price: cryptoData.ripple?.usd || 0, change: cryptoData.ripple?.usd_24h_change || 0, icon: 'X' }
+    ];
+
+    // 2. Fetch Stocks (Alpaca - Uses Fallback if no keys)
+    const ALPACA_KEY = process.env.ALPACA_KEY || 'YOUR_ALPACA_KEY';
+    const ALPACA_SECRET = process.env.ALPACA_SECRET || 'YOUR_ALPACA_SECRET';
+    
+    let stockList = [];
+    if (ALPACA_KEY !== 'YOUR_ALPACA_KEY') {
+      const stockRes = await fetch('https://data.alpaca.markets/v2/stocks/quotes/latest?symbols=AAPL,NVDA,TSLA', {
+        headers: { 'APCA-API-KEY-ID': ALPACA_KEY, 'APCA-API-SECRET-KEY': ALPACA_SECRET }
+      });
+      const stockData = await stockRes.json();
+      
+      stockList = [
+        { name: 'Apple Inc.', ticker: 'AAPL', price: stockData.quotes?.AAPL?.ap || 172.50, change: 0.5, icon: 'A' },
+        { name: 'NVIDIA Corp', ticker: 'NVDA', price: stockData.quotes?.NVDA?.ap || 890.20, change: 4.2, icon: 'N' },
+        { name: 'Tesla Inc.', ticker: 'TSLA', price: stockData.quotes?.TSLA?.ap || 175.30, change: -1.2, icon: 'T' }
+      ];
+    } else {
+      stockList = [
+        { name: 'Apple Inc.', ticker: 'AAPL', price: 172.50, change: 0.5, icon: 'A' },
+        { name: 'NVIDIA Corp', ticker: 'NVDA', price: 890.20, change: 4.2, icon: 'N' },
+        { name: 'Tesla Inc.', ticker: 'TSLA', price: 175.30, change: -1.2, icon: 'T' }
+      ];
+    }
+
+    marketCache = { crypto: cryptoList, stocks: stockList, lastUpdated: new Date() };
+    console.log('📈 Market data updated at', new Date().toLocaleTimeString());
+  } catch (err) {
+    console.error('Market Data Error:', err.message);
+  } finally {
+    isFetching = false;
+  }
+}
+
+updateMarketData();
+setInterval(updateMarketData, 60000); // Refresh every 60 seconds
+
+// ==========================================
 // 1. DATABASE SETUP
 // ==========================================
 pool.connect((err, client, release) => {
@@ -41,44 +99,25 @@ pool.connect((err, client, release) => {
       if (err) console.error('Create Table Error:', err.message);
 
       const alterQueries = [
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
-        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
-        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active'",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP", "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER", "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT", "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
+        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)", "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active'",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS message TEXT",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_response TEXT",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS message TEXT",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_response TEXT",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT"
       ];
 
@@ -107,7 +146,7 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// 2. AUTHENTICATION
+// 2. AUTHENTICATION & PROFILE
 // ==========================================
 app.post('/api/register', async (req, res) => {
   try {
@@ -189,30 +228,68 @@ app.get('/api/user-status/:userId', async (req, res) => {
 });
 
 // ==========================================
-// 4. ACCOUNTS & TRANSACTIONS
+// 4. ACCOUNTS & INVESTMENTS
 // ==========================================
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const query = `
-      SELECT COALESCE(SUM(
-        CASE 
-          WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount 
-          WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
-          ELSE 0 
-        END
-      ), 0) AS checking_balance
-      FROM transactions WHERE user_id = $1 AND status = 'Approved';
+      SELECT COALESCE(SUM(CASE 
+        WHEN type IN ('DEPOSIT') THEN amount 
+        WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
+        WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
+        ELSE 0 
+      END), 0) AS checking_balance FROM transactions WHERE user_id = $1 AND status = 'Approved';
     `;
     const result = await pool.query(query, [req.params.userId]);
     res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0 });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-app.get('/api/transactions/:userId', async (req, res) => {
-  try { 
-    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 }))); 
+app.get('/api/investments/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    const investments = result.rows.map(inv => {
+      let currentProfit = 0;
+      if (inv.status === 'Active' && inv.start_date && inv.maturity_date) {
+        const start = new Date(inv.start_date).getTime();
+        const maturity = new Date(inv.maturity_date).getTime();
+        const now = new Date().getTime();
+        const totalExpectedProfit = parseFloat(inv.amount) * 1.4; 
+        if (now >= maturity) currentProfit = totalExpectedProfit;
+        else if (now > start) {
+          const totalDuration = maturity - start;
+          const elapsed = now - start;
+          currentProfit = totalExpectedProfit * (elapsed / totalDuration);
+        }
+      } else if (inv.status === 'Completed') {
+         currentProfit = parseFloat(inv.profit) || 0;
+      }
+      return { ...inv, amount: parseFloat(inv.amount), profit: currentProfit.toFixed(2) };
+    });
+    res.json(investments);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/market', (req, res) => { res.json(marketCache); });
+
+app.get('/api/admin/settings', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM system_settings');
+    const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
+    res.json(settings);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/settings/update', async (req, res) => {
+  const { btc_address, bank_name, bank_account, bank_routing } = req.body;
+  try {
+    await pool.query(`
+      INSERT INTO system_settings (key, value) VALUES 
+      ('btc_address', $1), ('bank_name', $2), ('bank_account', $3), ('bank_routing', $4)
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+    `, [btc_address, bank_name, bank_account, bank_routing]);
+    res.json({ success: true, message: 'Settings updated successfully.' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
 });
 
 // ==========================================
@@ -247,29 +324,38 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
   } catch (err) { res.status(500).json({ error: 'Server error.' }); }
 });
 
-app.get('/api/admin/settings', async (req, res) => {
+app.post('/api/investments/deposit', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, reference } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
+  const imagePath = `/uploads/${req.file.filename}`;
   try {
-    const result = await pool.query('SELECT * FROM system_settings');
-    const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
-    res.json(settings);
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'INVESTMENT_DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, reference, imagePath]);
+    res.json({ success: true, message: 'Investment deposit pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/investments/withdraw', async (req, res) => {
+  const { userId, amount, timeline } = req.body;
+  try {
+    const balCheck = await pool.query(`SELECT COALESCE(SUM(amount), 0) as balance FROM investments WHERE user_id = $1 AND status = 'Active'`, [userId]);
+    if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient balance.' });
+    
+    const details = `Withdrawal Lock-in: ${timeline} Days`;
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'INVESTMENT_WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
+    res.json({ success: true, message: `Withdrawal requested for ${timeline} days.` });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// ==========================================
+// 6. TRANSACTIONS & ADMIN
+// ==========================================
+app.get('/api/transactions/:userId', async (req, res) => {
+  try { 
+    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 }))); 
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.post('/api/admin/settings/update', async (req, res) => {
-  const { btc_address, bank_name, bank_account, bank_routing } = req.body;
-  try {
-    await pool.query(`
-      INSERT INTO system_settings (key, value) VALUES 
-      ('btc_address', $1), ('bank_name', $2), ('bank_account', $3), ('bank_routing', $4)
-      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
-    `, [btc_address, bank_name, bank_account, bank_routing]);
-    res.json({ success: true, message: 'Settings updated successfully.' });
-  } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
-});
-
-// ==========================================
-// 6. ADMIN ROUTES & CHAT
-// ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
     const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
@@ -339,6 +425,8 @@ app.post('/api/chat/:complaintId/resolve', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
+// Fallback to index
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
