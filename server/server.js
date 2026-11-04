@@ -144,7 +144,6 @@ app.post('/api/register', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
 });
 
-// --- LOGIN CHECKS STATUS AND RETURNS FLAGS ---
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body; 
   try {
@@ -378,6 +377,14 @@ app.get('/api/notifications/:userId', async (req, res) => {
     const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+// NEW: Mark notifications as read
+app.post('/api/notifications/:userId/read', async (req, res) => {
+  try {
+    await pool.query(`UPDATE notifications SET is_read = true WHERE user_id = $1`, [req.params.userId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
 app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
