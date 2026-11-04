@@ -8,6 +8,9 @@ const fetch = require('node-fetch');
 
 const app = express();
 app.use(express.json());
+
+// CRITICAL FIX: Serve static files from the root folder (Xanviaa)
+// This ensures /js, /css, and /pages are accessible
 app.use(express.static(path.join(__dirname, '../')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -111,7 +114,7 @@ pool.connect((err, client, release) => {
   }
 });
 
-// AUTHENTICATION & PROFILE
+// AUTHENTICATION
 app.post('/api/register', async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -146,18 +149,15 @@ app.post('/api/login', async (req, res) => {
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
     
-    // Safe check for fee
-    let hasPaidFee = false;
-    let hasPendingFee = false;
+    let hasPaidFee = false, hasPendingFee = false;
     try {
       const feeCheck = await pool.query(`SELECT id, status FROM transactions WHERE user_id = $1 AND type = 'FEE' ORDER BY created_at DESC LIMIT 1`, [user.id]);
       if (feeCheck.rows.length > 0) {
         if (feeCheck.rows[0].status === 'Approved') hasPaidFee = true;
         else hasPendingFee = true;
       }
-    } catch(e) { console.log("Fee check error:", e.message); }
+    } catch(e) { }
 
-    // Safe check for onboarding
     const isOnboarded = !!(user.age && user.address);
 
     user.has_bank = hasPaidFee;
@@ -168,6 +168,44 @@ app.post('/api/login', async (req, res) => {
     await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+// CRITICAL FIX: THE MISSING DASHBOARD ROUTE
+app.get('/api/dashboard/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // 1. Fetch Balances from Accounts table
+    const accRes = await pool.query('SELECT type, balance FROM accounts WHERE user_id = $1', [userId]);
+    const balances = { checking: 0, savings: 0, brokerage: 0, loan: 0 };
+    
+    accRes.rows.forEach(acc => {
+      if (acc.type === 'checking') balances.checking = parseFloat(acc.balance);
+      if (acc.type === 'savings') balances.savings = parseFloat(acc.balance);
+      if (acc.type === 'brokerage') balances.brokerage = parseFloat(acc.balance);
+      if (acc.type === 'loan') balances.loan = parseFloat(acc.balance);
+    });
+
+    // 2. Fetch Transactions for the Table
+    const txRes = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10', [userId]);
+    const transactions = txRes.rows.map(tx => ({
+      ...tx,
+      amount: parseFloat(tx.amount)
+    }));
+
+    // 3. Cashflow Chart Data (Simulated for now)
+    const cashflow = [20, 45, 30, 80, 50, 90, 60];
+
+    res.json({
+      balances,
+      transactions,
+      cashflow
+    });
+
+  } catch (err) { 
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load dashboard data.' }); 
+  }
 });
 
 app.get('/api/user/:userId', async (req, res) => {
