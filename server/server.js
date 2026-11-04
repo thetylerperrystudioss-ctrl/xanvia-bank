@@ -24,8 +24,21 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// MARKET DATA CACHE
-let marketCache = { crypto: [], stocks: [], lastUpdated: null };
+// --- BULLETPROOF MARKET DATA CACHE ---
+let marketCache = { 
+  crypto: [
+    { name: 'Bitcoin', ticker: 'BTC', price: 64230.50, change: 2.4, icon: '₿' },
+    { name: 'Ethereum', ticker: 'ETH', price: 3120.10, change: 1.8, icon: 'Ξ' },
+    { name: 'Solana', ticker: 'SOL', price: 145.20, change: -0.5, icon: 'S' },
+    { name: 'XRP', ticker: 'XRP', price: 0.52, change: 1.1, icon: 'X' }
+  ], 
+  stocks: [
+    { name: 'Apple Inc.', ticker: 'AAPL', price: 172.50, change: 0.5, icon: 'A' },
+    { name: 'NVIDIA Corp', ticker: 'NVDA', price: 890.20, change: 4.2, icon: 'N' },
+    { name: 'Tesla Inc.', ticker: 'TSLA', price: 175.30, change: -1.2, icon: 'T' }
+  ], 
+  lastUpdated: new Date() 
+};
 let isFetching = false;
 
 async function updateMarketData() {
@@ -33,20 +46,25 @@ async function updateMarketData() {
   isFetching = true;
   try {
     const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd&include_24hr_change=true');
+    if (!cryptoRes.ok) throw new Error("API Error");
     const cryptoData = await cryptoRes.json();
-    const cryptoList = [
-      { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin?.usd || 0, change: cryptoData.bitcoin?.usd_24h_change || 0, icon: '₿' },
-      { name: 'Ethereum', ticker: 'ETH', price: cryptoData.ethereum?.usd || 0, change: cryptoData.ethereum?.usd_24h_change || 0, icon: 'Ξ' },
-      { name: 'Solana', ticker: 'SOL', price: cryptoData.solana?.usd || 0, change: cryptoData.solana?.usd_24h_change || 0, icon: 'S' },
-      { name: 'XRP', ticker: 'XRP', price: cryptoData.ripple?.usd || 0, change: cryptoData.ripple?.usd_24h_change || 0, icon: 'X' }
-    ];
-    const stockList = [
-      { name: 'Apple Inc.', ticker: 'AAPL', price: 172.50, change: 0.5, icon: 'A' },
-      { name: 'NVIDIA Corp', ticker: 'NVDA', price: 890.20, change: 4.2, icon: 'N' },
-      { name: 'Tesla Inc.', ticker: 'TSLA', price: 175.30, change: -1.2, icon: 'T' }
-    ];
-    marketCache = { crypto: cryptoList, stocks: stockList, lastUpdated: new Date() };
-  } catch (err) { console.error('Market Data Error:', err.message); } finally { isFetching = false; }
+    
+    // Only update if we got valid data
+    if (cryptoData.bitcoin) {
+      marketCache.crypto = [
+        { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin.usd, change: cryptoData.bitcoin.usd_24h_change, icon: '₿' },
+        { name: 'Ethereum', ticker: 'ETH', price: cryptoData.ethereum.usd, change: cryptoData.ethereum.usd_24h_change, icon: 'Ξ' },
+        { name: 'Solana', ticker: 'SOL', price: cryptoData.solana.usd, change: cryptoData.solana.usd_24h_change, icon: 'S' },
+        { name: 'XRP', ticker: 'XRP', price: cryptoData.ripple.usd, change: cryptoData.ripple.usd_24h_change, icon: 'X' }
+      ];
+      marketCache.lastUpdated = new Date();
+      console.log('📈 Live Market Data Updated');
+    }
+  } catch (err) { 
+    console.warn('Market API Failed. Using cached data.');
+  } finally { 
+    isFetching = false; 
+  }
 }
 updateMarketData();
 setInterval(updateMarketData, 60000);
@@ -167,32 +185,7 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// DASHBOARD DATA
-app.get('/api/dashboard/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    
-    const accRes = await pool.query('SELECT type, balance FROM accounts WHERE user_id = $1', [userId]);
-    const balances = { checking: 0, savings: 0, brokerage: 0, loan: 0 };
-    
-    accRes.rows.forEach(acc => {
-      if (acc.type === 'checking') balances.checking = parseFloat(acc.balance);
-      if (acc.type === 'savings') balances.savings = parseFloat(acc.balance);
-      if (acc.type === 'brokerage') balances.brokerage = parseFloat(acc.balance);
-      if (acc.type === 'loan') balances.loan = parseFloat(acc.balance);
-    });
-
-    const txRes = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10', [userId]);
-    const transactions = txRes.rows.map(tx => ({
-      ...tx,
-      amount: parseFloat(tx.amount)
-    }));
-
-    const cashflow = [20, 45, 30, 80, 50, 90, 60];
-
-    res.json({ balances, transactions, cashflow });
-  } catch (err) { res.status(500).json({ error: 'Failed to load dashboard data.' }); }
-});
+app.get('/api/market', (req, res) => { res.json(marketCache); });
 
 app.get('/api/user/:userId', async (req, res) => {
   try {
@@ -201,17 +194,70 @@ app.get('/api/user/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
-  const { userId, name, username, phone } = req.body;
-  const profilePicPath = req.file ? `/uploads/${req.file.filename}` : null;
+app.get('/api/investments/:userId', async (req, res) => {
   try {
-    if (profilePicPath) {
-      await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3, profile_pic = $4 WHERE id = $5`, [name, username.toLowerCase(), phone, profilePicPath, userId]);
-    } else {
-      await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3 WHERE id = $4`, [name, username.toLowerCase(), phone, userId]);
-    }
-    res.json({ success: true, message: 'Profile updated!' });
-  } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
+    const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    const investments = result.rows.map(inv => {
+      let currentProfit = 0;
+      if (inv.status === 'Active' && inv.start_date && inv.maturity_date) {
+        const start = new Date(inv.start_date).getTime();
+        const maturity = new Date(inv.maturity_date).getTime();
+        const now = new Date().getTime();
+        const totalExpectedProfit = parseFloat(inv.amount) * 1.4; 
+        if (now >= maturity) currentProfit = totalExpectedProfit;
+        else if (now > start) {
+          const totalDuration = maturity - start;
+          const elapsed = now - start;
+          currentProfit = totalExpectedProfit * (elapsed / totalDuration);
+        }
+      } else if (inv.status === 'Completed') {
+         currentProfit = parseFloat(inv.profit) || 0;
+      }
+      return { ...inv, amount: parseFloat(inv.amount), profit: currentProfit.toFixed(2) };
+    });
+    res.json(investments);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/transactions/:userId', async (req, res) => {
+  try { 
+    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 }))); 
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/accounts/:userId', async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        COALESCE(SUM(CASE 
+          WHEN type IN ('DEPOSIT') THEN amount 
+          WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
+          WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
+          ELSE 0 
+        END), 0) AS checking_balance,
+        
+        COALESCE(SUM(CASE 
+          WHEN type = 'LOAN_APPLICATION' THEN amount 
+          WHEN type IN ('LOAN_REPAYMENT', 'LOAN_TRANSFER') THEN -amount
+          ELSE 0 
+        END), 0) AS loan_balance
+      FROM transactions WHERE user_id = $1 AND status = 'Approved';
+    `;
+    const result = await pool.query(query, [req.params.userId]);
+    res.json({ 
+      checking: parseFloat(result.rows[0].checking_balance) || 0,
+      loan: parseFloat(result.rows[0].loan_balance) || 0 
+    });
+  } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+app.get('/api/admin/settings', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM system_settings');
+    const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
+    res.json(settings);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 // ONBOARDING & STATUS
@@ -260,73 +306,6 @@ app.get('/api/user-status/:userId', async (req, res) => {
   }
 });
 
-// ACCOUNTS & TRANSACTIONS (FIXED)
-app.get('/api/accounts/:userId', async (req, res) => {
-  try {
-    const query = `
-      SELECT 
-        COALESCE(SUM(CASE 
-          WHEN type IN ('DEPOSIT') THEN amount 
-          WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
-          WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
-          ELSE 0 
-        END), 0) AS checking_balance,
-        
-        COALESCE(SUM(CASE 
-          WHEN type = 'LOAN_APPLICATION' THEN amount 
-          WHEN type IN ('LOAN_REPAYMENT', 'LOAN_TRANSFER') THEN -amount
-          ELSE 0 
-        END), 0) AS loan_balance
-      FROM transactions WHERE user_id = $1 AND status = 'Approved';
-    `;
-    const result = await pool.query(query, [req.params.userId]);
-    res.json({ 
-      checking: parseFloat(result.rows[0].checking_balance) || 0,
-      loan: parseFloat(result.rows[0].loan_balance) || 0 
-    });
-  } catch (err) { res.status(500).json({ error: 'Database error.' }); }
-});
-
-app.get('/api/transactions/:userId', async (req, res) => {
-  try { 
-    const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    const cleanRows = result.rows.map(row => ({
-      ...row,
-      amount: parseFloat(row.amount) || 0
-    }));
-    res.json(cleanRows); 
-  } catch (err) { 
-    console.error("Trans fetch error:", err);
-    res.status(500).json({ error: 'Failed to fetch transactions' }); 
-  }
-});
-
-app.get('/api/investments/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    const investments = result.rows.map(inv => {
-      let currentProfit = 0;
-      if (inv.status === 'Active' && inv.start_date && inv.maturity_date) {
-        const start = new Date(inv.start_date).getTime();
-        const maturity = new Date(inv.maturity_date).getTime();
-        const now = new Date().getTime();
-        const totalExpectedProfit = parseFloat(inv.amount) * 1.4; 
-        if (now >= maturity) currentProfit = totalExpectedProfit;
-        else if (now > start) {
-          const totalDuration = maturity - start;
-          const elapsed = now - start;
-          currentProfit = totalExpectedProfit * (elapsed / totalDuration);
-        }
-      } else if (inv.status === 'Completed') {
-         currentProfit = parseFloat(inv.profit) || 0;
-      }
-      return { ...inv, amount: parseFloat(inv.amount), profit: currentProfit.toFixed(2) };
-    });
-    res.json(investments);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-// LOANS, DEPOSITS & TRANSFERS
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
@@ -461,26 +440,6 @@ app.post('/api/chat/:complaintId/resolve', async (req, res) => {
 });
 
 // ADMIN ROUTES
-app.get('/api/admin/settings', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM system_settings');
-    const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
-    res.json(settings);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/admin/settings/update', async (req, res) => {
-  const { btc_address, bank_name, bank_account, bank_routing } = req.body;
-  try {
-    await pool.query(`
-      INSERT INTO system_settings (key, value) VALUES 
-      ('btc_address', $1), ('bank_name', $2), ('bank_account', $3), ('bank_routing', $4)
-      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
-    `, [btc_address, bank_name, bank_account, bank_routing]);
-    res.json({ success: true, message: 'Settings updated successfully.' });
-  } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
-});
-
 app.get('/api/admin/requests', async (req, res) => {
   try {
     const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);

@@ -38,8 +38,8 @@
     .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
     .action-btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 1rem; text-align: center; border: none; cursor: pointer; transition: 0.2s; }
     .action-btn:active { transform: scale(0.98); }
-    .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 10px rgba(15,138,95,0.3); }
-    .btn-withdraw { background: white; color: var(--deep-green); border: 1px solid var(--border); }
+    .btn-deposit { background: var(--emerald); color: white; box-shadow: :0 4px 10px rgba(15,138,95,0active.3); }
+    . {btn-withdraw { background transform: scale: white; color: var(--deep-green); border: 1px solid var(--border); }
 
     /* MARKETPLACE */
     .marketplace { padding: 0 20px 20px; }
@@ -51,7 +51,7 @@
 
     .asset-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
     .asset-card { background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-    .asset-card:active { transform: scale(0.99); }
+    .asset-card(0.99); }
     .asset-info { display: flex; align-items: center; gap: 12px; }
     .asset-icon { width: 40px; height: 40px; background: #F4F7F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--deep-green); font-size: 1.1rem; }
     .asset-name { font-weight: 700; font-size: 0.95rem; margin-bottom: 2px; }
@@ -173,11 +173,11 @@
           <option value="7">7 Days (Standard)</option>
           <option value="14">14 Days (Extended)</option>
           <option value="30">30 Days (Premium)</option>
-          <option value="60">60 Days (VIP)</option>
+          <:option value="60">60 Days (VIP)</option>
         </select>
       </div>
       <div class="form-group"><label>Amount to Withdraw ($)</label><input type="number" id="withdraw-amount" placeholder="0.00"></div>
-      <button onclick="submitWithdraw()" style="width:100%; padding:16px; background:var(--deep-green); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Confirm Request</button>
+      <button onclick="submitWithdraw()" style="width:100%; padding:16px; backgroundvar(--deep-green); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Confirm Request</button>
       <div id="withdraw-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -192,12 +192,13 @@
     let profitTickRate = 0;
     let liveMarketData = { crypto: [], stocks: [] };
 
-    // 1. FETCH LIVE MARKET DATA FROM SERVER
+    // 1. FETCH LIVE MARKET DATA
     async function fetchMarketData() {
       try {
         const res = await fetch('/api/market');
         liveMarketData = await res.json();
         
+        // Populate ticker
         const track = document.getElementById('ticker-track');
         if(liveMarketData.crypto && liveMarketData.crypto.length > 0) {
           const tickerHtml = liveMarketData.crypto.map(coin => `
@@ -206,11 +207,14 @@
           track.innerHTML = tickerHtml + tickerHtml;
         }
 
+        // Populate currently active tab
         const activeTab = document.querySelector('.tab-btn.active').innerText.toLowerCase();
         if (activeTab === 'crypto') switchTab('crypto', document.querySelector('.tab-btn.active'));
         if (activeTab === 'us stocks') switchTab('stocks', document.querySelector('.tab-btn.active'));
 
-      } catch (err) { console.log("Market data failed to load", err); }
+      } catch (err) { 
+        console.warn("Market API failed. Showing fallback.");
+      }
     }
 
     function switchTab(category, btn) {
@@ -242,59 +246,61 @@
       `).join('');
     }
 
-    // 2. FETCH USER PORTFOLIO
+    // 2. FETCH USER PORTFOLIO & HISTORY
     async function loadDashboardData() {
-      const setRes = await fetch('/api/admin/settings');
-      const settings = await setRes.json();
-      document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
-      document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
-      document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
-      document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
+      try {
+        const setRes = await fetch('/api/admin/settings');
+        const settings = await setRes.json();
+        document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
+        document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
+        document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
+        document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
 
-      const res = await fetch(`/api/investments/${user.id}`);
-      const data = await res.json();
+        const res = await fetch(`/api/investments/${user.id}`);
+        const data = await res.json();
 
-      liveCapital = 0;
-      let baseProfit = 0;
-      profitTickRate = 0;
+        liveCapital = 0;
+        let baseProfit = 0;
+        profitTickRate = 0;
 
-      // Loop through approved investments
-      data.forEach(inv => {
-        if (inv.status === 'Active') {
-          liveCapital += parseFloat(inv.amount);
-          baseProfit += parseFloat(inv.profit);
+        data.forEach(inv => {
+          if (inv.status === 'Active') {
+            liveCapital += parseFloat(inv.amount);
+            baseProfit += parseFloat(inv.profit);
 
-          if (inv.start_date && inv.maturity_date) {
-            const totalDurationSeconds = (new Date(inv.maturity_date) - new Date(inv.start_date)) / 1000;
-            const totalExpectedProfit = parseFloat(inv.amount) * 1.4;
-            const profitPerSecond = totalExpectedProfit / totalDurationSeconds;
-            if (new Date() < new Date(inv.maturity_date)) {
-              profitTickRate += profitPerSecond;
+            if (inv.start_date && inv.maturity_date) {
+              const totalDurationSeconds = (new Date(inv.maturity_date) - new Date(inv.start_date)) / 1000;
+              const totalExpectedProfit = parseFloat(inv.amount) * 1.4;
+              const profitPerSecond = totalExpectedProfit / totalDurationSeconds;
+              if (new Date() < new Date(inv.maturity_date)) {
+                profitTickRate += profitPerSecond;
+              }
             }
           }
-        }
-      });
+        });
 
-      liveProfit = baseProfit;
-      updateUI();
+        liveProfit = baseProfit;
+        updateUI();
 
-      // Fetch History
-      const txRes = await fetch(`/api/transactions/${user.id}`);
-      const txs = await txRes.json();
-      const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
+        const txRes = await fetch(`/api/transactions/${user.id}`);
+        const txs = await txRes.json();
+        const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
 
-      document.getElementById('history-list').innerHTML = investTxs.length > 0 ? investTxs.map(tx => `
-        <div class="tx-item">
-          <div class="tx-info">
-            <h4>${tx.type.replace(/_/g, ' ')}</h4>
-            <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+        document.getElementById('history-list').innerHTML = investTxs.length > 0 ? investTxs.map(tx => `
+          <div class="tx-item">
+            <div class="tx-info">
+              <h4>${tx.type.replace(/_/g, ' ')}</h4>
+              <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+            </div>
+            <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : (tx.status === 'Rejected' ? 'var(--danger)' : '#F59E0B')}">
+              ${formatUSD(tx.amount)}
+              <div style="font-size:0.7rem; color:var(--muted); font-family: var(--font-main);">${tx.status}</div>
+            </div>
           </div>
-          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : (tx.status === 'Rejected' ? 'var(--danger)' : '#F59E0B')}">
-            ${formatUSD(tx.amount)}
-            <div style="font-size:0.7rem; color:var(--muted); font-family: var(--font-main);">${tx.status}</div>
-          </div>
-        </div>
-      `).join('') : '<p style="color: var(--muted); font-size: 0.9rem;">No investment history.</p>';
+        `).join('') : '<p style="color: var(--muted); font-size: 0.9rem;">No investment history.</p>';
+      } catch(err) {
+        console.error(err);
+      }
     }
 
     function updateUI() {
