@@ -18,11 +18,14 @@
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
 
-    .form-group { margin-bottom: 20px; }
+    .form-group { margin-bottom: 20px; position: relative; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
     .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     
+    /* Forgot password link */
+    .forgot-link { display: block; text-align: right; font-size: 0.8rem; color: var(--emerald); font-weight: 600; text-decoration: none; margin-top: -10px; margin-bottom: 20px; }
+
     .btn-primary { 
       width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
       cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-user-select: none; touch-action: manipulation; 
@@ -76,6 +79,10 @@
         <label>Password</label>
         <input type="password" id="user-password" placeholder="Enter password">
       </div>
+      
+      <!-- NEW: FORGOT PASSWORD LINK -->
+      <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
+
       <button class="btn-primary" onclick="userLogin()" style="position: static;">Sign In</button>
       <div class="footer-link">
         Don't have an account? <a href="register.html">Register</a>

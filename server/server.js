@@ -5,6 +5,7 @@ const path = require('path');
 const multer = require('multer');
 const fs = require('fs');
 const fetch = require('node-fetch');
+const nodemailer = require('nodemailer'); // ADDED NODEMAILER
 
 const app = express();
 app.use(express.json());
@@ -24,7 +25,20 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// ==========================================
+// NODEMAILER SETUP
+// ==========================================
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'YOUR_GMAIL@gmail.com', // <-- PUT YOUR GMAIL HERE
+    pass: 'YOUR_16_CHAR_APP_PASSWORD' // <-- PUT YOUR APP PASSWORD HERE
+  }
+});
+
+// ==========================================
 // MARKET DATA CACHE
+// ==========================================
 let marketCache = { 
   crypto: [
     { name: 'Bitcoin', ticker: 'BTC', price: 64230.50, change: 2.4, icon: '₿' },
@@ -63,7 +77,9 @@ async function updateMarketData() {
 updateMarketData();
 setInterval(updateMarketData, 60000);
 
+// ==========================================
 // DATABASE SETUP
+// ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
   else {
@@ -123,7 +139,9 @@ pool.connect((err, client, release) => {
   }
 });
 
+// ==========================================
 // AUTHENTICATION
+// ==========================================
 app.post('/api/register', async (req, res) => {
   try {
     const { name, email, password, phone } = req.body;
@@ -169,22 +187,56 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// FORGOT PASSWORD ROUTE
+// ==========================================
+// FORGOT PASSWORD (WITH EMAIL)
+// ==========================================
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
-    const result = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
+    const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email.toLowerCase()]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Email not found.' });
 
+    const user = result.rows[0];
     const tempPassword = "Reset" + Math.floor(1000 + Math.random() * 9000);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
     
     await pool.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email.toLowerCase()]);
 
-    res.json({ success: true, message: `Password reset successful! Your temporary password is: ${tempPassword}` });
-  } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+    const mailOptions = {
+      from: '"Xanvia Support" <YOUR_GMAIL@gmail.com>', // <-- PUT YOUR GMAIL HERE
+      to: email,
+      subject: 'Xanvia Password Reset',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1A1A1A;">
+          <h2 style="color: #0F8A5F;">Hello ${user.name},</h2>
+          <p>We received a request to reset your password.</p>
+          <p>Your temporary password is:</p>
+          <h1 style="background: #F4F7F6; padding: 10px; display: inline-block; border-radius: 8px; font-family: monospace;">${tempPassword}</h1>
+          <p>Please log in and change your password immediately.</p>
+          <br>
+          <p style="color: #6B7280; font-size: 12px;">If you did not request this, please contact support immediately.</p>
+        </div>
+      `
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log('Email Error:', error);
+        return res.json({ success: true, message: `Password reset. (Email failed). Your temp password is: ${tempPassword}` });
+      } else {
+        return res.json({ success: true, message: `Password reset successful! Check your email for the new password.` });
+      }
+    });
+
+  } catch (err) { 
+    console.error(err);
+    res.status(500).json({ error: 'Database error.' }); 
+  }
 });
 
+// ==========================================
+// USER & MARKET
+// ==========================================
 app.get('/api/market', (req, res) => { res.json(marketCache); });
 
 app.get('/api/user/:userId', async (req, res) => {
@@ -207,7 +259,9 @@ app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
 });
 
+// ==========================================
 // INVESTMENTS
+// ==========================================
 app.get('/api/investments/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -234,7 +288,9 @@ app.get('/api/investments/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+// ==========================================
 // TRANSACTIONS & ACCOUNTS
+// ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try { 
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -276,7 +332,6 @@ app.get('/api/admin/settings', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// ADMIN SETTINGS SAVE
 app.post('/api/admin/settings/update', async (req, res) => {
   const { bank_name, bank_account, bank_routing, btc_address } = req.body;
   try {
@@ -289,7 +344,9 @@ app.post('/api/admin/settings/update', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
 });
 
+// ==========================================
 // ONBOARDING & STATUS
+// ==========================================
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
@@ -317,7 +374,9 @@ app.get('/api/user-status/:userId', async (req, res) => {
   } catch (err) { res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); }
 });
 
+// ==========================================
 // LOANS, DEPOSITS & TRANSFERS
+// ==========================================
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
@@ -394,7 +453,9 @@ app.post('/api/investments/withdraw', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
+// ==========================================
 // NOTIFICATIONS & CHAT
+// ==========================================
 app.get('/api/notifications/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -451,7 +512,9 @@ app.post('/api/chat/:complaintId/resolve', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
+// ==========================================
 // ADMIN ROUTES
+// ==========================================
 app.get('/api/admin/requests', async (req, res) => {
   try {
     const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
