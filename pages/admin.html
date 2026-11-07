@@ -10,24 +10,22 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
     
-    /* DASHBOARD IS HIDDEN BY DEFAULT */
-    #dashboard-area { display: none; width: 100%; max-width: 600px; padding: 20px; padding-bottom: 80px; }
+    .app-container { width: 100%; max-width: 600px; padding: 20px; padding-bottom: 80px; }
+    #dashboard-area { display: none; }
     
-    /* LOGIN OVERLAY */
     #login-overlay { position: fixed; inset: 0; background: var(--deep-green); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-    .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-    .login-box h2 { color: var(--deep-green); margin-bottom: 20px; font-size: 1.5rem; }
-    .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; }
-    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; }
+    .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; }
+    .login-box h2 { color: var(--deep-green); margin-bottom: 10px; }
+    .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; }
+    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; }
 
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
-    .tabs::-webkit-scrollbar { display: none; }
-    .tab { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; font-size: 0.85rem; transition: 0.2s; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
+    .tab { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .tab.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
     .view-section { display: none; }
     .view-section.active { display: block; }
-    .panel { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .panel { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
     
     .req-item { display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: #FAFAFA; }
     .proof-img { width: 100%; max-width: 200px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; display: block; }
@@ -61,16 +59,16 @@
 
   <div id="login-overlay">
     <div class="login-box">
-      <h2>Admin Access</h2>
+      <h2 style="color:var(--deep-green); margin-bottom:10px;">Admin Access</h2>
       <input type="password" id="admin-pass" maxlength="4" placeholder="••••">
       <button onclick="verifyPasscode()">Unlock</button>
     </div>
   </div>
 
-  <div id="dashboard-area">
+  <div id="dashboard-area" class="app-container">
     <div class="header">
       <h1>Admin Panel</h1>
-      <button onclick="window.location.replace('../index.html')" style="background:none; border:none; font-weight:600; color:var(--emerald); cursor:pointer;">Exit</button>
+      <button onclick="window.location.replace('../index.html')" style="background:none; border:none; font-weight:600; color:var(--emerald);">Exit</button>
     </div>
 
     <div class="tabs">
@@ -129,13 +127,12 @@
   </div>
 
   <script>
-    // Force unlock on correct password
     function verifyPasscode() {
       if (document.getElementById('admin-pass').value === "@@@@") {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('dashboard-area').style.display = 'block';
         loadRequests();
-      } else { alert("Access Denied. Incorrect Passcode."); }
+      } else { alert("Access Denied"); }
     }
 
     function switchTab(tabName) {
@@ -279,7 +276,12 @@
     async function saveSettings() {
       const msg = document.getElementById('settings-msg');
       msg.textContent = "Saving..."; msg.style.color = "var(--muted)";
-      const payload = { bank_name: document.getElementById('set-bank-name').value, bank_account: document.getElementById('set-bank-account').value, bank_routing: document.getElementById('set-bank-routing').value, btc_address: document.getElementById('set-btc').value };
+      const payload = { 
+        bank_name: document.getElementById('set-bank-name').value, 
+        bank_account: document.getElementById('set-bank-account').value, 
+        bank_routing: document.getElementById('set-bank-routing').value, 
+        btc_address: document.getElementById('set-btc').value 
+      };
       const res = await fetch('/api/admin/settings/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const result = await res.json();
       if (result.success) { msg.textContent = "✅ Settings updated!"; msg.style.color = "var(--emerald)"; } 
