@@ -10,7 +10,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); display: flex; justify-content: center; }
     .app-container { width: 100%; max-width: 600px; background: var(--bg); min-height: 100vh; padding: 20px; padding-bottom: 50px; }
-    
+
     .header { display: flex; align-items: center; margin-bottom: 25px; }
     .back-btn { text-decoration: none; font-size: 1.5rem; color: var(--deep-green); margin-right: 15px; }
     .header h1 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
@@ -26,27 +26,38 @@
     .detail-label { color: var(--muted); font-weight: 500; }
     .detail-value { font-weight: 700; color: var(--deep-green); word-break: break-all; text-align: right; }
 
+    /* CUSTOM COPY BOX */
+    .copy-box { display: flex; align-items: center; justify-content: space-between; background: #ffffff; border: 1px solid #ddd; padding: 10px 12px; border-radius: 8px; margin-top: 5px; }
+    .copy-box span { font-size: 0.85rem; font-family: monospace; color: var(--text); word-break: break-all; padding-right: 10px; }
+    .copy-btn { background: var(--emerald); color: white; border: none; padding: 6px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
+    .copy-btn:active { transform: scale(0.95); }
+    .copy-btn svg { width: 14px; height: 14px; fill: white; }
+
+    /* TOAST NOTIFICATION */
+    .toast { visibility: hidden; min-width: 250px; background-color: var(--deep-green); color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 0.9rem; font-weight: 600; opacity: 0; transition: opacity 0.3s, bottom 0.3s; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+    .toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
     .form-group input[type="number"], .form-group input[type="text"] { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
-    
+
     .file-upload { border: 2px dashed #ccc; border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; margin-bottom: 20px; }
     .file-upload:hover { border-color: var(--emerald); background: #FAFAFA; }
     .file-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .file-upload p { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--text); }
     .file-upload span { font-size: 0.8rem; color: var(--muted); }
+    .file-upload.has-file { border-color: var(--emerald); background: #E6F4EE; }
 
     .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
     .btn-primary:active { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
 
     #msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
-    #msg.error { background: #FEE2E2; color: #991B1B; }
-    #msg.success { background: #D1FAE5; color: #065F46; }
+    #msg.error { display: block; background: #FEE2E2; color: #991B1B; }
+    #msg.success { display: block; background: #D1FAE5; color: #065F46; }
   </style>
 </head>
 <body>
-
   <div class="app-container">
     <div class="header">
       <a href="dashboard.html" class="back-btn">←</a>
@@ -55,110 +66,165 @@
 
     <div id="msg"></div>
 
-    <!-- STEP 1: ADMIN DETAILS -->
+    <!-- STEP 1: Send payment to admin -->
     <div class="card">
-      <div class="step-title"><span class="step-num">1</span> Send the Funds</div>
-      <p>Transfer your desired amount to the official Xanvia Bank deposit account below.</p>
-      
-      <div class="admin-details">
+      <div class="step-title"><span class="step-num">1</span> Send Your Payment</div>
+      <p>Transfer your deposit to the account below. Make sure to save your transaction reference or screenshot as proof.</p>
+
+      <div class="admin-details" id="admin-details">
         <div class="detail-row">
           <span class="detail-label">Bank Name</span>
-          <span class="detail-value" id="adm-bank-name">Loading...</span>
+          <span class="detail-value" id="adm-bank">Loading...</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Account Number</span>
-          <span class="detail-value" id="adm-bank-acc">Loading...</span>
+          <span class="detail-value" id="adm-acc">Loading...</span>
         </div>
         <div class="detail-row">
           <span class="detail-label">Routing Number</span>
-          <span class="detail-value" id="adm-bank-rout">Loading...</span>
+          <span class="detail-value" id="adm-rout">Loading...</span>
         </div>
-        <div class="detail-row" style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
-          <span class="detail-label">Bitcoin Address</span>
-          <span class="detail-value" id="adm-btc">Loading...</span>
+        <div class="detail-row" style="display:block;">
+          <span class="detail-label" style="display:block; margin-bottom:6px;">Bitcoin (BTC) Address</span>
+          <div class="copy-box">
+            <span id="adm-btc">Loading...</span>
+            <button class="copy-btn" onclick="copyText('adm-btc')" type="button">
+              <svg viewBox="0 0 24 24"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
+              Copy
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- STEP 2: UPLOAD RECEIPT -->
+    <!-- STEP 2: Submit proof -->
     <div class="card">
-      <div class="step-title"><span class="step-num">2</span> Upload Receipt</div>
-      <p>Enter the exact amount you sent and upload a screenshot of your receipt.</p>
+      <div class="step-title"><span class="step-num">2</span> Submit Proof of Payment</div>
+      <p>Enter the amount you sent and upload a screenshot of your payment receipt.</p>
 
-      <div class="form-group">
-        <label>Amount Sent ($)</label>
-        <input type="number" id="amount-input" placeholder="0.00">
-      </div>
+      <form id="deposit-form">
+        <div class="form-group">
+          <label>Amount Sent ($)</label>
+          <input type="number" id="amount" placeholder="0.00" min="1" step="0.01" required>
+        </div>
 
-      <div class="form-group">
-        <label>Payment Reference (Optional)</label>
-        <input type="text" id="ref-input" placeholder="e.g. BTC TXID">
-      </div>
+        <div class="form-group">
+          <label>Payment Reference / Transaction ID</label>
+          <input type="text" id="reference" placeholder="e.g. BTC TXID or bank reference" required>
+        </div>
 
-      <div class="file-upload">
-        <input type="file" id="deposit-file" accept="image/*">
-        <p id="file-text">Tap to upload screenshot</p>
-        <span>PNG, JPG up to 5MB</span>
-      </div>
+        <div class="file-upload" id="file-upload-box">
+          <input type="file" id="screenshot" accept="image/*" required>
+          <p id="file-label">Tap to upload receipt</p>
+          <span id="file-name">PNG or JPG</span>
+        </div>
 
-      <button class="btn-primary" id="submit-btn" onclick="submitDeposit()">I Have Sent It</button>
+        <button type="submit" class="btn-primary" id="submit-btn">Submit Deposit</button>
+      </form>
     </div>
   </div>
+
+  <div class="toast" id="toast">Copied!</div>
 
   <script>
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
 
-    const fileInput = document.getElementById('deposit-file');
-    const fileText = document.getElementById('file-text');
+    // Pre-select target account from URL (?target=checking)
+    const urlParams = new URLSearchParams(window.location.search);
+    const targetAccount = urlParams.get('target') || 'checking';
 
-    fileInput.addEventListener('change', function() {
-      if (this.files && this.files[0]) {
-        fileText.textContent = this.files[0].name;
-        fileText.style.color = "var(--emerald)";
-      }
-    });
-
+    // --- Fetch admin payment details ---
     async function loadAdminDetails() {
       try {
         const res = await fetch('/api/admin/settings');
-        if (!res.ok) throw new Error("Server error");
         const data = await res.json();
-        document.getElementById('adm-bank-name').textContent = data.bank_name || 'Chase Bank';
-        document.getElementById('adm-bank-acc').textContent = data.bank_account || '123456789';
-        document.getElementById('adm-bank-rout').textContent = data.bank_routing || '021000021';
+        document.getElementById('adm-bank').textContent = data.bank_name || 'Chase Bank';
+        document.getElementById('adm-acc').textContent = data.bank_account || '123456789';
+        document.getElementById('adm-rout').textContent = data.bank_routing || '021000021';
         document.getElementById('adm-btc').textContent = data.btc_address || 'bc1q...xanvia';
       } catch (err) {
-        document.getElementById('adm-bank-name').textContent = 'Chase Bank';
-        document.getElementById('adm-bank-acc').textContent = '123456789';
-        document.getElementById('adm-bank-rout').textContent = '021000021';
-        document.getElementById('adm-btc').textContent = 'bc1q...xanvia';
+        document.getElementById('adm-bank').textContent = 'Unavailable';
+        document.getElementById('adm-acc').textContent = 'Unavailable';
+        document.getElementById('adm-rout').textContent = 'Unavailable';
+        document.getElementById('adm-btc').textContent = 'Unavailable';
       }
     }
 
-    async function submitDeposit() {
-      const btn = document.getElementById('submit-btn');
+    // --- Copy to clipboard ---
+    function copyText(elementId) {
+      const text = document.getElementById(elementId).textContent;
+      const showToast = () => {
+        const t = document.getElementById('toast');
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 1800);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(showToast).catch(showToast);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+        showToast();
+      }
+    }
+
+    // --- File upload preview ---
+    const fileInput = document.getElementById('screenshot');
+    const fileBox = document.getElementById('file-upload-box');
+    const fileLabel = document.getElementById('file-label');
+    const fileName = document.getElementById('file-name');
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileBox.classList.add('has-file');
+        fileLabel.textContent = 'Receipt selected ✓';
+        fileName.textContent = fileInput.files[0].name;
+      } else {
+        fileBox.classList.remove('has-file');
+        fileLabel.textContent = 'Tap to upload receipt';
+        fileName.textContent = 'PNG or JPG';
+      }
+    });
+
+    // --- Submit ---
+    document.getElementById('deposit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
       const msg = document.getElementById('msg');
-      const amount = document.getElementById('amount-input').value;
-      const ref = document.getElementById('ref-input').value;
+      const btn = document.getElementById('submit-btn');
+
+      const amount = parseFloat(document.getElementById('amount').value);
+      const reference = document.getElementById('reference').value.trim();
       const file = fileInput.files[0];
 
-      if (!amount || isNaN(amount) || amount <= 0) {
-        msg.className = "error"; msg.textContent = "Please enter a valid amount."; msg.style.display = "block"; return;
+      if (!amount || amount <= 0) {
+        msg.className = 'error';
+        msg.textContent = 'Please enter a valid amount.';
+        return;
+      }
+      if (!reference) {
+        msg.className = 'error';
+        msg.textContent = 'Please enter your payment reference.';
+        return;
       }
       if (!file) {
-        msg.className = "error"; msg.textContent = "Please upload a screenshot of your receipt."; msg.style.display = "block"; return;
+        msg.className = 'error';
+        msg.textContent = 'Please upload a receipt screenshot.';
+        return;
       }
 
-      btn.textContent = "Sending...";
+      btn.textContent = 'Uploading...';
       btn.disabled = true;
-      msg.style.display = "none";
+      msg.className = '';
 
       const formData = new FormData();
       formData.append('userId', user.id);
       formData.append('amount', amount);
-      formData.append('reference', ref || 'Standard Deposit');
-      formData.append('targetAccount', 'checking');
+      formData.append('targetAccount', targetAccount);
+      formData.append('reference', reference);
       formData.append('screenshot', file);
 
       try {
@@ -166,20 +232,27 @@
         const data = await res.json();
 
         if (data.success) {
-          msg.className = "success"; 
-          msg.textContent = "Payment processing. Please wait for Admin approval."; 
-          msg.style.display = "block";
-          btn.textContent = "Processing...";
-          setTimeout(() => { window.location.href = "dashboard.html"; }, 2500);
+          msg.className = 'success';
+          msg.textContent = 'Deposit submitted! Awaiting admin approval.';
+          document.getElementById('deposit-form').reset();
+          fileBox.classList.remove('has-file');
+          fileLabel.textContent = 'Tap to upload receipt';
+          fileName.textContent = 'PNG or JPG';
+          btn.textContent = 'Submitted ✓';
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 2200);
         } else {
-          msg.className = "error"; msg.textContent = data.error || "Failed to submit."; msg.style.display = "block";
-          btn.textContent = "I Have Sent It"; btn.disabled = false;
+          msg.className = 'error';
+          msg.textContent = data.error || 'Deposit failed. Try again.';
+          btn.textContent = 'Submit Deposit';
+          btn.disabled = false;
         }
       } catch (err) {
-        msg.className = "error"; msg.textContent = "Network error. Try again."; msg.style.display = "block";
-        btn.textContent = "I Have Sent It"; btn.disabled = false;
+        msg.className = 'error';
+        msg.textContent = 'Server error. Please try again.';
+        btn.textContent = 'Submit Deposit';
+        btn.disabled = false;
       }
-    }
+    });
 
     loadAdminDetails();
   </script>
