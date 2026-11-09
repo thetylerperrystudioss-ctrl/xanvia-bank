@@ -67,10 +67,17 @@
     .profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: #eee; margin: 0 auto 10px; display: block; border: 3px solid var(--emerald); }
     .profile-name { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); }
     .profile-username { font-size: 0.85rem; color: var(--muted); margin-bottom: 15px; }
+    
     .account-card { background: #F4F7F6; border: 1px dashed var(--emerald); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
     .acc-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--muted); }
     .acc-number { font-size: 1.4rem; font-weight: 800; color: var(--deep-green); letter-spacing: 1px; }
-    .acc-routing { font-size: 0.8rem; color: var(--muted); margin-top: 5px; }
+    .acc-routing { font-size: 0.8rem; color: var(--muted); }
+    
+    /* COPY BUTTON STYLES */
+    .copy-btn { background: transparent; border: none; cursor: pointer; font-size: 1rem; opacity: 0.6; transition: 0.2s; padding: 0; }
+    .copy-btn:hover { opacity: 1; transform: scale(1.1); }
+    .copy-btn:active { transform: scale(0.9); }
+
     .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
     .info-row span:first-child { color: var(--muted); font-weight: 600; }
     .info-row span:last-child { font-weight: 700; color: var(--text); word-break: break-all; text-align: right; max-width: 60%; }
@@ -112,11 +119,20 @@
       <div class="profile-name" id="prof-name">Loading...</div>
       <div class="profile-username" id="prof-user">@loading</div>
     </div>
+    
     <div class="account-card">
       <div class="acc-label">Account Number</div>
-      <div class="acc-number" id="prof-acc-num">Loading...</div>
-      <div class="acc-routing">Routing: <span id="prof-rout-num">Loading...</span></div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+        <div class="acc-number" id="prof-acc-num">Loading...</div>
+        <button class="copy-btn" onclick="copyToClipboard('prof-acc-num', 'Account Number copied!')" title="Copy Account Number">📋</button>
+      </div>
+      
+      <div class="acc-routing" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px;">
+        Routing: <span id="prof-rout-num">Loading...</span>
+        <button class="copy-btn" onclick="copyToClipboard('prof-rout-num', 'Routing Number copied!')" title="Copy Routing Number">📋</button>
+      </div>
     </div>
+
     <div class="info-row"><span>Phone</span> <span id="prof-phone">Loading...</span></div>
     <div class="info-row"><span>Email</span> <span id="prof-email">Loading...</span></div>
     <button class="edit-profile-btn" onclick="openEditModal()">Edit Profile</button>
@@ -265,7 +281,13 @@
         document.getElementById('prof-rout-num').textContent = data.routing_number || 'Generating...';
         document.getElementById('prof-phone').textContent = data.phone || 'Not provided';
         document.getElementById('prof-email').textContent = data.email || 'N/A';
-        if(data.profile_pic) document.getElementById('prof-pic-img').src = data.profile_pic;
+        
+        if(data.profile_pic) {
+          document.getElementById('prof-pic-img').src = data.profile_pic;
+        } else {
+          // Fallback if no profile picture (shows initials)
+          document.getElementById('prof-pic-img').src = `https://ui-avatars.com/api/?name=${data.name || 'User'}&background=0F8A5F&color=fff&size=150`;
+        }
       } catch (err) { console.error("Sidebar error:", err); }
     }
 
@@ -297,6 +319,53 @@
         document.getElementById('edit-modal').classList.remove('open');
         fetchUserData();
       } else { alert(data.error); }
+    }
+
+    // --- COPY TO CLIPBOARD LOGIC ---
+    function copyToClipboard(elementId, successMessage) {
+      const textToCopy = document.getElementById(elementId).textContent;
+      
+      if (textToCopy === 'Loading...' || textToCopy === 'Generating...') return;
+
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          showToast(successMessage);
+        }).catch(err => {
+          console.error('Failed to copy: ', err);
+        });
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        textArea.style.position = "absolute";
+        textArea.style.left = "-999999px";
+        document.body.prepend(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showToast(successMessage);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          textArea.remove();
+        }
+      }
+    }
+
+    function showToast(message) {
+      let toast = document.getElementById("toast-notification");
+      if (!toast) {
+        toast = document.createElement("div");
+        toast.id = "toast-notification";
+        toast.style.cssText = "position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--emerald); color:white; padding:12px 24px; border-radius:8px; font-weight:600; font-size:0.9rem; z-index:9999; opacity:0; transition:opacity 0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.15);";
+        document.body.appendChild(toast);
+      }
+      
+      toast.textContent = message;
+      toast.style.opacity = "1";
+      
+      setTimeout(() => {
+        toast.style.opacity = "0";
+      }, 2500);
     }
 
     // --- NOTIFICATIONS LOGIC ---
