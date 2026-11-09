@@ -1,6 +1,7 @@
 {
   "name": "xanvia-bank",
   "version": "1.0.0",
+  "description": "Xanvia Credit Union Core Banking Application",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js"
@@ -10,6 +11,10 @@
     "express": "^4.18.2",
     "multer": "^1.4.5-lts.1",
     "node-fetch": "^2.7.0",
+    "nodemailer": "^6.9.7",
     "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
