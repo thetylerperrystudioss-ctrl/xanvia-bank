@@ -9,10 +9,10 @@
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
-    
+
     .app-container { width: 100%; max-width: 600px; padding: 20px; padding-bottom: 80px; }
     #dashboard-area { display: none; }
-    
+
     #login-overlay { position: fixed; inset: 0; background: var(--deep-green); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; }
     .login-box h2 { color: var(--deep-green); margin-bottom: 10px; }
@@ -26,7 +26,7 @@
     .view-section { display: none; }
     .view-section.active { display: block; }
     .panel { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); }
-    
+
     .req-item { display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 10px; background: #FAFAFA; }
     .proof-img { width: 100%; max-width: 200px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; display: block; }
     .btn-approve { background: var(--emerald); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1; }
@@ -75,6 +75,7 @@
       <div class="tab active" id="tab-requests" onclick="switchTab('requests')">Requests</div>
       <div class="tab" id="tab-users" onclick="switchTab('users')">Users</div>
       <div class="tab" id="tab-complaints" onclick="switchTab('complaints')">Complaints</div>
+      <div class="tab" id="tab-cards" onclick="switchTab('cards')">Cards</div>
       <div class="tab" id="tab-notify" onclick="switchTab('notify')">Broadcast</div>
       <div class="tab" id="tab-settings" onclick="switchTab('settings')">Settings</div>
     </div>
@@ -95,6 +96,10 @@
 
     <div id="view-complaints" class="view-section">
       <div class="panel"><h2 style="margin-bottom:15px;">Support Tickets</h2><div id="complaint-list"></div></div>
+    </div>
+
+    <div id="view-cards" class="view-section">
+      <div class="panel"><h2 style="margin-bottom:15px;">Card Requests</h2><div id="card-list"></div></div>
     </div>
 
     <div id="view-notify" class="view-section">
@@ -144,6 +149,7 @@
       if (tabName === 'requests') loadRequests();
       if (tabName === 'users') loadUsers();
       if (tabName === 'complaints') loadComplaints();
+      if (tabName === 'cards') loadAdminCards();
       if (tabName === 'notify') loadNotifyDropdown();
       if (tabName === 'settings') loadSettings();
     }
@@ -154,6 +160,7 @@
         <div class="req-item">
           <h4>${tx.name} (${tx.email})</h4>
           <p>Type: ${tx.type.replace(/_/g, ' ')} | Amount: $${parseFloat(tx.amount).toFixed(2)}</p>
+          ${tx.reference ? `<p>Reference: <strong>${tx.reference}</strong></p>` : ''}
           ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" class="proof-img"></a>` : ''}
           <div style="display: flex; gap: 10px; margin-top: 15px;">
             <button class="btn-approve" onclick="approveReq(${tx.id}, 'approve')">Approve</button>
@@ -218,7 +225,7 @@
       if (!message) { msg.textContent = "Enter a message."; msg.style.color = "var(--danger)"; return; }
       msg.textContent = "Sending..."; msg.style.color = "var(--muted)";
       const res = await fetch('/api/admin/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target, message }) });
-      if (res.ok) { msg.textContent = "✅ Notification sent!"; msg.style.color = "var(--emerald)"; document.getElementById('notify-message').value = ''; } 
+      if (res.ok) { msg.textContent = "✅ Notification sent!"; msg.style.color = "var(--emerald)"; document.getElementById('notify-message').value = ''; }
       else { msg.textContent = "❌ Failed to send."; msg.style.color = "var(--danger)"; }
       setTimeout(() => msg.textContent = "", 3000);
     }
@@ -262,7 +269,34 @@
       input.value = "";
       await fetch(`/api/admin/chat/${complaintId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
       loadAdminChat(complaintId);
-      setTimeout(loadComplaints, 500); 
+      setTimeout(loadComplaints, 500);
+    }
+
+    // ==========================================
+    // ADMIN — CARDS
+    // ==========================================
+    async function loadAdminCards() {
+      const cards = await (await fetch('/api/admin/cards')).json();
+      document.getElementById('card-list').innerHTML = cards.length > 0 ? cards.map(c => `
+        <div class="req-item">
+          <h4>${c.name} (${c.email})</h4>
+          <p>Type: <strong>${c.card_type}</strong> • Last4: **** ${c.last4 || '0000'}</p>
+          <p>Status: <strong style="color:${c.status === 'Active' ? '#0F8A5F' : c.status === 'Rejected' ? '#EF4444' : '#F59E0B'}">${c.status}</strong></p>
+          <div style="display: flex; gap: 10px; margin-top: 15px;">
+            <button class="btn-approve" onclick="setCardStatus(${c.id}, 'Active')">Activate</button>
+            <button class="btn-reject" onclick="setCardStatus(${c.id}, 'Rejected')">Reject</button>
+          </div>
+        </div>
+      `).join('') : '<p style="color:var(--muted);">No card requests.</p>';
+    }
+
+    async function setCardStatus(id, status) {
+      await fetch(`/api/admin/cards/${id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      });
+      loadAdminCards();
     }
 
     async function loadSettings() {
@@ -276,15 +310,15 @@
     async function saveSettings() {
       const msg = document.getElementById('settings-msg');
       msg.textContent = "Saving..."; msg.style.color = "var(--muted)";
-      const payload = { 
-        bank_name: document.getElementById('set-bank-name').value, 
-        bank_account: document.getElementById('set-bank-account').value, 
-        bank_routing: document.getElementById('set-bank-routing').value, 
-        btc_address: document.getElementById('set-btc').value 
+      const payload = {
+        bank_name: document.getElementById('set-bank-name').value,
+        bank_account: document.getElementById('set-bank-account').value,
+        bank_routing: document.getElementById('set-bank-routing').value,
+        btc_address: document.getElementById('set-btc').value
       };
       const res = await fetch('/api/admin/settings/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const result = await res.json();
-      if (result.success) { msg.textContent = "✅ Settings updated!"; msg.style.color = "var(--emerald)"; } 
+      if (result.success) { msg.textContent = "✅ Settings updated!"; msg.style.color = "var(--emerald)"; }
       else { msg.textContent = "❌ Failed to update."; msg.style.color = "var(--danger)"; }
       setTimeout(() => msg.textContent = "", 3000);
     }

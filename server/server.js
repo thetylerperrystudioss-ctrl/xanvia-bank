@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const { Pool } = require('pg');
 const bcrypt = require('bcryptjs');
@@ -26,32 +27,32 @@ const pool = new Pool({
 });
 
 // ==========================================
-// NODEMAILER SETUP
+// NODEMAILER SETUP (env-based)
 // ==========================================
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'YOUR_GMAIL@gmail.com', // <-- PUT YOUR GMAIL HERE
-    pass: 'YOUR_16_CHAR_APP_PASSWORD' // <-- PUT YOUR APP PASSWORD HERE
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASS
   }
 });
 
 // ==========================================
 // MARKET DATA CACHE
 // ==========================================
-let marketCache = { 
+let marketCache = {
   crypto: [
     { name: 'Bitcoin', ticker: 'BTC', price: 64230.50, change: 2.4, icon: '₿' },
     { name: 'Ethereum', ticker: 'ETH', price: 3120.10, change: 1.8, icon: 'Ξ' },
     { name: 'Solana', ticker: 'SOL', price: 145.20, change: -0.5, icon: 'S' },
     { name: 'XRP', ticker: 'XRP', price: 0.52, change: 1.1, icon: 'X' }
-  ], 
+  ],
   stocks: [
     { name: 'Apple Inc.', ticker: 'AAPL', price: 172.50, change: 0.5, icon: 'A' },
     { name: 'NVIDIA Corp', ticker: 'NVDA', price: 890.20, change: 4.2, icon: 'N' },
     { name: 'Tesla Inc.', ticker: 'TSLA', price: 175.30, change: -1.2, icon: 'T' }
-  ], 
-  lastUpdated: new Date() 
+  ],
+  lastUpdated: new Date()
 };
 let isFetching = false;
 
@@ -62,7 +63,7 @@ async function updateMarketData() {
     const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd&include_24hr_change=true');
     if (!cryptoRes.ok) throw new Error("API Error");
     const cryptoData = await cryptoRes.json();
-    
+
     if (cryptoData.bitcoin) {
       marketCache.crypto = [
         { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin.usd, change: cryptoData.bitcoin.usd_24h_change, icon: '₿' },
@@ -92,49 +93,54 @@ pool.connect((err, client, release) => {
       CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE, sender VARCHAR(20), message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
       CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, message TEXT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
       CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
+      CREATE TABLE IF NOT EXISTS cards (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
     `, async (err) => {
       if (err) console.error('Create Table Error:', err.message);
 
       const alterQueries = [
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)", 
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)", 
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)", 
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)", 
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'", 
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP", 
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER", 
-        "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT", 
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT",
         "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
-        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)", 
+        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
         "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)", 
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
         "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active'",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP", 
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP",
         "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
-        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)", 
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)",
         "ALTER TABLE investments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)", 
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'", 
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
-        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT", 
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
         "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE", 
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE",
         "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)", 
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)",
         "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS message TEXT",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'", 
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'",
         "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_response TEXT",
-        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT", 
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT",
         "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-        "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT"
+        "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT",
+        "ALTER TABLE cards ADD COLUMN IF NOT EXISTS card_type VARCHAR(50)",
+        "ALTER TABLE cards ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
+        "ALTER TABLE cards ADD COLUMN IF NOT EXISTS last4 VARCHAR(4)",
+        "ALTER TABLE cards ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
       ];
       for (let q of alterQueries) { try { await client.query(q); } catch (e) { } }
 
@@ -147,11 +153,11 @@ pool.connect((err, client, release) => {
         }
       } catch(e) { }
 
-      await client.query(`INSERT INTO system_settings (key, value) VALUES 
-        ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), 
-        ('bank_account', '123456789'), ('bank_routing', '021000021') 
+      await client.query(`INSERT INTO system_settings (key, value) VALUES
+        ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'),
+        ('bank_account', '123456789'), ('bank_routing', '021000021')
         ON CONFLICT (key) DO NOTHING`);
-      
+
       release();
       console.log('✅ Database fully upgraded and ready.');
     });
@@ -176,11 +182,11 @@ app.post('/api/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const userResult = await pool.query(
-      `INSERT INTO users (name, username, email, password, phone, account_number, routing_number) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, 
+      `INSERT INTO users (name, username, email, password, phone, account_number, routing_number)
+       VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
       [name || 'Member', safeUsername, email.toLowerCase(), hashedPassword, phone || null, accountNumber, routingNumber]
     );
-    
+
     await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [userResult.rows[0].id]);
 
     res.json({ success: true, message: 'Account created successfully!', userId: userResult.rows[0].id });
@@ -188,13 +194,13 @@ app.post('/api/register', async (req, res) => {
 });
 
 app.post('/api/login', async (req, res) => {
-  const { identifier, password } = req.body; 
+  const { identifier, password } = req.body;
   try {
     const result = await pool.query('SELECT * FROM users WHERE (email = $1 OR username = $1) AND deleted = false', [identifier.toLowerCase()]);
     const user = result.rows[0];
     if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
-    
+
     const isOnboarded = !!(user.age && user.address);
 
     user.has_bank = isOnboarded;
@@ -216,11 +222,11 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     const user = result.rows[0];
     const tempPassword = "Reset" + Math.floor(1000 + Math.random() * 9000);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
-    
+
     await pool.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email.toLowerCase()]);
 
     const mailOptions = {
-      from: '"Xanvia Support" <YOUR_GMAIL@gmail.com>',
+      from: `"Xanvia Support" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: 'Xanvia Password Reset',
       html: `
@@ -243,8 +249,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
       }
     });
 
-  } catch (err) { 
-    res.status(500).json({ error: 'Database error.' }); 
+  } catch (err) {
+    res.status(500).json({ error: 'Database error.' });
   }
 });
 
@@ -280,9 +286,9 @@ app.get('/api/investments/:userId', async (req, res) => {
         const start = new Date(inv.start_date).getTime();
         const maturity = new Date(inv.maturity_date).getTime();
         const now = new Date().getTime();
-        const totalExpectedProfit = parseFloat(inv.amount) * 1.4; 
+        const totalExpectedProfit = parseFloat(inv.amount) * 1.4;
         if (now >= maturity) {
-          currentProfit = totalExpectedProfit; 
+          currentProfit = totalExpectedProfit;
         } else if (now > start) {
           const totalDuration = maturity - start;
           const elapsed = now - start;
@@ -299,34 +305,34 @@ app.get('/api/investments/:userId', async (req, res) => {
 
 // TRANSACTIONS & ACCOUNTS
 app.get('/api/transactions/:userId', async (req, res) => {
-  try { 
+  try {
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 }))); 
+    res.json(result.rows.map(row => ({ ...row, amount: parseFloat(row.amount) || 0 })));
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
     const query = `
-      SELECT 
-        COALESCE(SUM(CASE 
-          WHEN type IN ('DEPOSIT') THEN amount 
+      SELECT
+        COALESCE(SUM(CASE
+          WHEN type IN ('DEPOSIT') THEN amount
           WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount
           WHEN type = 'LOAN_TRANSFER' AND details = 'checking' THEN amount
-          ELSE 0 
+          ELSE 0
         END), 0) AS checking_balance,
-        
-        COALESCE(SUM(CASE 
-          WHEN type = 'LOAN_APPLICATION' THEN amount 
+
+        COALESCE(SUM(CASE
+          WHEN type = 'LOAN_APPLICATION' THEN amount
           WHEN type IN ('LOAN_REPAYMENT', 'LOAN_TRANSFER') THEN -amount
-          ELSE 0 
+          ELSE 0
         END), 0) AS loan_balance
       FROM transactions WHERE user_id = $1 AND status = 'Approved';
     `;
     const result = await pool.query(query, [req.params.userId]);
-    res.json({ 
+    res.json({
       checking: parseFloat(result.rows[0].checking_balance) || 0,
-      loan: parseFloat(result.rows[0].loan_balance) || 0 
+      loan: parseFloat(result.rows[0].loan_balance) || 0
     });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
@@ -343,13 +349,13 @@ app.post('/api/admin/settings/update', async (req, res) => {
   const { bank_name, bank_account, bank_routing, btc_address } = req.body;
   try {
     await pool.query(`
-      INSERT INTO system_settings (key, value) VALUES 
+      INSERT INTO system_settings (key, value) VALUES
       ('bank_name', $1), ('bank_account', $2), ('bank_routing', $3), ('btc_address', $4)
       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
     `, [bank_name, bank_account, bank_routing, btc_address]);
     res.json({ success: true, message: 'Settings updated successfully.' });
-  } catch (err) { 
-    res.status(500).json({ error: 'Failed to update settings.' }); 
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update settings.' });
   }
 });
 
@@ -358,7 +364,7 @@ app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
     await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
-    
+
     const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : type === 'investment' ? 'INVESTMENT_ACCOUNT' : 'KYC_COMPLETED';
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
 
@@ -374,7 +380,7 @@ app.get('/api/user-status/:userId', async (req, res) => {
 
     res.json({
       has_bank: isOnboarded,
-      has_loan: isOnboarded, 
+      has_loan: isOnboarded,
       has_investment: isOnboarded,
       needs_fee: false
     });
@@ -412,7 +418,7 @@ app.post('/api/transfer/internal', async (req, res) => {
   try {
     const balCheck = await pool.query(`SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) as balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`, [userId]);
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
-    
+
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, details) VALUES ($1, 'INTERNAL_TRANSFER', $2, 'Pending', $3, 'Transfer')`, [userId, amount, recipientAccount]);
     res.json({ success: true, message: 'Transfer submitted. Pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -451,11 +457,44 @@ app.post('/api/investments/withdraw', async (req, res) => {
   try {
     const balCheck = await pool.query(`SELECT COALESCE(SUM(amount), 0) as balance FROM investments WHERE user_id = $1 AND status = 'Active'`, [userId]);
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient balance.' });
-    
+
     const details = `Withdrawal Lock-in: ${timeline} Days`;
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'INVESTMENT_WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
     res.json({ success: true, message: `Withdrawal requested for ${timeline} days.` });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// ==========================================
+// CARDS (USER)
+// ==========================================
+app.get('/api/cards/:userId', async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC',
+      [req.params.userId]
+    );
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load cards.' });
+  }
+});
+
+app.post('/api/cards/request', async (req, res) => {
+  const { userId, cardType } = req.body;
+  try {
+    if (!userId || !cardType) {
+      return res.status(400).json({ error: 'Missing userId or cardType.' });
+    }
+    const last4 = Math.floor(1000 + Math.random() * 9000).toString();
+    await pool.query(
+      `INSERT INTO cards (user_id, card_type, status, last4)
+       VALUES ($1, $2, 'Processing', $3)`,
+      [userId, cardType, last4]
+    );
+    res.json({ success: true, message: 'Card request submitted! Pending admin approval.' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to request card.' });
+  }
 });
 
 // NOTIFICATIONS & CHAT
@@ -539,7 +578,7 @@ app.post('/api/admin/approve', async (req, res) => {
       }
       if (tx.type === 'INVESTMENT_DEPOSIT') {
         const now = new Date();
-        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); 
+        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, 0]);
       }
     } else {
@@ -601,6 +640,33 @@ app.post('/api/admin/chat/:complaintId', async (req, res) => {
     await pool.query(`UPDATE complaints SET status = 'In Progress' WHERE id = $1`, [req.params.complaintId]);
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// ==========================================
+// ADMIN — CARD MANAGEMENT (Fix 5)
+// ==========================================
+app.get('/api/admin/cards', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT c.*, u.name, u.email
+      FROM cards c
+      JOIN users u ON c.user_id = u.id
+      ORDER BY c.created_at DESC
+    `);
+    res.json(result.rows);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to load cards.' });
+  }
+});
+
+app.post('/api/admin/cards/:id/status', async (req, res) => {
+  const { status } = req.body;
+  try {
+    await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, req.params.id]);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update card.' });
+  }
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
