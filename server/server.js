@@ -27,7 +27,7 @@ const pool = new Pool({
 });
 
 // ==========================================
-// NODEMAILER SETUP (env-based)
+// NODEMAILER SETUP
 // ==========================================
 const transporter = nodemailer.createTransport({
   service: 'gmail',
@@ -210,6 +210,30 @@ app.post('/api/login', async (req, res) => {
     await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+// CHANGE PASSWORD
+app.post('/api/user/change-password', async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body;
+  try {
+    const result = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    
+    if (!isMatch) {
+      return res.status(400).json({ error: 'Incorrect current password.' });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedNewPassword, userId]);
+    
+    res.json({ success: true, message: 'Password updated successfully.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update password.' });
+  }
 });
 
 // FORGOT PASSWORD
@@ -643,7 +667,7 @@ app.post('/api/admin/chat/:complaintId', async (req, res) => {
 });
 
 // ==========================================
-// ADMIN — CARD MANAGEMENT (Fix 5)
+// ADMIN — CARD MANAGEMENT
 // ==========================================
 app.get('/api/admin/cards', async (req, res) => {
   try {

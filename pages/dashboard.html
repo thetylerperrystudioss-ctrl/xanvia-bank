@@ -6,8 +6,18 @@
   <title>Dashboard | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    /* ADDED DARK MODE VARIABLES */
+    :root { 
+      --emerald: #0F8A5F; --deep-green: #0B2E23; 
+      --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; 
+      --gold: #C9A24B; --danger: #EF4444; --surface: #FFFFFF;
+    }
+
+    body.dark-mode {
+      --bg: #0D1117; --text: #F3F4F6; --border: #30363D; --muted: #8B949E; --surface: #161B22;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
     body { background: var(--bg); color: var(--text); }
 
     /* HEADER */
@@ -22,34 +32,35 @@
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
 
     .nav-right { display: flex; align-items: center; gap: 10px; }
-
-    /* NOTIFICATION BELL */
-    .bell-btn { position: relative; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: 0.2s; }
+    .bell-btn { position: relative; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: 0.2s; color: white; }
     .bell-btn:hover { background: rgba(255,255,255,0.2); }
     .bell-badge { position: absolute; top: 0px; right: 0px; background: var(--danger); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--deep-green); display: none; }
 
-    .balance-section { margin-top: 10px; }
-    .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; }
+    /* BALANCE WITH EYE TOGGLE */
+    .balance-section { margin-top: 10px; position: relative; display: inline-block; }
+    .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; display: flex; align-items: center; justify-content: center; gap: 12px; }
     .balance-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
+    .eye-btn { background: none; border: none; color: rgba(255,255,255,0.7); font-size: 1.4rem; cursor: pointer; padding: 0; margin-top: 8px;}
+    .eye-btn:hover { color: white; }
 
     .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 30px; position: absolute; bottom: -35px; left: 0; right: 0; padding: 0 20px; }
-    .action-btn { background: white; border: none; border-radius: 16px; padding: 12px 5px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
+    .action-btn { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 12px 5px; display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer; text-decoration: none; color: var(--text); }
     .icon-circle { width: 32px; height: 32px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
     .action-btn span { font-size: 0.7rem; font-weight: 600; }
 
     /* MAIN BODY */
     .app-main { padding: 50px 20px 20px; }
-    .search-bar { background: white; border-radius: 12px; padding: 12px 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid var(--border); }
-    .search-bar input { border: none; outline: none; width: 100%; font-size: 0.95rem; }
+    .search-bar { background: var(--surface); border-radius: 12px; padding: 12px 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 20px; border: 1px solid var(--border); }
+    .search-bar input { border: none; outline: none; width: 100%; font-size: 0.95rem; background: transparent; color: var(--text); }
 
     /* TRANSACTION HISTORY */
     .tx-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-    .tx-header h3 { font-size: 1.1rem; color: var(--deep-green); }
-    .transaction-list { background: white; border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .tx-header h3 { font-size: 1.1rem; color: var(--text); }
+    .transaction-list { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
     .tx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid var(--border); }
     .tx-item:last-child { border-bottom: none; }
     .tx-left { display: flex; align-items: center; gap: 15px; }
-    .tx-icon { width: 40px; height: 40px; background: #F4F7F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .tx-icon { width: 40px; height: 40px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
     .tx-details h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 3px; text-transform: uppercase; color: var(--text); }
     .tx-details p { font-size: 0.75rem; color: var(--muted); }
     .tx-amount { font-weight: 700; font-size: 1rem; }
@@ -60,51 +71,64 @@
     /* SIDEBAR */
     .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2500; display: none; }
     .sidebar-overlay.open { display: block; }
-    .sidebar { position: fixed; top: 0; left: -350px; width: 320px; height: 100vh; background: white; z-index: 3000; transition: 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar { position: fixed; top: 0; left: -350px; width: 320px; height: 100vh; background: var(--surface); z-index: 3000; transition: 0.3s ease; box-shadow: 2px 0 10px rgba(0,0,0,0.1); padding: 20px; display: flex; flex-direction: column; overflow-y: auto; }
     .sidebar.open { left: 0; }
 
-    .profile-section { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 20px; }
+    .profile-section { text-align: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
     .profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; background: #eee; margin: 0 auto 10px; display: block; border: 3px solid var(--emerald); }
-    .profile-name { font-size: 1.2rem; font-weight: 700; color: var(--deep-green); }
+    .profile-name { font-size: 1.2rem; font-weight: 700; color: var(--text); }
     .profile-username { font-size: 0.85rem; color: var(--muted); margin-bottom: 15px; }
     
-    .account-card { background: #F4F7F6; border: 1px dashed var(--emerald); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+    .account-card { background: var(--bg); border: 1px dashed var(--emerald); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; }
     .acc-label { font-size: 0.7rem; text-transform: uppercase; font-weight: 700; color: var(--muted); }
-    .acc-number { font-size: 1.4rem; font-weight: 800; color: var(--deep-green); letter-spacing: 1px; }
+    .acc-number { font-size: 1.4rem; font-weight: 800; color: var(--emerald); letter-spacing: 1px; }
     .acc-routing { font-size: 0.8rem; color: var(--muted); }
-    
-    /* COPY BUTTON STYLES */
-    .copy-btn { background: transparent; border: none; cursor: pointer; font-size: 1rem; opacity: 0.6; transition: 0.2s; padding: 0; }
+    .copy-btn { background: transparent; border: none; cursor: pointer; font-size: 1rem; opacity: 0.6; transition: 0.2s; padding: 0; color: var(--text); }
     .copy-btn:hover { opacity: 1; transform: scale(1.1); }
     .copy-btn:active { transform: scale(0.9); }
 
     .info-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 0.9rem; }
     .info-row span:first-child { color: var(--muted); font-weight: 600; }
     .info-row span:last-child { font-weight: 700; color: var(--text); word-break: break-all; text-align: right; max-width: 60%; }
-    .edit-profile-btn { background: var(--emerald); color: white; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-top: auto; margin-bottom: 10px; }
-    .logout-btn { background: #FEE2E2; color: #991B1B; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; }
+    
+    /* SIDEBAR MENU BUTTONS */
+    .menu-btn { width: 100%; text-align: left; padding: 12px 15px; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+    .menu-btn:hover { background: var(--bg); color: var(--emerald); }
+    .logout-btn { background: #FEE2E2; color: #991B1B; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-top: auto; }
+    body.dark-mode .logout-btn { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; }
 
-    /* MODALS */
+    /* MODALS & FORMS */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+    .modal-content { background: var(--surface); width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; border: 1px solid var(--border); }
     .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
-    .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: #333; }
-    .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; outline: none; }
+    .form-group label { font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; outline: none; background: var(--bg); color: var(--text); }
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
 
+    /* TOGGLE SWITCHES (SETTINGS) */
+    .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row span { font-size: 0.9rem; font-weight: 600; color: var(--text); }
+    .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--emerald); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* NOTIFICATIONS & CHAT */
     .notif-item { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
     .notif-item:last-child { border-bottom: none; }
     .notif-date { font-size: 0.7rem; color: var(--muted); display: block; margin-top: 5px; }
 
-    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
+    .chat-box { background: var(--bg); border-radius: 12px; padding: 15px; max-height: 300px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; flex-grow: 1; }
     .msg { max-width: 80%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
     .msg.user { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-    .msg.admin { background: white; color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg.admin { background: var(--surface); color: var(--text); border: 1px solid var(--border); align-self: flex-start; border-bottom-left-radius: 2px; }
     .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
-
     .chat-input-row { display: flex; gap: 10px; margin-top: auto; }
-    .chat-input-row input { flex-grow: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; }
+    .chat-input-row input { flex-grow: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; background: var(--bg); color: var(--text); }
     .chat-send-btn { background: var(--emerald); color: white; border: none; border-radius: 50%; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; }
     .btn-resolve { width: 100%; padding: 12px; background: #FEE2E2; color: #991B1B; border: 1px solid #F87171; border-radius: 8px; font-weight: 600; margin-top: 10px; cursor: pointer; }
   </style>
@@ -124,31 +148,110 @@
       <div class="acc-label">Account Number</div>
       <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
         <div class="acc-number" id="prof-acc-num">Loading...</div>
-        <button class="copy-btn" onclick="copyToClipboard('prof-acc-num', 'Account Number copied!')" title="Copy Account Number">📋</button>
+        <button class="copy-btn" onclick="copyToClipboard('prof-acc-num', 'Account Number copied!')" title="Copy">📋</button>
       </div>
-      
       <div class="acc-routing" style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px;">
         Routing: <span id="prof-rout-num">Loading...</span>
-        <button class="copy-btn" onclick="copyToClipboard('prof-rout-num', 'Routing Number copied!')" title="Copy Routing Number">📋</button>
+        <button class="copy-btn" onclick="copyToClipboard('prof-rout-num', 'Routing Number copied!')" title="Copy">📋</button>
       </div>
     </div>
 
     <div class="info-row"><span>Phone</span> <span id="prof-phone">Loading...</span></div>
     <div class="info-row"><span>Email</span> <span id="prof-email">Loading...</span></div>
-    <button class="edit-profile-btn" onclick="openEditModal()">Edit Profile</button>
-    <button class="logout-btn" onclick="logout()">Log Out</button>
+    
+    <!-- NEW SIDEBAR MENU -->
+    <div style="margin-top: 15px; border-top: 1px solid var(--border);">
+      <button class="menu-btn" onclick="openEditModal()">👤 Edit Profile</button>
+      <button class="menu-btn" onclick="document.getElementById('deposit-modal').classList.add('open')">🏦 Direct Deposit Form</button>
+      <button class="menu-btn" onclick="document.getElementById('password-modal').classList.add('open')">🔒 Change Password</button>
+      <button class="menu-btn" onclick="document.getElementById('settings-modal').classList.add('open')">⚙️ App Settings</button>
+    </div>
+
+    <button class="logout-btn" onclick="logout()" style="margin-top: 20px;">Log Out</button>
   </div>
 
   <!-- EDIT PROFILE MODAL -->
   <div id="edit-modal" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="document.getElementById('edit-modal').classList.remove('open')">×</button>
-      <h3 style="color:var(--deep-green); margin-bottom:15px;">Edit Profile</h3>
+      <h3 style="color:var(--emerald); margin-bottom:15px;">Edit Profile</h3>
       <div class="form-group"><label>Full Name</label><input type="text" id="edit-name"></div>
       <div class="form-group"><label>Username</label><input type="text" id="edit-username"></div>
       <div class="form-group"><label>Phone</label><input type="text" id="edit-phone"></div>
       <div class="form-group"><label>Profile Picture</label><input type="file" id="edit-pic" accept="image/*"></div>
       <button onclick="saveProfile()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Save Changes</button>
+    </div>
+  </div>
+
+  <!-- CHANGE PASSWORD MODAL -->
+  <div id="password-modal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="document.getElementById('password-modal').classList.remove('open')">×</button>
+      <h3 style="color:var(--emerald); margin-bottom:15px;">Change Password</h3>
+      <div class="form-group"><label>Current Password</label><input type="password" id="curr-pass"></div>
+      <div class="form-group"><label>New Password</label><input type="password" id="new-pass"></div>
+      <div class="form-group"><label>Confirm New Password</label><input type="password" id="conf-pass"></div>
+      <button onclick="changePassword()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Update Password</button>
+      <p id="pass-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
+    </div>
+  </div>
+
+  <!-- APP SETTINGS MODAL -->
+  <div id="settings-modal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="document.getElementById('settings-modal').classList.remove('open')">×</button>
+      <h3 style="color:var(--emerald); margin-bottom:15px;">App Settings</h3>
+      
+      <div class="settings-row">
+        <span>🌙 Dark Mode</span>
+        <label class="switch">
+          <input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()">
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <span>📧 Email Alerts</span>
+        <label class="switch">
+          <input type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <span>🔔 Push Notifications</span>
+        <label class="switch">
+          <input type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="settings-row">
+        <span>💸 Alert on Spend > $100</span>
+        <label class="switch">
+          <input type="checkbox">
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIRECT DEPOSIT MODAL -->
+  <div id="deposit-modal" class="modal-overlay">
+    <div class="modal-content" style="text-align: center;">
+      <button class="close-modal" onclick="document.getElementById('deposit-modal').classList.remove('open')">×</button>
+      <h3 style="color:var(--emerald); margin-bottom:10px;">Direct Deposit Form</h3>
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:20px;">Provide this information to your employer to receive your paycheck directly.</p>
+      
+      <div style="background:var(--bg); border: 1px solid var(--border); padding:20px; border-radius:12px; text-align:left; margin-bottom:20px;">
+        <p style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:5px;">Bank Name</p>
+        <p style="font-size:1rem; font-weight:700; margin-bottom:15px;">Xanvia Credit Union</p>
+        
+        <p style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:5px;">Routing Number</p>
+        <p style="font-size:1.2rem; font-family:monospace; font-weight:700; letter-spacing:1px; margin-bottom:15px;" id="dep-rout">—</p>
+        
+        <p style="font-size:0.75rem; font-weight:700; text-transform:uppercase; color:var(--muted); margin-bottom:5px;">Account Number</p>
+        <p style="font-size:1.2rem; font-family:monospace; font-weight:700; letter-spacing:1px;" id="dep-acc">—</p>
+      </div>
+      
+      <button onclick="window.print()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Print / Save as PDF</button>
     </div>
   </div>
 
@@ -169,7 +272,10 @@
       </div>
     </div>
     <div class="balance-section">
-      <h1 class="balance-amount" id="total-balance">$0.00</h1>
+      <h1 class="balance-amount">
+        <span id="total-balance">$0.00</span>
+        <button class="eye-btn" onclick="toggleBalance()" id="eye-icon">👁️</button>
+      </h1>
       <p class="balance-label">Available Checking Balance</p>
     </div>
     <div class="quick-actions">
@@ -196,7 +302,7 @@
   <div id="modal-notifications" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="document.getElementById('modal-notifications').classList.remove('open')">×</button>
-      <h2 style="color:var(--deep-green); margin-bottom:15px;">Notifications</h2>
+      <h2 style="color:var(--emerald); margin-bottom:15px;">Notifications</h2>
       <div id="notifications-list" style="margin-bottom: 15px;">
         <p style="text-align:center; color:#888;">Loading...</p>
       </div>
@@ -208,41 +314,24 @@
     <div class="modal-content">
       <button class="close-modal" onclick="document.getElementById('modal-support').classList.remove('open')">×</button>
 
-      <!-- LIST VIEW -->
       <div id="support-list-view">
-        <h2 style="color:var(--deep-green); margin-bottom:15px;">Live Chat Support</h2>
+        <h2 style="color:var(--emerald); margin-bottom:15px;">Live Chat Support</h2>
         <div id="user-complaints" style="margin-bottom: 20px; max-height: 300px; overflow-y: auto;">Loading...</div>
         <button onclick="showSupportForm()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Start New Chat</button>
       </div>
 
-      <!-- FORM VIEW -->
       <div id="support-form-view" style="display: none;">
-        <h2 style="color:var(--deep-green); margin-bottom:15px;">Start New Chat</h2>
-        <div class="form-group">
-          <label>Category</label>
-          <select id="sup-category">
-            <option>Deposit Issue</option>
-            <option>Withdrawal Issue</option>
-            <option>Login Problem</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Subject</label>
-          <input type="text" id="sup-subject" placeholder="Brief summary">
-        </div>
-        <div class="form-group">
-          <label>Message</label>
-          <textarea id="sup-message" rows="3" placeholder="Explain your issue..."></textarea>
-        </div>
+        <h2 style="color:var(--emerald); margin-bottom:15px;">Start New Chat</h2>
+        <div class="form-group"><label>Category</label><select id="sup-category"><option>Deposit Issue</option><option>Withdrawal Issue</option><option>Login Problem</option><option>Other</option></select></div>
+        <div class="form-group"><label>Subject</label><input type="text" id="sup-subject" placeholder="Brief summary"></div>
+        <div class="form-group"><label>Message</label><textarea id="sup-message" rows="3" placeholder="Explain your issue..."></textarea></div>
         <button onclick="submitComplaint()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Submit Ticket</button>
         <button onclick="showSupportList()" style="width:100%; padding:14px; background:transparent; border:none; font-weight:600; margin-top:5px; cursor:pointer; color:var(--muted);">Cancel</button>
         <div id="sup-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
       </div>
 
-      <!-- CHAT VIEW -->
       <div id="chat-view" style="display: none; flex-direction: column; height: 60vh;">
-        <h3 id="chat-title" style="color:var(--deep-green); margin-bottom:15px;"></h3>
+        <h3 id="chat-title" style="color:var(--emerald); margin-bottom:15px;"></h3>
         <div class="chat-box" id="chat-messages"></div>
         <div class="chat-input-row" id="chat-input-area">
           <input type="text" id="chat-input" placeholder="Type a message..." onkeypress="handleChatEnter(event)">
@@ -260,11 +349,45 @@
     let allTransactions = [];
     let activeComplaintId = null;
     let chatInterval = null;
+    let isBalanceHidden = false;
 
-    function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-    // --- SIDEBAR LOGIC ---
+    function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
+
+    // --- UI TOGGLES (DARK MODE, HIDE BALANCE) ---
+    function toggleDarkMode() {
+      const isDark = document.getElementById('dark-toggle').checked;
+      if (isDark) {
+        document.body.classList.add('dark-mode');
+        localStorage.setItem('xanvia_theme', 'dark');
+      } else {
+        document.body.classList.remove('dark-mode');
+        localStorage.setItem('xanvia_theme', 'light');
+      }
+    }
+
+    function toggleBalance() {
+      isBalanceHidden = !isBalanceHidden;
+      const balanceEl = document.getElementById('total-balance');
+      const eyeIcon = document.getElementById('eye-icon');
+      
+      if (isBalanceHidden) {
+        balanceEl.textContent = '****';
+        eyeIcon.textContent = '🙈';
+      } else {
+        loadDashboard(); // Reload the real balance
+        eyeIcon.textContent = '👁️';
+      }
+    }
+
+    // Check saved theme on load
+    if (localStorage.getItem('xanvia_theme') === 'dark') {
+      document.body.classList.add('dark-mode');
+      setTimeout(() => { document.getElementById('dark-toggle').checked = true; }, 500);
+    }
+
+    // --- SIDEBAR & PROFILE ---
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebar-overlay').classList.toggle('open');
@@ -282,10 +405,13 @@
         document.getElementById('prof-phone').textContent = data.phone || 'Not provided';
         document.getElementById('prof-email').textContent = data.email || 'N/A';
         
+        // Fill deposit modal
+        document.getElementById('dep-rout').textContent = data.routing_number || '—';
+        document.getElementById('dep-acc').textContent = data.account_number || '—';
+
         if(data.profile_pic) {
           document.getElementById('prof-pic-img').src = data.profile_pic;
         } else {
-          // Fallback if no profile picture (shows initials)
           document.getElementById('prof-pic-img').src = `https://ui-avatars.com/api/?name=${data.name || 'User'}&background=0F8A5F&color=fff&size=150`;
         }
       } catch (err) { console.error("Sidebar error:", err); }
@@ -313,7 +439,6 @@
 
       const res = await fetch('/api/user/update', { method: 'POST', body: formData });
       const data = await res.json();
-
       if(data.success) {
         alert("Profile updated!");
         document.getElementById('edit-modal').classList.remove('open');
@@ -321,33 +446,48 @@
       } else { alert(data.error); }
     }
 
-    // --- COPY TO CLIPBOARD LOGIC ---
+    // --- CHANGE PASSWORD ---
+    async function changePassword() {
+      const curr = document.getElementById('curr-pass').value;
+      const newP = document.getElementById('new-pass').value;
+      const conf = document.getElementById('conf-pass').value;
+      const msg = document.getElementById('pass-msg');
+
+      if (!curr || !newP || !conf) { msg.textContent = "Fill all fields."; msg.style.color = "red"; return; }
+      if (newP !== conf) { msg.textContent = "New passwords do not match."; msg.style.color = "red"; return; }
+
+      msg.textContent = "Updating..."; msg.style.color = "var(--emerald)";
+
+      const res = await fetch('/api/user/change-password', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, currentPassword: curr, newPassword: newP })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        msg.textContent = "✅ Password updated!";
+        msg.style.color = "var(--emerald)";
+        setTimeout(() => { document.getElementById('password-modal').classList.remove('open'); msg.textContent = ""; }, 2000);
+      } else {
+        msg.textContent = data.error; msg.style.color = "red";
+      }
+    }
+
+    // --- COPY CLIPBOARD ---
     function copyToClipboard(elementId, successMessage) {
       const textToCopy = document.getElementById(elementId).textContent;
-      
       if (textToCopy === 'Loading...' || textToCopy === 'Generating...') return;
 
       if (navigator.clipboard && window.isSecureContext) {
-        navigator.clipboard.writeText(textToCopy).then(() => {
-          showToast(successMessage);
-        }).catch(err => {
-          console.error('Failed to copy: ', err);
-        });
+        navigator.clipboard.writeText(textToCopy).then(() => showToast(successMessage));
       } else {
         const textArea = document.createElement("textarea");
         textArea.value = textToCopy;
-        textArea.style.position = "absolute";
-        textArea.style.left = "-999999px";
         document.body.prepend(textArea);
         textArea.select();
-        try {
-          document.execCommand('copy');
-          showToast(successMessage);
-        } catch (error) {
-          console.error(error);
-        } finally {
-          textArea.remove();
-        }
+        document.execCommand('copy');
+        textArea.remove();
+        showToast(successMessage);
       }
     }
 
@@ -359,16 +499,12 @@
         toast.style.cssText = "position:fixed; bottom:30px; left:50%; transform:translateX(-50%); background:var(--emerald); color:white; padding:12px 24px; border-radius:8px; font-weight:600; font-size:0.9rem; z-index:9999; opacity:0; transition:opacity 0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.15);";
         document.body.appendChild(toast);
       }
-      
       toast.textContent = message;
       toast.style.opacity = "1";
-      
-      setTimeout(() => {
-        toast.style.opacity = "0";
-      }, 2500);
+      setTimeout(() => { toast.style.opacity = "0"; }, 2500);
     }
 
-    // --- NOTIFICATIONS LOGIC ---
+    // --- NOTIFICATIONS ---
     async function loadNotifications() {
       try {
         const res = await fetch(`/api/notifications/${user.id}`);
@@ -392,7 +528,7 @@
         }
 
         list.innerHTML = notifs.map(n => `
-          <div class="notif-item" style="background:${n.is_read ? 'white' : '#F0FDF4'};">
+          <div class="notif-item" style="background:${n.is_read ? 'transparent' : 'rgba(15,138,95,0.1)'};">
             <p style="margin:0; font-weight:${n.is_read ? '400' : '600'};">${n.message}</p>
             <span class="notif-date">${new Date(n.created_at).toLocaleString()}</span>
           </div>
@@ -406,7 +542,7 @@
       loadNotifications();
     }
 
-    // --- CHAT & SUPPORT LOGIC ---
+    // --- SUPPORT ---
     function showSupportForm() {
       document.getElementById('support-list-view').style.display = 'none';
       document.getElementById('support-form-view').style.display = 'block';
@@ -434,9 +570,9 @@
         const res = await fetch(`/api/complaints/${user.id}`);
         const data = await res.json();
         container.innerHTML = data.length > 0 ? data.map(c => `
-          <div onclick="openChat(${c.id}, '${c.subject}', '${c.status}')" style="background:#F4F7F6; padding:15px; border-radius:10px; margin-bottom:10px; border:1px solid var(--border); cursor:pointer;">
+          <div onclick="openChat(${c.id}, '${c.subject}', '${c.status}')" style="background:var(--bg); padding:15px; border-radius:10px; margin-bottom:10px; border:1px solid var(--border); cursor:pointer;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-              <h4 style="color:var(--deep-green); font-size:0.95rem;">${c.subject}</h4>
+              <h4 style="color:var(--emerald); font-size:0.95rem;">${c.subject}</h4>
               <span style="font-size:0.7rem; font-weight:bold; padding:2px 6px; border-radius:4px; background:${c.status === 'Resolved' ? '#D1FAE5' : '#FEE2E2'}; color:${c.status === 'Resolved' ? '#065F46' : '#991B1B'};">${c.status}</span>
             </div>
             <p style="font-size:0.8rem; color:var(--muted); margin:0;">Ref: ${c.ref_number}</p>
@@ -524,8 +660,10 @@
       showSupportList();
     }
 
-    // --- DASHBOARD LOGIC ---
+    // --- DASHBOARD ---
     async function loadDashboard() {
+      if (isBalanceHidden) return; // Don't overwrite if hidden
+
       try {
         const res = await fetch(`/api/accounts/${user.id}`);
         const data = await res.json();
