@@ -28,7 +28,7 @@
       overflow: hidden;
     }
 
-    /* FIXED BACKGROUND LAYER */
+    /* BACKGROUND LAYERS */
     .bg-layer {
       position: absolute;
       inset: 0;
@@ -47,7 +47,7 @@
       -webkit-backdrop-filter: blur(10px);
     }
 
-    /* FIXED LOGIN CARD */
+    /* LOGIN CARD */
     .login-card { 
       background: #FFFFFF; 
       width: 100%; 
@@ -73,13 +73,45 @@
     .form-group input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; outline: none; background: #FAFAFA; transition: 0.2s; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 4px rgba(15,138,95,0.1); }
     
-    /* PASSWORD TOGGLE */
     .password-toggle { position: absolute; right: 15px; top: 40px; cursor: pointer; color: var(--muted); font-size: 1.1rem; }
 
     .forgot-link { display: block; text-align: right; font-size: 0.85rem; color: var(--emerald); font-weight: 600; text-decoration: none; margin-top: -5px; margin-bottom: 25px; }
 
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(15,138,95,0.2); }
+    /* LONG PRESS BUTTON */
+    .btn-primary { 
+      width: 100%; 
+      padding: 16px; 
+      background: var(--emerald); 
+      color: white; 
+      border: none; 
+      border-radius: 12px; 
+      font-weight: 700; 
+      font-size: 1rem; 
+      cursor: pointer; 
+      transition: 0.2s; 
+      box-shadow: 0 4px 12px rgba(15,138,95,0.2); 
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
     .btn-primary:active { transform: scale(0.98); }
+    
+    /* HIDDEN HOLD INDICATOR */
+    .hold-indicator { 
+      position: absolute; 
+      bottom: 0; 
+      left: 0; 
+      height: 4px; 
+      background: var(--gold); 
+      width: 0%; 
+      transition: width 0.1s linear; 
+      z-index: 10; 
+    }
     
     .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
@@ -87,18 +119,16 @@
     .footer-link { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--muted); }
     .footer-link a { color: var(--emerald); font-weight: 700; text-decoration: none; }
 
-    /* HIDDEN ADMIN VIEW */
+    /* STRICT HIDING FOR ADMIN VIEW */
     #admin-login-section { display: none; }
     .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; z-index: 20; }
   </style>
 </head>
 <body>
 
-  <!-- BACKGROUND LAYERS -->
   <div class="bg-layer"></div>
   <div class="bg-overlay"></div>
 
-  <!-- LOGIN CARD -->
   <div class="login-card">
     <button class="back-btn" id="back-btn" onclick="resetView()">←</button>
 
@@ -129,14 +159,18 @@
       
       <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
 
-      <button class="btn-primary" id="login-btn" onclick="userLogin()">Secure Sign In</button>
+      <!-- BUTTON WITH LONG PRESS -->
+      <button class="btn-primary" id="login-btn">
+        Secure Sign In
+        <div class="hold-indicator" id="hold-bar"></div>
+      </button>
       
       <div class="footer-link">
         Don't have an account? <a href="register.html">Apply Now</a>
       </div>
     </div>
 
-    <!-- ADMIN LOGIN VIEW -->
+    <!-- ADMIN LOGIN VIEW (Hidden by default) -->
     <div id="admin-login-section">
       <div class="logo" style="margin-bottom: 20px;">
         <div class="logo-icon" style="background:var(--deep-green);">🛡️</div>
@@ -157,16 +191,70 @@
   </div>
 
   <script>
-    // Check URL for admin mode
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('admin') === 'true') {
+    // --- LONG PRESS LOGIC FOR ADMIN ACCESS ---
+    const loginBtn = document.getElementById('login-btn');
+    const holdBar = document.getElementById('hold-bar');
+    
+    let holdTimer;
+    let progressTimer;
+    let progress = 0;
+    let isHoldTriggered = false;
+
+    function startHold(e) {
+      if (e) e.preventDefault(); // Prevent text selection on mobile
+      progress = 0;
+      isHoldTriggered = false;
+      holdBar.style.width = '0%';
+      
+      // Animate the bar (50 ticks = 100% / 50ms * 50 = 2500ms total)
+      progressTimer = setInterval(() => {
+        progress += 1;
+        holdBar.style.width = (progress / 50) * 100 + '%';
+      }, 50);
+
+      // Trigger admin view after 2.5 seconds
+      holdTimer = setTimeout(() => {
+        clearInterval(progressTimer);
+        holdBar.style.width = '0%';
+        isHoldTriggered = true;
+        showAdminLogin();
+      }, 2500);
+    }
+
+    function cancelHold(e) {
+      if (e) e.preventDefault();
+      clearTimeout(holdTimer);
+      clearInterval(progressTimer);
+      
+      // Reset the bar
+      holdBar.style.width = '0%';
+
+      // If the user didn't hold long enough, and it wasn't triggered, run normal login
+      if (progress < 45 && !isHoldTriggered) {
+        userLogin();
+      }
+    }
+
+    // Attach touch and mouse events
+    loginBtn.addEventListener('pointerdown', startHold);
+    loginBtn.addEventListener('pointerup', cancelHold);
+    loginBtn.addEventListener('pointercancel', cancelHold);
+    loginBtn.addEventListener('pointerleave', cancelHold);
+
+
+    // --- VIEW SWITCHING ---
+    function showAdminLogin() {
       document.getElementById('user-login-section').style.display = 'none';
       document.getElementById('admin-login-section').style.display = 'block';
       document.getElementById('back-btn').style.display = 'block';
     }
 
     function resetView() {
-      window.location.href = 'login.html'; // Strip the admin parameter
+      document.getElementById('user-login-section').style.display = 'block';
+      document.getElementById('admin-login-section').style.display = 'none';
+      document.getElementById('back-btn').style.display = 'none';
+      document.getElementById('admin-pass').value = '';
+      document.getElementById('admin-msg').style.display = 'none';
     }
 
     function togglePassword(inputId, icon) {
@@ -180,11 +268,11 @@
       }
     }
 
+    // --- LOGIN LOGIC ---
     async function userLogin() {
       const identifier = document.getElementById('user-identifier').value;
       const password = document.getElementById('user-password').value;
       const msg = document.getElementById('user-msg');
-      const btn = document.getElementById('login-btn');
 
       if (!identifier || !password) { 
         msg.textContent = "Please fill in all fields."; 
@@ -192,8 +280,8 @@
         return; 
       }
 
-      btn.textContent = "Authenticating..."; 
-      btn.disabled = true;
+      msg.style.display = 'none';
+      loginBtn.innerHTML = `Authenticating... <div class="hold-indicator" id="hold-bar"></div>`;
 
       try {
         const res = await fetch('/api/login', {
@@ -210,14 +298,12 @@
         } else {
           msg.textContent = data.error;
           msg.className = "msg error";
-          btn.textContent = "Secure Sign In"; 
-          btn.disabled = false;
+          loginBtn.innerHTML = `Secure Sign In <div class="hold-indicator" id="hold-bar"></div>`;
         }
       } catch (err) {
         msg.textContent = "Server error. Please try again.";
         msg.className = "msg error";
-        btn.textContent = "Secure Sign In"; 
-        btn.disabled = false;
+        loginBtn.innerHTML = `Secure Sign In <div class="hold-indicator" id="hold-bar"></div>`;
       }
     }
 
