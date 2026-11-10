@@ -9,71 +9,141 @@
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --muted: #6B7280; --border: #E5E7EB; --danger: #EF4444; --gold: #C9A24B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
     body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; }
+    
     .app-container { width: 100%; max-width: 650px; padding: 20px; padding-bottom: 80px; }
     #dashboard-area { display: none; }
     
+    /* LOGIN OVERLAY */
     #login-overlay { position: fixed; inset: 0; background: var(--deep-green); z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column; }
     .login-box { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-    .login-box h2 { color: var(--deep-green); margin-bottom: 10px; }
+    .login-box h2 { color: var(--deep-green); margin-bottom: 10px; font-family: 'Merriweather', serif; }
+    .login-box p { font-size: 0.9rem; color: var(--muted); margin-bottom: 20px; }
     .login-box input { width: 100%; padding: 16px; border: 1px solid #ddd; border-radius: 10px; font-size: 1.5rem; text-align: center; letter-spacing: 8px; margin-bottom: 20px; outline: none; }
-    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; }
+    .login-box input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    .login-box button { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+    .login-box button:hover { background: var(--emerald-dark); }
 
+    /* HEADER */
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-    .header h1 { color: var(--deep-green); font-size: 1.6rem; font-weight: 900; }
-    .btn-exit { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    
+    .header h1 { font-family: 'Merriweather', serif; color: var(--deep-green); font-size: 1.6rem; font-weight: 900; }
+    .btn-exit { background: transparent; border: 1px solid var(--border); padding: 8px 16px; border-radius: 8px; font-weight: 600; color: var(--text); cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+    .btn-exit:hover { background: #FEE2E2; color: #991B1B; border-color: #FECACA; }
+
+    /* QUICK STATS */
+    .mini-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px; }
+    .mini-stat-card { background: white; padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 4px 10px rgba(0,0,0,0.02); text-align: center; }
+    .mini-stat-card p { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+    .mini-stat-card h3 { font-size: 1.6rem; color: var(--deep-green); font-weight: 800; }
+
+    /* TABS */
     .tabs { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
     .tabs::-webkit-scrollbar { display: none; }
-    .tab { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    .tab { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: 0.2s; font-size: 0.9rem; }
     .tab.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
     
-    .view-section { display: none; }
+    .view-section { display: none; animation: fadeIn 0.3s ease; }
     .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* PANELS */
     .panel { background: white; border-radius: 16px; padding: 20px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(11,46,35,0.03); }
     .panel h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 15px; }
 
+    /* REQUEST ITEMS */
     .req-item { display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; background: #FAFAFA; }
     .req-item h4 { color: var(--deep-green); font-size: 1rem; margin-bottom: 4px; }
-    .req-item p { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; }
-    .proof-img { width: 100%; max-width: 200px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; }
+    .req-item p { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; line-height: 1.4; }
+    .req-item strong { color: var(--text); }
+    .proof-img { width: 100%; max-width: 200px; border-radius: 8px; border: 1px solid #ddd; margin-top: 10px; display: block; cursor: pointer; }
     
     .action-row { display: flex; gap: 10px; margin-top: 15px; }
-    .btn-approve { background: var(--emerald); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1; }
-    .btn-reject { background: #FEE2E2; color: #991B1B; border: 1px solid #F87171; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1; }
+    .btn-approve { background: var(--emerald); color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1; transition: 0.2s; }
+    .btn-approve:hover { background: var(--emerald-dark); }
+    .btn-reject { background: #FEE2E2; color: #991B1B; border: 1px solid #F87171; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: 600; flex: 1; transition: 0.2s; }
+    .btn-reject:hover { background: #FECACA; }
 
+    /* USER ITEMS */
+    .user-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+    .user-row:last-child { border-bottom: none; }
+    .user-info h4 { font-size: 0.95rem; color: var(--deep-green); margin-bottom: 2px; }
+    .user-info p { font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+    .user-status { font-weight: 700; font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; display: inline-block; }
+    .user-status.active { background: #D1FAE5; color: #065F46; }
+    .user-status.frozen { background: #FEE2E2; color: #991B1B; }
+    .user-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn-sm { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; border: none; }
+    .btn-outline-sm { background: white; border: 1px solid var(--border); color: var(--text); }
+    .btn-delete { background: #FEE2E2; color: #991B1B; }
+    .btn-notify { background: #F3F4F6; color: #374151; }
+
+    /* CHAT BOX */
+    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
+    .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
+    .msg.user { background: #E5E7EB; color: var(--text); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg.admin { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
+    .reply-row { display: flex; gap: 10px; margin-top: 15px; }
+    .reply-row input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; }
+    
+    /* FORMS */
     .form-group { margin-bottom: 15px; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
-    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
-    .btn-save { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; color: var(--text); }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; font-family: 'Inter', sans-serif; }
+    .form-group input:focus { border-color: var(--emerald); }
+    .btn-save { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; font-size: 1rem; }
   </style>
 </head>
 <body>
 
+  <!-- LOGIN OVERLAY -->
   <div id="login-overlay">
     <div class="login-box">
       <h2>Admin Access</h2>
+      <p>Enter your 4-digit passcode to unlock the terminal.</p>
       <input type="password" id="admin-pass" maxlength="4" placeholder="••••">
-      <button onclick="verifyPasscode()">Unlock</button>
+      <button onclick="verifyPasscode()">Unlock Terminal</button>
     </div>
   </div>
 
+  <!-- DASHBOARD AREA -->
   <div id="dashboard-area" class="app-container">
+    
     <div class="header">
       <h1>Admin Terminal</h1>
       <button class="btn-exit" onclick="window.location.replace('../index.html')">Exit</button>
     </div>
 
+    <!-- MINI STATS -->
+    <div class="mini-stats">
+      <div class="mini-stat-card">
+        <p>Pending Requests</p>
+        <h3 id="stat-requests">0</h3>
+      </div>
+      <div class="mini-stat-card">
+        <p>Total Users</p>
+        <h3 id="stat-users">0</h3>
+      </div>
+    </div>
+
+    <!-- TABS -->
     <div class="tabs">
       <div class="tab active" id="tab-requests" onclick="switchTab('requests')">Approvals</div>
       <div class="tab" id="tab-assets" onclick="switchTab('assets')">Manage Assets</div>
       <div class="tab" id="tab-users" onclick="switchTab('users')">Users</div>
       <div class="tab" id="tab-complaints" onclick="switchTab('complaints')">Support</div>
+      <div class="tab" id="tab-notify" onclick="switchTab('notify')">Broadcast</div>
+      <div class="tab" id="tab-settings" onclick="switchTab('settings')">Settings</div>
     </div>
 
+    <!-- REQUESTS VIEW -->
     <div id="view-requests" class="view-section active">
-      <div class="panel"><h2>Pending Approvals</h2><div id="req-list">Loading...</div></div>
+      <div class="panel">
+        <h2>Pending Approvals</h2>
+        <div id="req-list"><p style="color:var(--muted);">Loading...</p></div>
+      </div>
     </div>
 
+    <!-- ASSETS VIEW -->
     <div id="view-assets" class="view-section">
       <div class="panel">
         <h2>Add Investment Option</h2>
@@ -101,13 +171,54 @@
       </div>
     </div>
 
+    <!-- USERS VIEW -->
     <div id="view-users" class="view-section">
-      <div class="panel"><h2>Registered Users</h2><div id="user-list">Loading...</div></div>
+      <div class="panel">
+        <h2>Registered Users</h2>
+        <div id="user-list"><p style="color:var(--muted);">Loading...</p></div>
+      </div>
     </div>
-    
+
+    <!-- COMPLAINTS VIEW -->
     <div id="view-complaints" class="view-section">
-      <div class="panel"><h2>Support Tickets</h2><div id="complaint-list">Loading...</div></div>
+      <div class="panel">
+        <h2>Support Tickets</h2>
+        <div id="complaint-list"><p style="color:var(--muted);">Loading...</p></div>
+      </div>
     </div>
+
+    <!-- BROADCAST VIEW -->
+    <div id="view-notify" class="view-section">
+      <div class="panel">
+        <h2>Send Notification</h2>
+        <div class="form-group">
+          <label>Recipient</label>
+          <select id="notify-target"><option value="all">All Users (Broadcast)</option></select>
+        </div>
+        <div class="form-group">
+          <label>Message</label>
+          <textarea id="notify-message" rows="4" placeholder="Type your notification here..."></textarea>
+        </div>
+        <button class="btn-save" onclick="sendNotification()">Send Notification</button>
+        <p id="notify-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
+      </div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div id="view-settings" class="view-section">
+      <div class="panel">
+        <h2>Deposit Bank Settings</h2>
+        <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">These details are shown to users when they try to make a deposit or repay a loan.</p>
+        
+        <div class="form-group"><label>Bank Name</label><input type="text" id="set-bank-name"></div>
+        <div class="form-group"><label>Account Number</label><input type="text" id="set-bank-account"></div>
+        <div class="form-group"><label>Routing Number</label><input type="text" id="set-bank-routing"></div>
+        <div class="form-group" style="margin-top: 20px;"><label>Bitcoin Wallet Address</label><input type="text" id="set-btc"></div>
+        <button class="btn-save" onclick="saveSettings()">Save Settings</button>
+        <p id="settings-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
+      </div>
+    </div>
+
   </div>
 
   <script>
@@ -116,6 +227,7 @@
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('dashboard-area').style.display = 'block';
         loadRequests();
+        loadUsers(); // Load stats immediately
       } else { alert("Access Denied"); }
     }
 
@@ -129,22 +241,28 @@
       if (tabName === 'assets') loadAdminAssets();
       if (tabName === 'users') loadUsers();
       if (tabName === 'complaints') loadComplaints();
+      if (tabName === 'notify') loadNotifyDropdown();
+      if (tabName === 'settings') loadSettings();
     }
 
+    // --- REQUESTS (DEPOSITS, LOANS, INVESTMENTS) ---
     async function loadRequests() {
       const requests = await (await fetch('/api/admin/requests')).json();
+      document.getElementById('stat-requests').textContent = requests.length;
+      
       document.getElementById('req-list').innerHTML = requests.length > 0 ? requests.map(tx => `
         <div class="req-item">
           <h4>${tx.name} (${tx.email})</h4>
           <p>Type: <strong>${tx.type.replace(/_/g, ' ')}</strong> | Amount: <strong>$${parseFloat(tx.amount).toFixed(2)}</strong></p>
           ${tx.details && tx.type === 'INVESTMENT_DEPOSIT' ? `<p>Asset: <strong>${tx.details.split('|')[0]} (${tx.details.split('|')[1]})</strong></p>` : ''}
-          ${tx.proof_image ? `<img src="${tx.proof_image}" class="proof-img">` : ''}
+          ${tx.reference ? `<p>Reference: <strong>${tx.reference}</strong></p>` : ''}
+          ${tx.proof_image ? `<a href="${tx.proof_image}" target="_blank"><img src="${tx.proof_image}" class="proof-img" title="Click to view full image"></a>` : ''}
           <div class="action-row">
             <button class="btn-approve" onclick="approveReq(${tx.id}, 'approve')">Approve</button>
             <button class="btn-reject" onclick="approveReq(${tx.id}, 'reject')">Reject</button>
           </div>
         </div>
-      `).join('') : '<p style="color:var(--muted);">No pending requests.</p>';
+      `).join('') : '<p style="color:var(--muted); text-align:center;">No pending requests.</p>';
     }
 
     async function approveReq(id, action) {
@@ -152,6 +270,7 @@
       loadRequests();
     }
 
+    // --- ASSETS ---
     async function loadAdminAssets() {
       const assets = await (await fetch('/api/admin/assets')).json();
       document.getElementById('asset-list-admin').innerHTML = assets.length > 0 ? assets.map(a => `
@@ -159,7 +278,7 @@
           <h4>${a.name} <span style="font-size:0.7rem; background:#E0E7FF; color:#3730A3; padding:2px 6px; border-radius:4px;">${a.category}</span></h4>
           <p>Target: $${parseFloat(a.price).toLocaleString()}</p>
         </div>
-      `).join('') : '<p style="color:var(--muted);">No assets added yet.</p>';
+      `).join('') : '<p style="color:var(--muted); text-align:center;">No assets added yet.</p>';
     }
 
     async function addAsset() {
@@ -193,26 +312,152 @@
       setTimeout(() => msg.textContent = "", 3000);
     }
 
+    // --- USERS ---
     async function loadUsers() {
       const data = await (await fetch('/api/admin/users')).json();
+      document.getElementById('stat-users').textContent = data.length;
+      
       document.getElementById('user-list').innerHTML = data.length > 0 ? data.map(u => `
-        <div class="req-item" style="flex-direction: row; justify-content: space-between; align-items: center;">
-          <div>
-            <h4>${u.name}</h4>
+        <div class="user-row">
+          <div class="user-info">
+            <h4>${u.name} (@${u.username})</h4>
             <p>${u.email}</p>
+            <span class="user-status ${u.status === 'Active' ? 'active' : 'frozen'}">${u.status}</span>
+          </div>
+          <div class="user-actions">
+            <button class="btn-sm btn-notify" onclick="promptNotify('${u.id}')">Notify</button>
+            <button class="btn-sm btn-outline-sm" onclick="freezeUser(${u.id}, '${u.status}')">${u.status === 'Active' ? 'Freeze' : 'Unfreeze'}</button>
+            <button class="btn-sm btn-delete" onclick="deleteUser(${u.id})">Delete</button>
           </div>
         </div>
-      `).join('') : '<p>No users.</p>';
+      `).join('') : '<p style="color:var(--muted); text-align:center;">No users found.</p>';
     }
 
+    async function freezeUser(id, currentStatus) {
+      const newStatus = currentStatus === 'Active' ? 'Frozen' : 'Active';
+      await fetch('/api/admin/freeze', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: id, status: newStatus }) });
+      loadUsers();
+    }
+
+    async function deleteUser(id) {
+      if (!confirm("Are you sure you want to delete this user?")) return;
+      await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+      loadUsers();
+    }
+
+    async function promptNotify(userId) {
+      const message = prompt("Enter notification message for this user:");
+      if (!message) return;
+      await fetch('/api/admin/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target: userId, message }) });
+      alert("Notification sent successfully!");
+    }
+
+    // --- BROADCAST ---
+    async function loadNotifyDropdown() {
+      const data = await (await fetch('/api/admin/users')).json();
+      const select = document.getElementById('notify-target');
+      select.innerHTML = '<option value="all">All Users (Broadcast)</option>' + data.map(u => `<option value="${u.id}">${u.name} (${u.email})</option>`).join('');
+    }
+
+    async function sendNotification() {
+      const target = document.getElementById('notify-target').value;
+      const message = document.getElementById('notify-message').value;
+      const msg = document.getElementById('notify-msg');
+      if (!message) { msg.textContent = "Enter a message."; msg.style.color = "var(--danger)"; return; }
+      msg.textContent = "Sending..."; msg.style.color = "var(--muted)";
+      
+      const res = await fetch('/api/admin/notify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ target, message }) });
+      if (res.ok) { 
+        msg.textContent = "✅ Notification sent!"; 
+        msg.style.color = "var(--emerald)"; 
+        document.getElementById('notify-message').value = ''; 
+      } else { 
+        msg.textContent = "❌ Failed to send."; 
+        msg.style.color = "var(--danger)"; 
+      }
+      setTimeout(() => msg.textContent = "", 3000);
+    }
+
+    // --- COMPLAINTS ---
     async function loadComplaints() {
       const complaints = await (await fetch('/api/admin/complaints')).json();
       document.getElementById('complaint-list').innerHTML = complaints.length > 0 ? complaints.map(c => `
         <div class="req-item">
-          <h4>${c.subject}</h4>
-          <p>From: ${c.name} | Status: <strong>${c.status}</strong></p>
+          <h4>${c.subject} <span style="font-size:0.75rem; color:var(--muted);">(${c.ref_number})</span></h4>
+          <p>From: <strong>${c.name}</strong> | Category: ${c.category}</p>
+          <div class="chat-box" id="admin-chat-${c.id}"><p style="text-align:center; font-size:0.8rem; color:#888;">Loading chat...</p></div>
+          <p style="margin-top:10px;">Status: <strong>${c.status}</strong></p>
+          
+          ${c.status !== 'Resolved' ? `
+          <div class="reply-row">
+            <input type="text" id="admin-reply-${c.id}" placeholder="Type reply..." onkeypress="if(event.key==='Enter') sendAdminReply(${c.id})">
+            <button class="btn-approve" onclick="sendAdminReply(${c.id})" style="flex:0 0 auto; padding: 10px 20px;">Send</button>
+          </div>` : ''}
         </div>
-      `).join('') : '<p>No complaints.</p>';
+      `).join('') : '<p style="color:var(--muted); text-align:center;">No complaints.</p>';
+      
+      complaints.forEach(c => { if(c.status !== 'Resolved') loadAdminChat(c.id); });
+    }
+
+    async function loadAdminChat(complaintId) {
+      const container = document.getElementById(`admin-chat-${complaintId}`);
+      if (!container) return;
+      const res = await fetch(`/api/chat/${complaintId}`);
+      const messages = await res.json();
+      
+      const isScrolledToBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+      
+      container.innerHTML = messages.map(m => `
+        <div class="msg ${m.sender}">
+          ${m.message}
+          <span class="msg-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+        </div>
+      `).join('');
+      
+      if (isScrolledToBottom) container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendAdminReply(complaintId) {
+      const input = document.getElementById(`admin-reply-${complaintId}`);
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = "";
+      await fetch(`/api/admin/chat/${complaintId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
+      loadAdminChat(complaintId);
+      setTimeout(loadComplaints, 500); 
+    }
+
+    // --- SETTINGS ---
+    async function loadSettings() {
+      const data = await (await fetch('/api/admin/settings')).json();
+      document.getElementById('set-bank-name').value = data.bank_name || '';
+      document.getElementById('set-bank-account').value = data.bank_account || '';
+      document.getElementById('set-bank-routing').value = data.bank_routing || '';
+      document.getElementById('set-btc').value = data.btc_address || '';
+    }
+
+    async function saveSettings() {
+      const msg = document.getElementById('settings-msg');
+      msg.textContent = "Saving..."; msg.style.color = "var(--muted)";
+      
+      const payload = { 
+        bank_name: document.getElementById('set-bank-name').value, 
+        bank_account: document.getElementById('set-bank-account').value, 
+        bank_routing: document.getElementById('set-bank-routing').value, 
+        btc_address: document.getElementById('set-btc').value 
+      };
+      
+      const res = await fetch('/api/admin/settings/update', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const result = await res.json();
+      
+      if (result.success) { 
+        msg.textContent = "✅ Settings updated!"; 
+        msg.style.color = "var(--emerald)"; 
+      } else { 
+        msg.textContent = "❌ Failed to update."; 
+        msg.style.color = "var(--danger)"; 
+      }
+      setTimeout(() => msg.textContent = "", 3000);
     }
   </script>
 </body>
