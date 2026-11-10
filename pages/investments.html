@@ -11,6 +11,7 @@
     body { background: var(--bg); display: flex; justify-content: center; min-height: 100vh; }
     .app-container { width: 100%; max-width: 650px; background: var(--bg); min-height: 100vh; position: relative; overflow-x: hidden; padding-bottom: 40px; }
 
+    /* TICKER */
     .ticker-wrap { width: 100%; overflow: hidden; background: #061a13; padding: 10px 0; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .ticker { display: inline-block; animation: ticker 35s linear infinite; }
     .ticker-item { display: inline-flex; align-items: center; gap: 8px; color: white; font-size: 0.8rem; font-weight: 600; margin-right: 30px; font-family: var(--font-mono); }
@@ -18,46 +19,41 @@
     .ticker-item span.down { color: #F87171; }
     @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
+    /* HEADER */
     .invest-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; text-align: center; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
     .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
     .invest-summary h2 { font-size: 3rem; font-weight: 800; margin: 0; letter-spacing: -1px; font-family: var(--font-mono); }
 
+    /* STATS */
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
     .stat-card { background: var(--surface); padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align: center; border: 1px solid var(--border); }
     .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
     .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 800; font-family: var(--font-mono); margin: 0; }
     .stat-card h3.profit { color: var(--emerald); }
 
+    /* ACTIONS */
     .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
     .action-btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 1rem; text-align: center; border: none; cursor: pointer; transition: 0.2s; }
     .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 10px rgba(15,138,95,0.3); }
 
+    /* MARKETPLACE */
     .marketplace { padding: 0 20px 20px; }
     .marketplace h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
-    
     .tab-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
     .tab-btn { background: var(--surface); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--muted); white-space: nowrap; cursor: pointer; transition: 0.2s; }
     .tab-btn.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
 
     .asset-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-    
-    .asset-card-img { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
-    .asset-img { width: 100%; height: 140px; object-fit: cover; background: #eee; }
-    .asset-info-box { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .asset-name { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px; }
-    .asset-cat { font-size: 0.75rem; color: var(--muted); }
-    .asset-price-box { text-align: right; }
-    .asset-price-box h4 { font-family: var(--font-mono); font-size: 1.1rem; margin: 0; color: var(--emerald); }
-    
     .asset-card { background: var(--surface); padding: 15px; border-radius: 14px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
     .asset-icon { width: 40px; height: 40px; background: #F4F7F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--deep-green); }
     .asset-price span { font-size: 0.8rem; font-weight: 600; }
     .asset-price span.up { color: var(--emerald); }
     .asset-price span.down { color: var(--danger); }
 
+    /* HISTORY ON MAIN SCREEN */
     .history-panel { padding: 0 20px 30px; }
     .history-panel h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
     .tx-item { background: var(--surface); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -65,13 +61,21 @@
     .tx-info p { font-size: 0.75rem; color: var(--muted); margin: 0; }
     .tx-amount { font-weight: 800; text-align: right; font-family: var(--font-mono); }
 
+    /* MODALS */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
     .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
+    .form-group input:focus { border-color: var(--emerald); background: white; }
     
+    /* ADMIN DETAILS BOX */
+    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); font-size: 0.85rem; line-height: 1.6; }
+    .admin-details-box strong { color: var(--deep-green); }
+    .copy-btn { background: var(--emerald); color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600; cursor: pointer; margin-left: 5px; }
+    .btc-address { font-family: monospace; font-size: 0.8rem; word-break: break-all; background: white; padding: 8px; border-radius: 6px; border: 1px solid #ddd; margin-top: 5px; display: flex; justify-content: space-between; align-items: center; }
+
     .quick-amounts { display: flex; gap: 10px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
     .quick-amounts::-webkit-scrollbar { display: none; }
     .quick-btn { background: #F4F7F6; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
@@ -110,8 +114,8 @@
       </div>
 
       <div class="action-grid">
-        <button class="action-btn btn-deposit" onclick="openModal('deposit')">Fund Account</button>
-        <button class="action-btn" style="background:white; border:1px solid var(--border); color:var(--text);" onclick="openModal('withdraw')">Withdraw</button>
+        <button class="action-btn btn-deposit" onclick="openDepositModal('General Portfolio', 'Crypto')">Fund Account</button>
+        <button class="action-btn" style="background:white; border:1px solid var(--border); color:var(--text);" onclick="alert('Withdrawal requests are processed manually. Contact support.')">Withdraw</button>
       </div>
 
       <div class="marketplace">
@@ -119,16 +123,17 @@
         <div class="tab-container">
           <button class="tab-btn active" onclick="switchTab('crypto', this)">Crypto</button>
           <button class="tab-btn" onclick="switchTab('stocks', this)">US Stocks</button>
-          <button class="tab-btn" onclick="switchTab('Real Estate', this)">Real Estate</button>
-          <button class="tab-btn" onclick="switchTab('Bonds', this)">Bonds</button>
         </div>
 
         <div id="asset-list-container" class="asset-list"></div>
       </div>
 
+      <!-- NEW: HISTORY ON MAIN SCREEN -->
       <div class="history-panel" style="margin-top: 20px;">
         <h3>Investment History</h3>
-        <div id="history-list"></div>
+        <div id="history-list">
+          <p style="text-align:center; color:var(--muted); font-size:0.9rem;">Loading history...</p>
+        </div>
       </div>
     </main>
   </div>
@@ -139,11 +144,22 @@
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2 style="color:var(--deep-green); margin-bottom:15px; font-size:1.3rem;">Fund Investment</h2>
       
-      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
-        <p style="margin: 0 0 5px; font-weight: 700;">Send payment to:</p>
+      <!-- FIXED ADMIN DETAILS & BITCOIN -->
+      <div class="admin-details-box">
+        <p style="margin: 0 0 5px; font-weight: 700; color:var(--deep-green);">Send payment to:</p>
         <div><strong>Bank:</strong> <span id="adm-bank">Loading...</span></div>
         <div><strong>Acct:</strong> <span id="adm-acc">Loading...</span></div>
         <div><strong>Routing:</strong> <span id="adm-rout">Loading...</span></div>
+        
+        <div style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:700; color:var(--deep-green);">₿ Bitcoin (Recommended for fast payment)</span>
+          </div>
+          <div class="btc-address">
+            <span id="adm-btc">Loading...</span>
+            <button class="copy-btn" onclick="copyBtc()">Copy</button>
+          </div>
+        </div>
       </div>
       
       <div class="form-group">
@@ -161,8 +177,9 @@
         <input type="number" id="dep-amount" placeholder="0.00">
       </div>
       
-      <div class="form-group"><label>Transaction Reference</label><input type="text" id="dep-ref" placeholder="e.g. TXID"></div>
+      <div class="form-group"><label>Transaction Reference / TXID</label><input type="text" id="dep-ref" placeholder="e.g. Bitcoin Hash"></div>
       <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*"></div>
+      
       <button onclick="submitDeposit()" style="width:100%; padding:16px; background:var(--emerald); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Submit Deposit</button>
       <div id="dep-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
@@ -177,9 +194,14 @@
     let liveProfit = 0;
     let profitTickRate = 0;
     let marketData = { crypto: [], stocks: [] };
-    let customAssets = [];
 
     function setVal(id, val) { document.getElementById(id).value = val; }
+
+    function copyBtc() {
+      const btc = document.getElementById('adm-btc').textContent;
+      navigator.clipboard.writeText(btc);
+      alert('Bitcoin address copied to clipboard!');
+    }
 
     async function fetchMarketData() {
       try {
@@ -196,72 +218,48 @@
       } catch (err) { console.log("Market fail", err); }
     }
 
-    async function fetchCustomAssets() {
-      try {
-        const res = await fetch('/api/assets');
-        customAssets = await res.json();
-      } catch (err) { console.log("Assets fail", err); }
-    }
-
     function switchTab(category, btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
       const container = document.getElementById('asset-list-container');
+      const assets = marketData[category] || [];
+      
+      if (assets.length === 0) { container.innerHTML = '<p>Loading...</p>'; return; }
 
-      if (category === 'crypto' || category === 'stocks') {
-        const assets = marketData[category] || [];
-        if (assets.length === 0) { container.innerHTML = '<p>Loading...</p>'; return; }
-
-        container.innerHTML = assets.map(asset => `
-          <div class="asset-card" onclick="selectAsset('${asset.name}', '${category}')">
-            <div style="display:flex; align-items:center; gap:12px;">
-              <div class="asset-icon">${asset.icon}</div>
-              <div>
-                <div class="asset-name">${asset.name}</div>
-                <div class="asset-cat">${asset.ticker}</div>
-              </div>
-            </div>
-            <div class="asset-price" style="text-align:right;">
-              <h4 style="font-family:var(--font-mono);">$${parseFloat(asset.price).toLocaleString()}</h4>
-              <span class="${asset.change >= 0 ? 'up' : 'down'}">${asset.change > 0 ? '+' : ''}${parseFloat(asset.change).toFixed(2)}%</span>
+      container.innerHTML = assets.map(asset => `
+        <div class="asset-card" onclick="openDepositModal('${asset.name}', '${category}')">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="asset-icon">${asset.icon}</div>
+            <div>
+              <div style="font-weight:700; font-size:1rem;">${asset.name}</div>
+              <div style="font-size:0.75rem; color:var(--muted);">${asset.ticker}</div>
             </div>
           </div>
-        `).join('');
-      } else {
-        const assets = customAssets.filter(a => a.category === category);
-        if (assets.length === 0) { container.innerHTML = `<p style="text-align:center; color:var(--muted);">No ${category} available right now.</p>`; return; }
-
-        container.innerHTML = assets.map(asset => `
-          <div class="asset-card-img" onclick="selectAsset('${asset.name}', '${asset.category}')">
-            <img src="${asset.image_url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop'}" class="asset-img">
-            <div class="asset-info-box">
-              <div>
-                <div class="asset-name">${asset.name}</div>
-                <div class="asset-cat">${asset.category}</div>
-              </div>
-              <div class="asset-price-box">
-                <h4>${formatUSD(asset.price)}</h4>
-              </div>
-            </div>
+          <div style="text-align:right;">
+            <h4 style="font-family:var(--font-mono);">$${parseFloat(asset.price).toLocaleString()}</h4>
+            <span class="${asset.change >= 0 ? 'up' : 'down'}" style="font-size:0.8rem; font-weight:600;">${asset.change > 0 ? '+' : ''}${parseFloat(asset.change).toFixed(2)}%</span>
           </div>
-        `).join('');
-      }
+        </div>
+      `).join('');
     }
 
-    function selectAsset(name, category) {
+    function openDepositModal(name, category) {
       document.getElementById('dep-asset-name').value = `${name} (${category})`;
-      openModal('deposit');
+      document.getElementById('modal-deposit').classList.add('open');
     }
 
-    async function loadDashboardData() {
+    async function loadAdminDetailsAndHistory() {
       try {
+        // 1. Fetch Admin Bank & BTC Details
         const setRes = await fetch('/api/admin/settings');
         const settings = await setRes.json();
         document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
         document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
         document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
+        document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
 
+        // 2. Fetch Investments Data
         const res = await fetch(`/api/investments/${user.id}`);
         const data = await res.json();
 
@@ -276,7 +274,7 @@
 
             if (inv.start_date && inv.maturity_date) {
               const totalDurationSeconds = (new Date(inv.maturity_date) - new Date(inv.start_date)) / 1000;
-              const totalExpectedProfit = parseFloat(inv.amount) * 0.4;
+              const totalExpectedProfit = parseFloat(inv.amount) * 0.4; // 40% ROI
               const profitPerSecond = totalExpectedProfit / totalDurationSeconds;
               if (new Date() < new Date(inv.maturity_date)) {
                 profitTickRate += profitPerSecond;
@@ -288,6 +286,7 @@
         liveProfit = baseProfit;
         updateUI();
 
+        // 3. Fetch Transactions for History
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
         const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
@@ -303,8 +302,11 @@
               <div style="font-size:0.7rem; color:var(--muted); font-family: var(--font-main);">${tx.status}</div>
             </div>
           </div>
-        `).join('') : '<p style="color: var(--muted); font-size: 0.9rem;">No investment history.</p>';
-      } catch(err) { console.error(err); }
+        `).join('') : '<p style="text-align:center; color: var(--muted); font-size: 0.9rem;">No investment history.</p>';
+      } catch(err) { 
+        console.error(err); 
+        document.getElementById('history-list').innerHTML = '<p style="color:red; text-align:center;">Failed to load data.</p>';
+      }
     }
 
     function updateUI() {
@@ -320,7 +322,6 @@
       }
     }, 1000);
 
-    function openModal(type) { document.getElementById(`modal-${type}`).classList.add('open'); }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
 
     async function submitDeposit() {
@@ -351,17 +352,19 @@
       if(data.success) {
         msg.textContent = "Pending Admin Approval."; 
         msg.style.color = "var(--emerald)";
-        setTimeout(() => { closeModal(); loadDashboardData(); }, 2000);
+        setTimeout(() => { 
+          closeModal(); 
+          loadAdminDetailsAndHistory(); 
+        }, 2000);
       } else {
         msg.textContent = data.error; msg.style.color = "red";
       }
     }
 
-    fetchMarketData();
-    fetchCustomAssets().then(() => {
+    fetchMarketData().then(() => {
       switchTab('crypto', document.querySelector('.tab-btn.active'));
     });
-    loadDashboardData();
+    loadAdminDetailsAndHistory();
   </script>
 </body>
 </html>
