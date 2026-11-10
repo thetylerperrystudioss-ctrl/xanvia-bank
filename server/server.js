@@ -26,6 +26,15 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
+// Helper function to easily send notifications
+async function sendNotification(userId, message) {
+  try {
+    await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [userId, message]);
+  } catch (err) {
+    console.error("Failed to send notification:", err);
+  }
+}
+
 // ==========================================
 // NODEMAILER SETUP
 // ==========================================
@@ -192,15 +201,8 @@ app.post('/api/register', async (req, res) => {
 
     await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUserId]);
 
-    // Insert Welcome Notification
-    await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, 
-      [newUserId, `Welcome to Xanvia Credit Union, ${name || 'Member'}! Your account has been successfully created.`]
-    );
-
-    // Insert $25 Deposit Reminder Notification
-    await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, 
-      [newUserId, `Action Required: A minimum deposit of $25 is required to fully activate your checking account and unlock transfers.`]
-    );
+    await sendNotification(newUserId, `Welcome to Xanvia Credit Union, ${name || 'Member'}! Your account has been successfully created.`);
+    await sendNotification(newUserId, `Action Required: A minimum deposit of $25 is required to fully activate your checking account and unlock transfers.`);
 
     res.json({ success: true, message: 'Account created successfully!', userId: newUserId });
   } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
@@ -398,6 +400,7 @@ app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
+    await sendNotification(userId, `Your loan application for $${parseFloat(amount).toFixed(2)} has been submitted and is pending review.`);
     res.json({ success: true, message: 'Application received.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
@@ -407,6 +410,7 @@ app.post('/api/loans/transfer', async (req, res) => {
   try {
     const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
+    await sendNotification(userId, `Your loan transfer request of $${parseFloat(amount).toFixed(2)} to ${destination} is pending admin approval.`);
     res.json({ success: true, message: 'Transfer pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
@@ -415,6 +419,7 @@ app.post('/api/loans/repay', async (req, res) => {
   const { userId, amount } = req.body;
   try {
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
+    await sendNotification(userId, `Your loan repayment of $${parseFloat(amount).toFixed(2)} has been received and is pending admin approval.`);
     res.json({ success: true, message: 'Repayment pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
@@ -425,6 +430,7 @@ app.post('/api/transfer/internal', async (req, res) => {
     const balCheck = await pool.query(`SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) as balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`, [userId]);
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, details) VALUES ($1, 'INTERNAL_TRANSFER', $2, 'Pending', $3, 'Transfer')`, [userId, amount, recipientAccount]);
+    await sendNotification(userId, `Your transfer of $${parseFloat(amount).toFixed(2)} to account ending in ${recipientAccount.slice(-4)} is pending admin approval.`);
     res.json({ success: true, message: 'Transfer submitted. Pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
@@ -443,6 +449,7 @@ app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) =
   const imagePath = `/uploads/${req.file.filename}`;
   try {
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, targetAccount, imagePath]);
+    await sendNotification(userId, `Your deposit of $${parseFloat(amount).toFixed(2)} has been submitted successfully and is pending review.`);
     res.json({ success: true, message: 'Deposit submitted.' });
   } catch (err) { res.status(500).json({ error: 'Server error.' }); }
 });
@@ -453,6 +460,7 @@ app.post('/api/investments/deposit', upload.single('screenshot'), async (req, re
   const imagePath = `/uploads/${req.file.filename}`;
   try {
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'INVESTMENT_DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, reference, imagePath]);
+    await sendNotification(userId, `Your investment deposit of $${parseFloat(amount).toFixed(2)} is pending admin approval.`);
     res.json({ success: true, message: 'Investment deposit pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
@@ -464,6 +472,7 @@ app.post('/api/investments/withdraw', async (req, res) => {
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient balance.' });
     const details = `Withdrawal Lock-in: ${timeline} Days`;
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'INVESTMENT_WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
+    await sendNotification(userId, `Your investment withdrawal request for $${parseFloat(amount).toFixed(2)} is pending. Lock-in: ${timeline} days.`);
     res.json({ success: true, message: `Withdrawal requested for ${timeline} days.` });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
@@ -481,15 +490,17 @@ app.post('/api/cards/request', async (req, res) => {
     if (!userId || !cardType) return res.status(400).json({ error: 'Missing userId or cardType.' });
     const last4 = Math.floor(1000 + Math.random() * 9000).toString();
     await pool.query(`INSERT INTO cards (user_id, card_type, status, last4) VALUES ($1, $2, 'Active', $3)`, [userId, cardType, last4]);
+    await sendNotification(userId, `Your request for a new ${cardType} ending in ${last4} has been approved and is active.`);
     res.json({ success: true, message: 'Card created successfully!' });
   } catch (err) { res.status(500).json({ error: 'Failed to request card.' }); }
 });
 
 app.post('/api/cards/:cardId/toggle', async (req, res) => {
   const { cardId } = req.params;
-  const { status } = req.body;
+  const { status, userId } = req.body;
   try {
     await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, cardId]);
+    await sendNotification(userId, `Your card status has been updated to: ${status}.`);
     res.json({ success: true, status });
   } catch (err) { res.status(500).json({ error: 'Failed to update card status.' }); }
 });
@@ -557,6 +568,7 @@ app.get('/api/admin/requests', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+// ADMIN APPROVE/REJECT
 app.post('/api/admin/approve', async (req, res) => {
   const { txId, action } = req.body;
   const client = await pool.connect();
@@ -576,8 +588,12 @@ app.post('/api/admin/approve', async (req, res) => {
         const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit) VALUES ($1, $2, 'Active', $3, $4, $5)`, [tx.user_id, tx.amount, now, maturity, 0]);
       }
+      // Send Success Notification
+      await sendNotification(tx.user_id, `Good news! Your ${tx.type.replace(/_/g, ' ')} of $${parseFloat(tx.amount).toFixed(2)} has been approved and processed.`);
     } else {
       await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
+      // Send Rejection Notification
+      await sendNotification(tx.user_id, `Alert: Your ${tx.type.replace(/_/g, ' ')} of $${parseFloat(tx.amount).toFixed(2)} was rejected. Please contact support for details.`);
     }
     await client.query('COMMIT');
     res.json({ success: true });
@@ -595,6 +611,11 @@ app.post('/api/admin/freeze', async (req, res) => {
   const { userId, status } = req.body;
   try {
     await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
+    if (status === 'Frozen') {
+      await sendNotification(userId, `Your account has been temporarily frozen by an administrator. Please contact support.`);
+    } else {
+      await sendNotification(userId, `Your account has been unfrozen and is now active.`);
+    }
     res.json({ success: true });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
