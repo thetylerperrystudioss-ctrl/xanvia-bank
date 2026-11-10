@@ -188,9 +188,21 @@ app.post('/api/register', async (req, res) => {
       [name || 'Member', safeUsername, email.toLowerCase(), hashedPassword, phone || null, accountNumber, routingNumber]
     );
 
-    await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [userResult.rows[0].id]);
+    const newUserId = userResult.rows[0].id;
 
-    res.json({ success: true, message: 'Account created successfully!', userId: userResult.rows[0].id });
+    await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUserId]);
+
+    // Insert Welcome Notification
+    await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, 
+      [newUserId, `Welcome to Xanvia Credit Union, ${name || 'Member'}! Your account has been successfully created.`]
+    );
+
+    // Insert $25 Deposit Reminder Notification
+    await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, 
+      [newUserId, `Action Required: A minimum deposit of $25 is required to fully activate your checking account and unlock transfers.`]
+    );
+
+    res.json({ success: true, message: 'Account created successfully!', userId: newUserId });
   } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
 });
 
@@ -207,10 +219,8 @@ app.post('/api/login', async (req, res) => {
     user.has_loan = isOnboarded;
     user.has_investment = isOnboarded;
 
-    // --- SECURITY LOGGING ---
     const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
     const device = req.headers['user-agent'] || 'Unknown Device';
-    
     await pool.query(`INSERT INTO login_history (user_id, ip_address, device_info) VALUES ($1, $2, $3)`, [user.id, ip, device]);
 
     await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
@@ -218,7 +228,6 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
-// GET LOGIN HISTORY
 app.get('/api/security/logins/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM login_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5', [req.params.userId]);
@@ -226,70 +235,43 @@ app.get('/api/security/logins/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to load history.' }); }
 });
 
-// CHANGE PASSWORD
 app.post('/api/user/change-password', async (req, res) => {
   const { userId, currentPassword, newPassword } = req.body;
   try {
     const result = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
-
     const user = result.rows[0];
     const isMatch = await bcrypt.compare(currentPassword, user.password);
-    
-    if (!isMatch) {
-      return res.status(400).json({ error: 'Incorrect current password.' });
-    }
+    if (!isMatch) return res.status(400).json({ error: 'Incorrect current password.' });
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
     await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedNewPassword, userId]);
-    
     res.json({ success: true, message: 'Password updated successfully.' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to update password.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to update password.' }); }
 });
 
-// FORGOT PASSWORD
 app.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
     const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email.toLowerCase()]);
     if (result.rows.length === 0) return res.status(404).json({ error: 'Email not found.' });
-
     const user = result.rows[0];
     const tempPassword = "Reset" + Math.floor(1000 + Math.random() * 9000);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
-
     await pool.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email.toLowerCase()]);
 
     const mailOptions = {
       from: `"Xanvia Support" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: 'Xanvia Password Reset',
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #1A1A1A;">
-          <h2 style="color: #0F8A5F;">Hello ${user.name},</h2>
-          <p>We received a request to reset your password.</p>
-          <p>Your temporary password is:</p>
-          <h1 style="background: #F4F7F6; padding: 10px; display: inline-block; border-radius: 8px; font-family: monospace;">${tempPassword}</h1>
-          <p>Please log in and change your password immediately.</p>
-        </div>
-      `
+      html: `<h2>Hello ${user.name},</h2><p>Your temp password is: <b>${tempPassword}</b></p>`
     };
 
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log('Email Error:', error);
-        return res.json({ success: true, message: `Password reset. (Email failed). Your temp password is: ${tempPassword}` });
-      } else {
-        return res.json({ success: true, message: `Password reset successful! Check your email for the new password.` });
-      }
+    transporter.sendMail(mailOptions, (error) => {
+      if (error) return res.json({ success: true, message: `Password reset. Temp password is: ${tempPassword}` });
+      return res.json({ success: true, message: `Check your email for the new password.` });
     });
-
-  } catch (err) {
-    res.status(500).json({ error: 'Database error.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
 app.get('/api/market', (req, res) => { res.json(marketCache); });
@@ -314,7 +296,6 @@ app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
 });
 
-// INVESTMENTS
 app.get('/api/investments/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -341,7 +322,6 @@ app.get('/api/investments/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-// TRANSACTIONS & ACCOUNTS
 app.get('/api/transactions/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -392,20 +372,15 @@ app.post('/api/admin/settings/update', async (req, res) => {
       ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
     `, [bank_name, bank_account, bank_routing, btc_address]);
     res.json({ success: true, message: 'Settings updated successfully.' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update settings.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
 });
 
-// ONBOARDING & STATUS
 app.post('/api/complete-onboarding', async (req, res) => {
   const { userId, type, age, address, ssn_last4 } = req.body;
   try {
     await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
-
     const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : type === 'investment' ? 'INVESTMENT_ACCOUNT' : 'KYC_COMPLETED';
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
-
     res.json({ success: true, message: 'Application approved!' });
   } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
 });
@@ -415,17 +390,10 @@ app.get('/api/user-status/:userId', async (req, res) => {
     const userId = req.params.userId;
     const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
     const isOnboarded = !!(userRes.rows[0]?.age && userRes.rows[0]?.address);
-
-    res.json({
-      has_bank: isOnboarded,
-      has_loan: isOnboarded,
-      has_investment: isOnboarded,
-      needs_fee: false
-    });
+    res.json({ has_bank: isOnboarded, has_loan: isOnboarded, has_investment: isOnboarded, needs_fee: false });
   } catch (err) { res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); }
 });
 
-// LOANS, DEPOSITS & TRANSFERS
 app.post('/api/loans/apply', async (req, res) => {
   const { userId, amount } = req.body;
   try {
@@ -456,7 +424,6 @@ app.post('/api/transfer/internal', async (req, res) => {
   try {
     const balCheck = await pool.query(`SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) as balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`, [userId]);
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
-
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, details) VALUES ($1, 'INTERNAL_TRANSFER', $2, 'Pending', $3, 'Transfer')`, [userId, amount, recipientAccount]);
     res.json({ success: true, message: 'Transfer submitted. Pending Admin approval.' });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -495,60 +462,38 @@ app.post('/api/investments/withdraw', async (req, res) => {
   try {
     const balCheck = await pool.query(`SELECT COALESCE(SUM(amount), 0) as balance FROM investments WHERE user_id = $1 AND status = 'Active'`, [userId]);
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient balance.' });
-
     const details = `Withdrawal Lock-in: ${timeline} Days`;
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'INVESTMENT_WITHDRAWAL', $2, 'Pending', $3)`, [userId, amount, details]);
     res.json({ success: true, message: `Withdrawal requested for ${timeline} days.` });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ==========================================
-// CARDS (USER)
-// ==========================================
 app.get('/api/cards/:userId', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC',
-      [req.params.userId]
-    );
+    const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
     res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to load cards.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to load cards.' }); }
 });
 
 app.post('/api/cards/request', async (req, res) => {
   const { userId, cardType } = req.body;
   try {
-    if (!userId || !cardType) {
-      return res.status(400).json({ error: 'Missing userId or cardType.' });
-    }
+    if (!userId || !cardType) return res.status(400).json({ error: 'Missing userId or cardType.' });
     const last4 = Math.floor(1000 + Math.random() * 9000).toString();
-    await pool.query(
-      `INSERT INTO cards (user_id, card_type, status, last4)
-       VALUES ($1, $2, 'Active', $3)`,
-      [userId, cardType, last4]
-    );
+    await pool.query(`INSERT INTO cards (user_id, card_type, status, last4) VALUES ($1, $2, 'Active', $3)`, [userId, cardType, last4]);
     res.json({ success: true, message: 'Card created successfully!' });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to request card.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to request card.' }); }
 });
 
-// Toggle Card Status (Freeze/Unfreeze)
 app.post('/api/cards/:cardId/toggle', async (req, res) => {
   const { cardId } = req.params;
-  const { status } = req.body; // 'Active' or 'Frozen'
+  const { status } = req.body;
   try {
     await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, cardId]);
     res.json({ success: true, status });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update card status.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to update card status.' }); }
 });
 
-// NOTIFICATIONS & CHAT
 app.get('/api/notifications/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -570,7 +515,7 @@ app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
     const result = await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message) VALUES ($1, $2, $3, $4, $5) RETURNING id`, [userId, refNum, category, subject, message]);
     const complaintId = result.rows[0].id;
     await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'user', $2)`, [complaintId, message]);
-    const autoReply = `Welcome to Xanvia Credit Union Support. We have received your inquiry regarding "${subject}". A secure support agent will review your message shortly. Your reference number is ${refNum}.`;
+    const autoReply = `Welcome to Xanvia Support. We have received your inquiry regarding "${subject}". Your reference number is ${refNum}.`;
     await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [complaintId, autoReply]);
     res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
@@ -605,7 +550,6 @@ app.post('/api/chat/:complaintId/resolve', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ADMIN ROUTES
 app.get('/api/admin/requests', async (req, res) => {
   try {
     const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
@@ -693,21 +637,11 @@ app.post('/api/admin/chat/:complaintId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-// ==========================================
-// ADMIN — CARD MANAGEMENT
-// ==========================================
 app.get('/api/admin/cards', async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT c.*, u.name, u.email
-      FROM cards c
-      JOIN users u ON c.user_id = u.id
-      ORDER BY c.created_at DESC
-    `);
+    const result = await pool.query(`SELECT c.*, u.name, u.email FROM cards c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
     res.json(result.rows);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to load cards.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to load cards.' }); }
 });
 
 app.post('/api/admin/cards/:id/status', async (req, res) => {
@@ -715,9 +649,7 @@ app.post('/api/admin/cards/:id/status', async (req, res) => {
   try {
     await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, req.params.id]);
     res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to update card.' });
-  }
+  } catch (err) { res.status(500).json({ error: 'Failed to update card.' }); }
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));

@@ -29,7 +29,9 @@
     .nav-right { display: flex; align-items: center; gap: 10px; }
     .bell-btn { position: relative; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: 0.2s; color: white; }
     .bell-btn:hover { background: rgba(255,255,255,0.2); }
-    .bell-badge { position: absolute; top: 0px; right: 0px; background: var(--danger); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--deep-green); display: none; }
+    
+    /* RED DOT BADGE */
+    .bell-badge { position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; background: var(--danger); border-radius: 50%; border: 2px solid var(--deep-green); display: none; }
 
     .balance-section { margin-top: 10px; position: relative; display: inline-block; }
     .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; display: flex; align-items: center; justify-content: center; gap: 12px; }
@@ -52,7 +54,6 @@
     .tx-header h3 { font-size: 1.1rem; color: var(--text); }
     .transaction-list { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
     
-    /* NEW: DATE GROUP HEADERS */
     .date-group-header { padding: 12px 20px; background: var(--bg); font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
     
     .tx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid var(--border); }
@@ -285,7 +286,7 @@
       </div>
       <div class="nav-right">
         <button class="bell-btn" onclick="openNotifications(event)">
-          🔔 <span class="bell-badge" id="bell-badge">0</span>
+          🔔 <span class="bell-badge" id="bell-badge"></span>
         </button>
         <button class="bell-btn" onclick="openSupport(event)" title="Support">💬</button>
       </div>
@@ -559,6 +560,7 @@
       setTimeout(() => { toast.style.opacity = "0"; }, 2500);
     }
 
+    // --- NOTIFICATIONS LOGIC ---
     async function loadNotifications() {
       try {
         const res = await fetch(`/api/notifications/${user.id}`);
@@ -572,15 +574,15 @@
           return;
         }
 
+        // Show red dot if there are unread messages
         const unreadCount = notifs.filter(n => !n.is_read).length;
         if (unreadCount > 0) {
-          badge.textContent = unreadCount;
           badge.style.display = 'block';
-          alert("New Notification from Admin:\n\n" + notifs[0].message);
-          await fetch(`/api/notifications/${user.id}/read`, { method: 'POST' });
+        } else {
           badge.style.display = 'none';
         }
 
+        // Render the list (highlighting unread ones)
         list.innerHTML = notifs.map(n => `
           <div class="notif-item" style="background:${n.is_read ? 'transparent' : 'rgba(15,138,95,0.1)'};">
             <p style="margin:0; font-weight:${n.is_read ? '400' : '600'};">${n.message}</p>
@@ -590,9 +592,18 @@
       } catch (err) { console.error(err); }
     }
 
-    function openNotifications(e) {
+    // NEW: Open notification and mark as read
+    async function openNotifications(e) {
       if(e) e.preventDefault();
       document.getElementById('modal-notifications').classList.add('open');
+      
+      // Hide dot immediately
+      document.getElementById('bell-badge').style.display = 'none';
+      
+      // Mark as read in backend
+      await fetch(`/api/notifications/${user.id}/read`, { method: 'POST' });
+      
+      // Reload list to show them as read
       loadNotifications();
     }
 
@@ -713,7 +724,6 @@
       showSupportList();
     }
 
-    // --- DASHBOARD LOGIC ---
     async function loadDashboard() {
       if (isBalanceHidden) return;
 
@@ -739,7 +749,6 @@
       }
     }
 
-    // NEW: Helper to format dates nicely for the history headers
     function formatGroupDate(dateStr) {
       const d = new Date(dateStr);
       const today = new Date();
@@ -768,7 +777,6 @@
         const txDate = new Date(tx.created_at);
         const dateLabel = formatGroupDate(txDate);
 
-        // If the date changes, insert a new date header
         if (dateLabel !== currentDateLabel) {
           html += `<div class="date-group-header">${dateLabel}</div>`;
           currentDateLabel = dateLabel;
@@ -784,7 +792,6 @@
         if (tx.type === 'FEE') icon = '⚠️';
         if (tx.type === 'INTERNAL_TRANSFER') icon = '↗️';
 
-        // Format time (e.g., "10:45 AM")
         const timeString = txDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
         html += `
@@ -817,6 +824,9 @@
 
     loadDashboard();
     loadNotifications();
+    
+    // Check for new notifications every 30 seconds
+    setInterval(loadNotifications, 30000);
   </script>
 </body>
 </html>
