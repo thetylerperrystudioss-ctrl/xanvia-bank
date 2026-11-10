@@ -53,7 +53,16 @@
     .asset-price span.up { color: var(--emerald); }
     .asset-price span.down { color: var(--danger); }
 
-    /* HISTORY ON MAIN SCREEN */
+    /* IMAGE CARD FOR REAL ESTATE */
+    .asset-card-img { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+    .asset-img { width: 100%; height: 140px; object-fit: cover; background: #eee; }
+    .asset-info-box { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .asset-name { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+    .asset-cat { font-size: 0.75rem; color: var(--muted); }
+    .asset-price-box { text-align: right; }
+    .asset-price-box h4 { font-family: var(--font-mono); font-size: 1.1rem; margin: 0; color: var(--emerald); }
+
+    /* HISTORY */
     .history-panel { padding: 0 20px 30px; }
     .history-panel h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
     .tx-item { background: var(--surface); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
@@ -67,8 +76,8 @@
     .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
     .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background: white; }
+    .form-group input, .form-group select { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--emerald); background: white; }
     
     /* ADMIN DETAILS BOX */
     .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 15px; border: 1px solid var(--border); font-size: 0.85rem; line-height: 1.6; }
@@ -115,7 +124,7 @@
 
       <div class="action-grid">
         <button class="action-btn btn-deposit" onclick="openDepositModal('General Portfolio', 'Crypto')">Fund Account</button>
-        <button class="action-btn" style="background:white; border:1px solid var(--border); color:var(--text);" onclick="alert('Withdrawal requests are processed manually. Contact support.')">Withdraw</button>
+        <button class="action-btn" style="background:white; border:1px solid var(--border); color:var(--text);" onclick="checkWithdrawal()">Withdraw</button>
       </div>
 
       <div class="marketplace">
@@ -123,12 +132,13 @@
         <div class="tab-container">
           <button class="tab-btn active" onclick="switchTab('crypto', this)">Crypto</button>
           <button class="tab-btn" onclick="switchTab('stocks', this)">US Stocks</button>
+          <button class="tab-btn" onclick="switchTab('Real Estate', this)">Real Estate</button>
+          <button class="tab-btn" onclick="switchTab('Bonds', this)">Bonds</button>
         </div>
 
         <div id="asset-list-container" class="asset-list"></div>
       </div>
 
-      <!-- HISTORY ON MAIN SCREEN -->
       <div class="history-panel" style="margin-top: 20px;">
         <h3>Investment History</h3>
         <div id="history-list">
@@ -166,6 +176,17 @@
         <input type="text" id="dep-asset-name" readonly style="background:#E6F4EE; color:var(--emerald); font-weight:700;">
       </div>
 
+      <!-- NEW: SELECT TERM -->
+      <div class="form-group">
+        <label>Select Investment Term</label>
+        <select id="dep-term">
+          <option value="7">7 Days (Standard)</option>
+          <option value="14">14 Days (Extended)</option>
+          <option value="30">30 Days (Premium)</option>
+          <option value="60">60 Days (VIP)</option>
+        </select>
+      </div>
+
       <div class="form-group">
         <label>Amount ($)</label>
         <div class="quick-amounts">
@@ -193,6 +214,7 @@
     let liveProfit = 0;
     let profitTickRate = 0;
     let marketData = { crypto: [], stocks: [] };
+    let customAssets = [];
 
     function setVal(id, val) { document.getElementById(id).value = val; }
 
@@ -217,30 +239,57 @@
       } catch (err) { console.log("Market fail", err); }
     }
 
+    async function fetchCustomAssets() {
+      try {
+        const res = await fetch('/api/assets');
+        customAssets = await res.json();
+      } catch (err) { console.log("Assets fail", err); }
+    }
+
     function switchTab(category, btn) {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
       const container = document.getElementById('asset-list-container');
-      const assets = marketData[category] || [];
-      
-      if (assets.length === 0) { container.innerHTML = '<p>Loading...</p>'; return; }
 
-      container.innerHTML = assets.map(asset => `
-        <div class="asset-card" onclick="openDepositModal('${asset.name}', '${category}')">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <div class="asset-icon">${asset.icon}</div>
-            <div>
-              <div style="font-weight:700; font-size:1rem;">${asset.name}</div>
-              <div style="font-size:0.75rem; color:var(--muted);">${asset.ticker}</div>
+      if (category === 'crypto' || category === 'stocks') {
+        const assets = marketData[category] || [];
+        if (assets.length === 0) { container.innerHTML = '<p>Loading...</p>'; return; }
+
+        container.innerHTML = assets.map(asset => `
+          <div class="asset-card" onclick="openDepositModal('${asset.name}', '${category}')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="asset-icon">${asset.icon}</div>
+              <div>
+                <div style="font-weight:700; font-size:1rem;">${asset.name}</div>
+                <div style="font-size:0.75rem; color:var(--muted);">${asset.ticker}</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <h4 style="font-family:var(--font-mono);">$${parseFloat(asset.price).toLocaleString()}</h4>
+              <span class="${asset.change >= 0 ? 'up' : 'down'}" style="font-size:0.8rem; font-weight:600;">${asset.change > 0 ? '+' : ''}${parseFloat(asset.change).toFixed(2)}%</span>
             </div>
           </div>
-          <div style="text-align:right;">
-            <h4 style="font-family:var(--font-mono);">$${parseFloat(asset.price).toLocaleString()}</h4>
-            <span class="${asset.change >= 0 ? 'up' : 'down'}" style="font-size:0.8rem; font-weight:600;">${asset.change > 0 ? '+' : ''}${parseFloat(asset.change).toFixed(2)}%</span>
+        `).join('');
+      } else {
+        const assets = customAssets.filter(a => a.category === category);
+        if (assets.length === 0) { container.innerHTML = `<p style="text-align:center; color:var(--muted);">No ${category} available right now.</p>`; return; }
+
+        container.innerHTML = assets.map(asset => `
+          <div class="asset-card-img" onclick="openDepositModal('${asset.name}', '${asset.category}')">
+            <img src="${asset.image_url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop'}" class="asset-img">
+            <div class="asset-info-box">
+              <div>
+                <div class="asset-name">${asset.name}</div>
+                <div class="asset-cat">${asset.category}</div>
+              </div>
+              <div class="asset-price-box">
+                <h4>${formatUSD(asset.price)}</h4>
+              </div>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
+      }
     }
 
     function openDepositModal(name, category) {
@@ -248,8 +297,38 @@
       document.getElementById('modal-deposit').classList.add('open');
     }
 
-    // SPLIT THIS INTO TWO SEPARATE FUNCTIONS SO ONE FAILING DOESN'T BREAK THE OTHER
-    async function loadAdminDetails() {
+    async function checkWithdrawal() {
+      try {
+        const res = await fetch(`/api/investments/${user.id}`);
+        const data = await res.json();
+        const active = data.filter(inv => inv.status === 'Active');
+
+        if (active.length === 0) {
+          alert("You do not have any active investments to withdraw from.");
+          return;
+        }
+
+        // Find the nearest maturity date
+        const nextMaturity = active.reduce((earliest, inv) => {
+          const invDate = new Date(inv.maturity_date);
+          return invDate < earliest ? invDate : earliest;
+        }, new Date(active[0].maturity_date));
+
+        const now = new Date();
+        const diffTime = nextMaturity - now;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays > 0) {
+          alert(`Withdrawal Available In:\n\nYour funds will be fully available for withdrawal in ${diffDays} days (${nextMaturity.toLocaleDateString()}).`);
+        } else {
+          alert("Your investments have matured! Please submit a withdrawal request via support.");
+        }
+      } catch (err) {
+        alert("Withdrawal requests are processed manually. Contact support.");
+      }
+    }
+
+    async function loadAdminDetailsAndHistory() {
       try {
         const setRes = await fetch('/api/admin/settings');
         if(!setRes.ok) throw new Error("Failed to fetch settings");
@@ -259,17 +338,13 @@
         document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
         document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
       } catch (err) {
-        console.error("Admin details fail:", err);
         document.getElementById('adm-bank').textContent = 'Unavailable';
         document.getElementById('adm-acc').textContent = 'Unavailable';
         document.getElementById('adm-rout').textContent = 'Unavailable';
         document.getElementById('adm-btc').textContent = 'Unavailable';
       }
-    }
 
-    async function loadHistoryAndInvestments() {
       try {
-        // Fetch Investments
         const res = await fetch(`/api/investments/${user.id}`);
         const data = await res.json();
 
@@ -296,7 +371,6 @@
         liveProfit = baseProfit;
         updateUI();
 
-        // Fetch Transactions for History
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
         const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
@@ -339,6 +413,7 @@
       const ref = document.getElementById('dep-ref').value;
       const file = document.getElementById('dep-screenshot').files[0];
       const assetFull = document.getElementById('dep-asset-name').value;
+      const term = document.getElementById('dep-term').value;
       const msg = document.getElementById('dep-msg');
 
       if (!amount || !file) { msg.textContent = "Amount and receipt required."; msg.style.color = "red"; return; }
@@ -352,6 +427,7 @@
       formData.append('reference', ref);
       formData.append('assetName', assetName);
       formData.append('assetCategory', assetCategory);
+      formData.append('term', term);
       formData.append('screenshot', file);
 
       msg.textContent = "Uploading..."; msg.style.color = "var(--emerald)";
@@ -364,19 +440,18 @@
         msg.style.color = "var(--emerald)";
         setTimeout(() => { 
           closeModal(); 
-          loadHistoryAndInvestments(); 
+          loadAdminDetailsAndHistory(); 
         }, 2000);
       } else {
         msg.textContent = data.error; msg.style.color = "red";
       }
     }
 
-    // Run initialization separately so one error doesn't block the other
-    fetchMarketData().then(() => {
+    fetchMarketData();
+    fetchCustomAssets().then(() => {
       switchTab('crypto', document.querySelector('.tab-btn.active'));
     });
-    loadAdminDetails();
-    loadHistoryAndInvestments();
+    loadAdminDetailsAndHistory();
   </script>
 </body>
 </html>
