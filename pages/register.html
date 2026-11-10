@@ -157,30 +157,32 @@
           body: formData 
         });
         
-        // Check if the response is JSON or an HTML error page
         const contentType = res.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
-           throw new Error("Server returned an invalid response. Check if server.js is running.");
+           throw new Error("Server error. Check if server.js is running.");
         }
 
         const data = await res.json();
 
         if (data.success) {
           msg.className = "msg success";
-          msg.textContent = "Account Created! Redirecting to login...";
+          msg.textContent = "Account Created! Redirecting to Dashboard...";
+          
+          // Save the FULL user object to localStorage
+          localStorage.setItem("xanvia_user", JSON.stringify(data.user));
           
           setTimeout(() => {
-            window.location.href = "login.html";
-          }, 2000);
+            window.location.href = "hub.html";
+          }, 1500);
         } else {
           msg.className = "msg error"; 
-          msg.textContent = data.error || "Verification failed.";
+          msg.textContent = data.error || "Registration failed.";
           btn.innerHTML = "Submit & Open Account"; 
           btn.disabled = false;
         }
       } catch (err) {
         msg.className = "msg error"; 
-        msg.textContent = err.message || "Server error. Try again.";
+        msg.textContent = err.message || "Network error.";
         btn.innerHTML = "Submit & Open Account"; 
         btn.disabled = false;
       }

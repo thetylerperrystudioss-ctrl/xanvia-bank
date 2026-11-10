@@ -164,7 +164,7 @@ pool.connect((err, client, release) => {
 });
 
 // ==========================================
-// REGISTRATION (KYC & FILE UPLOADS)
+// AUTHENTICATION & REGISTRATION
 // ==========================================
 app.post('/api/register', kycUpload, async (req, res) => {
   try {
@@ -195,15 +195,15 @@ app.post('/api/register', kycUpload, async (req, res) => {
     
     const userResult = await pool.query(
       `INSERT INTO users (name, username, email, password, phone, account_number, routing_number, age, address, ssn_last4, id_front, id_back, proof_of_address) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING id`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *`,
       [name, safeUsername, email.toLowerCase(), hashedPassword, phone, accountNumber, routingNumber, age, address, ssn_last4, idFrontPath, idBackPath, proofAddressPath]
     );
 
-    const newUserId = userResult.rows[0].id;
-    await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUserId]);
+    const newUser = userResult.rows[0];
+    await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUser.id]);
 
-    await sendNotification(newUserId, `Welcome to Xanvia Credit Union, ${name}! Your account has been successfully created.`);
-    await sendNotification(newUserId, `Action Required: A minimum deposit of $25 is required to fully activate your checking account.`);
+    await sendNotification(newUser.id, `Welcome to Xanvia Credit Union, ${name}! Your account has been successfully created.`);
+    await sendNotification(newUser.id, `Action Required: A minimum deposit of $25 is required to fully activate your checking account.`);
 
     sendEmail(email, "Welcome to Xanvia Bank!", `
       <h2>Welcome, ${name}!</h2>
@@ -211,16 +211,13 @@ app.post('/api/register', kycUpload, async (req, res) => {
       <p>To activate your account, please log in and make a minimum opening deposit of $25.</p>
     `);
 
-    res.json({ success: true, message: 'Account created successfully!', userId: newUserId });
+    res.json({ success: true, message: 'Account created successfully!', user: newUser });
   } catch (err) { 
     console.error("Registration Error:", err);
     res.status(500).json({ error: 'Database Error: ' + err.message }); 
   }
 });
 
-// ==========================================
-// AUTHENTICATION
-// ==========================================
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
   try {
@@ -337,25 +334,6 @@ app.post('/api/admin/settings/update', async (req, res) => {
     `, [bank_name, bank_account, bank_routing, btc_address]);
     res.json({ success: true, message: 'Settings updated successfully.' });
   } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
-});
-
-app.post('/api/complete-onboarding', async (req, res) => {
-  const { userId, type, age, address, ssn_last4 } = req.body;
-  try {
-    await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
-    const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : type === 'investment' ? 'INVESTMENT_ACCOUNT' : 'KYC_COMPLETED';
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
-    res.json({ success: true, message: 'Application approved!' });
-  } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
-});
-
-app.get('/api/user-status/:userId', async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
-    const isOnboarded = !!(userRes.rows[0]?.age && userRes.rows[0]?.address);
-    res.json({ has_bank: isOnboarded, has_loan: isOnboarded, has_investment: isOnboarded, needs_fee: false });
-  } catch (err) { res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); }
 });
 
 // LOANS & TRANSFERS
