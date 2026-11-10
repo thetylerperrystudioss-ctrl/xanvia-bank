@@ -9,11 +9,36 @@
     :root { --emerald: #0F8A5F; --emerald-dark: #0A5F42; --deep-green: #0B2E23; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
     
-    body { background-color: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; position: relative; overflow: hidden; }
-    .bg-layer { position: absolute; inset: 0; background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; z-index: 1; }
-    .bg-overlay { position: absolute; inset: 0; background: rgba(11, 46, 35, 0.85); z-index: 2; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    /* FIXED BODY LAYOUT */
+    body { 
+      background-color: var(--deep-green); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      padding: 20px; 
+      position: relative; 
+      overflow-y: auto; /* Allow scrolling if screen is too small */
+      overflow-x: hidden;
+    }
 
-    .login-card { background: #FFFFFF; width: 100%; max-width: 420px; padding: 40px 30px 30px; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); position: relative; z-index: 10; }
+    /* BACKGROUND LAYERS */
+    .bg-layer { position: fixed; inset: 0; background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; z-index: 1; }
+    .bg-overlay { position: fixed; inset: 0; background: rgba(11, 46, 35, 0.85); z-index: 2; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+
+    /* FIXED CARD LAYOUT */
+    .login-card { 
+      background: #FFFFFF; 
+      width: 100%; 
+      max-width: 420px; 
+      padding: 40px 30px 30px; 
+      border-radius: 24px; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3); 
+      position: relative; 
+      z-index: 10; 
+      display: block; /* Ensure it's not collapsing */
+      flex-shrink: 0;
+    }
     
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; justify-content: center; }
     .logo-icon { background: var(--emerald); color: white; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 900; }
@@ -24,12 +49,12 @@
     .login-card h2 { text-align: center; color: var(--deep-green); margin-bottom: 8px; font-size: 1.5rem; }
     .login-card p.sub { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 30px; }
 
-    .form-group { margin-bottom: 20px; position: relative; }
+    .form-group { margin-bottom: 20px; position: relative; display: block; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-    .form-group input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; outline: none; background: #FAFAFA; transition: 0.2s; }
+    .form-group input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; outline: none; background: #FAFAFA; transition: 0.2s; display: block; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 4px rgba(15,138,95,0.1); }
     
-    .password-toggle { position: absolute; right: 15px; top: 40px; cursor: pointer; color: var(--muted); font-size: 1.1rem; }
+    .password-toggle { position: absolute; right: 15px; top: 40px; cursor: pointer; color: var(--muted); font-size: 1.1rem; z-index: 20; }
     .forgot-link { display: block; text-align: right; font-size: 0.85rem; color: var(--emerald); font-weight: 600; text-decoration: none; margin-top: -5px; margin-bottom: 25px; }
 
     /* LONG PRESS BUTTON */
@@ -37,7 +62,7 @@
       width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; 
       font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(15,138,95,0.2); 
       position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: manipulation;
-      display: flex; justify-content: center; align-items: center;
+      display: flex; justify-content: center; align-items: center; z-index: 10;
     }
     .btn-primary:active { transform: scale(0.98); }
     
@@ -73,7 +98,7 @@
       <h2>Welcome Back</h2>
       <p class="sub">Sign in to access your accounts securely.</p>
       
-      <div id="user-msg" class="msg"></').div>
+      <div id="user-msg" class="msg"></div>
       
       <div class="form-group">
         <label>Email or Username</label>
@@ -114,15 +139,15 @@
         <input type="password" id="admin-pass" maxlength="4" placeholder="••••" style="text-align: center; letter-spacing: 8px; font-size: 1.5rem;">
       </div>
       
-      <button class="btn-primary" onclick="verifyAdmin()" style="background: var(--deep-green);style">Unlock Terminal</button>
-    </div.display>
+      <button class="btn-primary" onclick="verifyAdmin()" style="background: var(--deep-green);">Unlock Terminal</button>
+    </div>
 
   </div>
 
   <script>
- =    // --- LONG PRESS LOGIC ---
-    const ' loginBtn = document.getElementById('login-btn');
-    constnone btnText = document.getElementById('btn-text');
+    // --- LONG PRESS LOGIC ---
+    const loginBtn = document.getElementById('login-btn');
+    const btnText = document.getElementById('btn-text');
     const holdBar = document.getElementById('hold-bar');
     
     let holdTimer;
@@ -182,7 +207,7 @@
     function resetView() {
       document.getElementById('user-login-section').style.display = 'block';
       document.getElementById('admin-login-section').style.display = 'none';
-      document.getElementById('back-btn';
+      document.getElementById('back-btn').style.display = 'none';
       document.getElementById('admin-pass').value = '';
       document.getElementById('admin-msg').style.display = 'none';
     }
