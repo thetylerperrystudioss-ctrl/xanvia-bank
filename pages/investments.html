@@ -128,7 +128,7 @@
         <div id="asset-list-container" class="asset-list"></div>
       </div>
 
-      <!-- NEW: HISTORY ON MAIN SCREEN -->
+      <!-- HISTORY ON MAIN SCREEN -->
       <div class="history-panel" style="margin-top: 20px;">
         <h3>Investment History</h3>
         <div id="history-list">
@@ -144,7 +144,6 @@
       <button class="close-modal" onclick="closeModal()">×</button>
       <h2 style="color:var(--deep-green); margin-bottom:15px; font-size:1.3rem;">Fund Investment</h2>
       
-      <!-- FIXED ADMIN DETAILS & BITCOIN -->
       <div class="admin-details-box">
         <p style="margin: 0 0 5px; font-weight: 700; color:var(--deep-green);">Send payment to:</p>
         <div><strong>Bank:</strong> <span id="adm-bank">Loading...</span></div>
@@ -153,7 +152,7 @@
         
         <div style="margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:700; color:var(--deep-green);">₿ Bitcoin (Recommended for fast payment)</span>
+            <span style="font-weight:700; color:var(--deep-green);">₿ Bitcoin (Fast Payment)</span>
           </div>
           <div class="btc-address">
             <span id="adm-btc">Loading...</span>
@@ -249,17 +248,28 @@
       document.getElementById('modal-deposit').classList.add('open');
     }
 
-    async function loadAdminDetailsAndHistory() {
+    // SPLIT THIS INTO TWO SEPARATE FUNCTIONS SO ONE FAILING DOESN'T BREAK THE OTHER
+    async function loadAdminDetails() {
       try {
-        // 1. Fetch Admin Bank & BTC Details
         const setRes = await fetch('/api/admin/settings');
+        if(!setRes.ok) throw new Error("Failed to fetch settings");
         const settings = await setRes.json();
         document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
         document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
         document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
         document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
+      } catch (err) {
+        console.error("Admin details fail:", err);
+        document.getElementById('adm-bank').textContent = 'Unavailable';
+        document.getElementById('adm-acc').textContent = 'Unavailable';
+        document.getElementById('adm-rout').textContent = 'Unavailable';
+        document.getElementById('adm-btc').textContent = 'Unavailable';
+      }
+    }
 
-        // 2. Fetch Investments Data
+    async function loadHistoryAndInvestments() {
+      try {
+        // Fetch Investments
         const res = await fetch(`/api/investments/${user.id}`);
         const data = await res.json();
 
@@ -274,7 +284,7 @@
 
             if (inv.start_date && inv.maturity_date) {
               const totalDurationSeconds = (new Date(inv.maturity_date) - new Date(inv.start_date)) / 1000;
-              const totalExpectedProfit = parseFloat(inv.amount) * 0.4; // 40% ROI
+              const totalExpectedProfit = parseFloat(inv.amount) * 0.4;
               const profitPerSecond = totalExpectedProfit / totalDurationSeconds;
               if (new Date() < new Date(inv.maturity_date)) {
                 profitTickRate += profitPerSecond;
@@ -286,7 +296,7 @@
         liveProfit = baseProfit;
         updateUI();
 
-        // 3. Fetch Transactions for History
+        // Fetch Transactions for History
         const txRes = await fetch(`/api/transactions/${user.id}`);
         const txs = await txRes.json();
         const investTxs = txs.filter(tx => tx.type.includes('INVESTMENT'));
@@ -354,17 +364,19 @@
         msg.style.color = "var(--emerald)";
         setTimeout(() => { 
           closeModal(); 
-          loadAdminDetailsAndHistory(); 
+          loadHistoryAndInvestments(); 
         }, 2000);
       } else {
         msg.textContent = data.error; msg.style.color = "red";
       }
     }
 
+    // Run initialization separately so one error doesn't block the other
     fetchMarketData().then(() => {
       switchTab('crypto', document.querySelector('.tab-btn.active'));
     });
-    loadAdminDetailsAndHistory();
+    loadAdminDetails();
+    loadHistoryAndInvestments();
   </script>
 </body>
 </html>

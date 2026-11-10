@@ -195,6 +195,52 @@ app.post('/api/login', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
+app.post('/api/auth/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  try {
+    const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email.toLowerCase()]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'Email not found.' });
+    const user = result.rows[0];
+    const tempPassword = "Reset" + Math.floor(1000 + Math.random() * 9000);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+    await pool.query('UPDATE users SET password = $1 WHERE email = $2', [hashedPassword, email.toLowerCase()]);
+
+    const mailOptions = {
+      from: `"Xanvia Support" <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: 'Xanvia Password Reset',
+      html: `<h2>Hello ${user.name},</h2><p>Your temp password is: <b>${tempPassword}</b></p>`
+    };
+
+    transporter.sendMail(mailOptions, (error) => {
+      if (error) return res.json({ success: true, message: `Password reset. Temp password is: ${tempPassword}` });
+      return res.json({ success: true, message: `Check your email for the new password.` });
+    });
+  } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+app.post('/api/user/change-password', async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body;
+  try {
+    const result = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) return res.status(404).json({ error: 'User not found.' });
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) return res.status(400).json({ error: 'Incorrect current password.' });
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedNewPassword, userId]);
+    res.json({ success: true, message: 'Password updated successfully.' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update password.' }); }
+});
+
+app.get('/api/security/logins/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM login_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Failed to load history.' }); }
+});
+
 app.get('/api/user/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT name, username, email, phone, account_number, routing_number, profile_pic FROM users WHERE id = $1', [req.params.userId]);
@@ -202,6 +248,22 @@ app.get('/api/user/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
+app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
+  const { userId, name, username, phone } = req.body;
+  const profilePicPath = req.file ? `/uploads/${req.file.filename}` : null;
+  try {
+    if (profilePicPath) {
+      await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3, profile_pic = $4 WHERE id = $5`, [name, username.toLowerCase(), phone, profilePicPath, userId]);
+    } else {
+      await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3 WHERE id = $4`, [name, username.toLowerCase(), phone, userId]);
+    }
+    res.json({ success: true, message: 'Profile updated!' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
+});
+
+// ==========================================
+// CORE BANKING & TRANSACTIONS
+// ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -222,6 +284,106 @@ app.get('/api/accounts/:userId', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
+app.get('/api/admin/settings', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM system_settings');
+    const settings = {}; result.rows.forEach(r => settings[r.key] = r.value);
+    res.json(settings);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/settings/update', async (req, res) => {
+  const { bank_name, bank_account, bank_routing, btc_address } = req.body;
+  try {
+    await pool.query(`
+      INSERT INTO system_settings (key, value) VALUES
+      ('bank_name', $1), ('bank_account', $2), ('bank_routing', $3), ('btc_address', $4)
+      ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value
+    `, [bank_name, bank_account, bank_routing, btc_address]);
+    res.json({ success: true, message: 'Settings updated successfully.' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
+});
+
+app.post('/api/complete-onboarding', async (req, res) => {
+  const { userId, type, age, address, ssn_last4 } = req.body;
+  try {
+    await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
+    const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : type === 'investment' ? 'INVESTMENT_ACCOUNT' : 'KYC_COMPLETED';
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
+    res.json({ success: true, message: 'Application approved!' });
+  } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
+});
+
+app.get('/api/user-status/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
+    const isOnboarded = !!(userRes.rows[0]?.age && userRes.rows[0]?.address);
+    res.json({ has_bank: isOnboarded, has_loan: isOnboarded, has_investment: isOnboarded, needs_fee: false });
+  } catch (err) { res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); }
+});
+
+// LOANS
+app.post('/api/loans/apply', async (req, res) => {
+  const { userId, amount } = req.body;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
+    await sendNotification(userId, `Your loan application for $${parseFloat(amount).toFixed(2)} has been submitted and is pending review.`);
+    res.json({ success: true, message: 'Application received.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/loans/transfer', async (req, res) => {
+  const { userId, amount, destination, bankDetails } = req.body;
+  try {
+    const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
+    await sendNotification(userId, `Your loan transfer request of $${parseFloat(amount).toFixed(2)} to ${destination} is pending admin approval.`);
+    res.json({ success: true, message: 'Transfer pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/loans/repay', async (req, res) => {
+  const { userId, amount } = req.body;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
+    await sendNotification(userId, `Your loan repayment of $${parseFloat(amount).toFixed(2)} has been received and is pending admin approval.`);
+    res.json({ success: true, message: 'Repayment pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// TRANSFERS & DEPOSITS
+app.post('/api/transfer/internal', async (req, res) => {
+  const { userId, recipientAccount, amount } = req.body;
+  try {
+    const balCheck = await pool.query(`SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) as balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`, [userId]);
+    if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, details) VALUES ($1, 'INTERNAL_TRANSFER', $2, 'Pending', $3, 'Transfer')`, [userId, amount, recipientAccount]);
+    await sendNotification(userId, `Your transfer of $${parseFloat(amount).toFixed(2)} to account ending in ${recipientAccount.slice(-4)} is pending admin approval.`);
+    res.json({ success: true, message: 'Transfer submitted. Pending Admin approval.' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/lookup-account/:accountNumber', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT name FROM users WHERE account_number = $1', [req.params.accountNumber]);
+    if (result.rows.length > 0) res.json({ success: true, name: result.rows[0].name });
+    else res.status(404).json({ error: 'Account not found' });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, targetAccount } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
+  const imagePath = `/uploads/${req.file.filename}`;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, targetAccount, imagePath]);
+    await sendNotification(userId, `Your deposit of $${parseFloat(amount).toFixed(2)} has been submitted successfully and is pending review.`);
+    res.json({ success: true, message: 'Deposit submitted.' });
+  } catch (err) { res.status(500).json({ error: 'Server error.' }); }
+});
+
+// NOTIFICATIONS
 app.get('/api/notifications/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -236,53 +398,40 @@ app.post('/api/notifications/:userId/read', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.get('/api/admin/requests', async (req, res) => {
+// ==========================================
+// CARDS
+// ==========================================
+app.get('/api/cards/:userId', async (req, res) => {
   try {
-    const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
+    const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
     res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
+  } catch (err) { res.status(500).json({ error: 'Failed to load cards.' }); }
 });
 
-app.post('/api/admin/approve', async (req, res) => {
-  const { txId, action } = req.body;
-  const client = await pool.connect();
+app.post('/api/cards/request', async (req, res) => {
+  const { userId, cardType } = req.body;
   try {
-    const tx = (await client.query('SELECT * FROM transactions WHERE id = $1', [txId])).rows[0];
-    await client.query('BEGIN');
-    if (action === 'approve') {
-      await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
-      if (tx.type === 'INVESTMENT_DEPOSIT') {
-        const now = new Date();
-        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit, asset_name, asset_category) VALUES ($1, $2, 'Active', $3, $4, $5, $6, $7)`, 
-          [tx.user_id, tx.amount, now, maturity, 0, tx.details?.split('|')[0] || 'Portfolio Deposit', tx.details?.split('|')[1] || 'Crypto']);
-      }
-      await sendNotification(tx.user_id, `Good news! Your ${tx.type.replace(/_/g, ' ')} of $${parseFloat(tx.amount).toFixed(2)} has been approved.`);
-    } else {
-      await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
-      await sendNotification(tx.user_id, `Alert: Your ${tx.type.replace(/_/g, ' ')} of $${parseFloat(tx.amount).toFixed(2)} was rejected.`);
-    }
-    await client.query('COMMIT');
-    res.json({ success: true });
-  } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); } finally { client.release(); }
+    if (!userId || !cardType) return res.status(400).json({ error: 'Missing userId or cardType.' });
+    const last4 = Math.floor(1000 + Math.random() * 9000).toString();
+    await pool.query(`INSERT INTO cards (user_id, card_type, status, last4) VALUES ($1, $2, 'Active', $3)`, [userId, cardType, last4]);
+    await sendNotification(userId, `Your request for a new ${cardType} ending in ${last4} has been approved and is active.`);
+    res.json({ success: true, message: 'Card created successfully!' });
+  } catch (err) { res.status(500).json({ error: 'Failed to request card.' }); }
 });
 
-app.get('/api/admin/assets', async (req, res) => {
+app.post('/api/cards/:cardId/toggle', async (req, res) => {
+  const { cardId } = req.params;
+  const { status, userId } = req.body;
   try {
-    const result = await pool.query('SELECT * FROM investment_assets ORDER BY created_at DESC');
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
+    await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, cardId]);
+    await sendNotification(userId, `Your card status has been updated to: ${status}.`);
+    res.json({ success: true, status });
+  } catch (err) { res.status(500).json({ error: 'Failed to update card status.' }); }
 });
 
-app.post('/api/admin/assets/add', async (req, res) => {
-  const { category, name, description, price, image_url } = req.body;
-  try {
-    await pool.query(`INSERT INTO investment_assets (category, name, description, price, image_url) VALUES ($1, $2, $3, $4, $5)`, 
-      [category, name, description, price, image_url]);
-    res.json({ success: true, message: 'Asset added successfully!' });
-  } catch (err) { res.status(500).json({ error: 'Failed to add asset.' }); }
-});
-
+// ==========================================
+// INVESTMENTS & ASSETS (User)
+// ==========================================
 app.get('/api/assets', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM investment_assets ORDER BY created_at DESC');
@@ -342,11 +491,172 @@ app.post('/api/investments/withdraw', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed.' }); }
 });
 
-app.get('/api/cards/:userId', async (req, res) => {
+// ==========================================
+// SUPPORT & COMPLAINTS
+// ==========================================
+app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
+  const { userId, category, subject, message } = req.body;
+  const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
   try {
-    const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    const result = await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message) VALUES ($1, $2, $3, $4, $5) RETURNING id`, [userId, refNum, category, subject, message]);
+    const complaintId = result.rows[0].id;
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'user', $2)`, [complaintId, message]);
+    const autoReply = `Welcome to Xanvia Support. We have received your inquiry regarding "${subject}". Your reference number is ${refNum}.`;
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [complaintId, autoReply]);
+    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/complaints/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM complaints WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/chat/:complaintId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM chat_messages WHERE complaint_id = $1 ORDER BY created_at ASC', [req.params.complaintId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/chat/:complaintId', async (req, res) => {
+  const { sender, message } = req.body;
+  try {
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, $2, $3)`, [req.params.complaintId, sender, message]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.post('/api/chat/:complaintId/resolve', async (req, res) => {
+  try {
+    await pool.query(`UPDATE complaints SET status = 'Resolved' WHERE id = $1`, [req.params.complaintId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+// ==========================================
+// ADMIN ROUTES
+// ==========================================
+app.get('/api/admin/requests', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT t.*, u.name, u.email FROM transactions t JOIN users u ON t.user_id = u.id WHERE t.status IN ('Pending', 'Pending Admin Approval') ORDER BY t.created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/approve', async (req, res) => {
+  const { txId, action } = req.body;
+  const client = await pool.connect();
+  try {
+    const tx = (await client.query('SELECT * FROM transactions WHERE id = $1', [txId])).rows[0];
+    await client.query('BEGIN');
+    if (action === 'approve') {
+      await client.query(`UPDATE transactions SET status = 'Approved' WHERE id = $1`, [txId]);
+      if (tx.type === 'INVESTMENT_DEPOSIT') {
+        const now = new Date();
+        const maturity = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+        await client.query(`INSERT INTO investments (user_id, amount, status, start_date, maturity_date, profit, asset_name, asset_category) VALUES ($1, $2, 'Active', $3, $4, $5, $6, $7)`, 
+          [tx.user_id, tx.amount, now, maturity, 0, tx.details?.split('|')[0] || 'Portfolio Deposit', tx.details?.split('|')[1] || 'Crypto']);
+      }
+      await sendNotification(tx.user_id, `Good news! Your ${tx.type.replace(/_/g, ' ')} of $${parseFloat(tx.amount).toFixed(2)} has been approved.`);
+    } else {
+      await client.query(`UPDATE transactions SET status = 'Rejected' WHERE id = $1`, [txId]);
+      await sendNotification(tx.user_id, `Alert: Your ${tx.type.replace(/_/g, ' ')} of $${parseFloat(tx.amount).toFixed(2)} was rejected.`);
+    }
+    await client.query('COMMIT');
+    res.json({ success: true });
+  } catch (err) { await client.query('ROLLBACK'); res.status(500).json({ error: 'Failed.' }); } finally { client.release(); }
+});
+
+app.get('/api/admin/assets', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM investment_assets ORDER BY created_at DESC');
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/assets/add', async (req, res) => {
+  const { category, name, description, price, image_url } = req.body;
+  try {
+    await pool.query(`INSERT INTO investment_assets (category, name, description, price, image_url) VALUES ($1, $2, $3, $4, $5)`, 
+      [category, name, description, price, image_url]);
+    res.json({ success: true, message: 'Asset added successfully!' });
+  } catch (err) { res.status(500).json({ error: 'Failed to add asset.' }); }
+});
+
+app.get('/api/admin/users', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT id, name, COALESCE(username, 'N/A') as username, email, status, created_at FROM users WHERE deleted = false ORDER BY created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
+});
+
+app.post('/api/admin/freeze', async (req, res) => {
+  const { userId, status } = req.body;
+  try {
+    await pool.query(`UPDATE users SET status = $1 WHERE id = $2`, [status, userId]);
+    if (status === 'Frozen') {
+      await sendNotification(userId, `Your account has been temporarily frozen by an administrator. Please contact support.`);
+    } else {
+      await sendNotification(userId, `Your account has been unfrozen and is now active.`);
+    }
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.delete('/api/admin/users/:id', async (req, res) => {
+  try {
+    await pool.query(`UPDATE users SET deleted = true WHERE id = $1`, [req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/notify', async (req, res) => {
+  const { target, message } = req.body;
+  try {
+    if (target === 'all') {
+      const users = await pool.query('SELECT id FROM users WHERE deleted = false');
+      for (let u of users.rows) {
+        await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [u.id, message]);
+      }
+    } else {
+      await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [target, message]);
+    }
+    res.json({ success: true, message: 'Notification(s) sent!' });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/admin/complaints', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT c.*, u.name, u.email FROM complaints c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/admin/chat/:complaintId', async (req, res) => {
+  const { message } = req.body;
+  try {
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'admin', $2)`, [req.params.complaintId, message]);
+    await pool.query(`UPDATE complaints SET status = 'In Progress' WHERE id = $1`, [req.params.complaintId]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed.' }); }
+});
+
+app.get('/api/admin/cards', async (req, res) => {
+  try {
+    const result = await pool.query(`SELECT c.*, u.name, u.email FROM cards c JOIN users u ON c.user_id = u.id ORDER BY c.created_at DESC`);
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: 'Failed to load cards.' }); }
+});
+
+app.post('/api/admin/cards/:id/status', async (req, res) => {
+  const { status } = req.body;
+  try {
+    await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, req.params.id]);
+    res.json({ success: true });
+  } catch (err) { res.status(500).json({ error: 'Failed to update card.' }); }
 });
 
 app.get('/api/market', (req, res) => { res.json(marketCache); });
