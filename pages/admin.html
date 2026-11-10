@@ -42,26 +42,21 @@
     .req-item p { font-size: 0.85rem; color: var(--muted); margin-bottom: 8px; }
     .proof-img { width: 100px; border-radius: 6px; margin-top: 5px; border: 1px solid #ddd; }
 
-    /* USER ROW (KYC details) */
     .user-row { display: flex; flex-direction: column; padding: 15px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 15px; background: #FAFAFA; }
     .user-row h4 { color: var(--deep-green); font-size: 1.1rem; margin-bottom: 4px; }
     .user-row p { font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
-    .user-row strong { color: var(--text); }
-    
     .kyc-images { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
     .kyc-images a { display: flex; flex-direction: column; align-items: center; gap: 5px; text-decoration: none; }
     .kyc-images img { width: 100px; height: 70px; object-fit: cover; border-radius: 6px; border: 1px solid #ddd; }
     .kyc-images span { font-size: 0.7rem; font-weight: 700; color: var(--emerald); }
 
-    .action-row { display: flex; gap: 10px; margin-top: 15px; }
-    .btn-approve { background: var(--emerald); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1; }
-    .btn-reject { background: #FEE2E2; color: #991B1B; border: 1px solid #F87171; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; flex: 1; }
-
-    .user-actions { display: flex; gap: 10px; margin-top: 15px; border-top: 1px dashed #ddd; padding-top: 15px; }
-    .btn-sm { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.75rem; border: none; }
-    .btn-outline-sm { background: white; border: 1px solid var(--border); color: var(--text); flex: 1; }
-    .btn-delete { background: #FEE2E2; color: #991B1B; }
-    .btn-notify { background: #F3F4F6; color: #374151; }
+    .chat-box { background: #F4F7F6; border-radius: 12px; padding: 15px; margin-top: 10px; display: flex; flex-direction: column; gap: 10px; max-height: 300px; overflow-y: auto; }
+    .msg { max-width: 85%; padding: 10px 14px; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
+    .msg.user { background: #E5E7EB; color: var(--text); align-self: flex-start; border-bottom-left-radius: 2px; }
+    .msg.admin { background: var(--emerald); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+    .msg-time { font-size: 0.65rem; opacity: 0.7; margin-top: 4px; display: block; }
+    .reply-row { display: flex; gap: 10px; margin-top: 15px; }
+    .reply-row input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; outline: none; }
 
     .form-group { margin-bottom: 15px; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
@@ -246,7 +241,7 @@
     }
 
     async function loadAdminAssets() {
-      const assets = await (await fetch('/api/admin/assets')).json();
+      const assets = await (await fetch('/api/assets')).json();
       document.getElementById('asset-list-admin').innerHTML = assets.map(a => `
         <div class="req-item">
           <h4>${a.name} <span style="font-size:0.7rem; background:#E0E7FF; padding:2px 6px; border-radius:4px;">${a.category}</span></h4>
@@ -291,12 +286,42 @@
 
     async function loadComplaints() {
       const c = await (await fetch('/api/admin/complaints')).json();
-      document.getElementById('complaint-list').innerHTML = c.map(x => `
+      document.getElementById('complaint-list').innerHTML = c.length > 0 ? c.map(x => `
         <div class="req-item">
           <h4>${x.subject}</h4>
           <p>From: ${x.name} | Status: ${x.status}</p>
+          <div class="chat-box" id="admin-chat-${x.id}"><p>Loading chat...</p></div>
+          <div class="reply-row">
+            <input type="text" id="admin-reply-${x.id}" placeholder="Type reply...">
+            <button class="btn-approve" onclick="sendAdminReply(${x.id})">Send</button>
+          </div>
+        </div>
+      `).join('') : '<p>No complaints.</p>';
+      
+      c.forEach(comp => loadAdminChat(comp.id));
+    }
+
+    async function loadAdminChat(complaintId) {
+      const container = document.getElementById(`admin-chat-${complaintId}`);
+      if (!container) return;
+      const res = await fetch(`/api/chat/${complaintId}`);
+      const messages = await res.json();
+      container.innerHTML = messages.map(m => `
+        <div class="msg ${m.sender}">
+          ${m.message}
+          <span class="msg-time">${new Date(m.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
         </div>
       `).join('');
+      container.scrollTop = container.scrollHeight;
+    }
+
+    async function sendAdminReply(complaintId) {
+      const input = document.getElementById(`admin-reply-${complaintId}`);
+      const message = input.value.trim();
+      if (!message) return;
+      input.value = "";
+      await fetch(`/api/admin/chat/${complaintId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ message }) });
+      loadAdminChat(complaintId);
     }
 
     async function loadNotifyDropdown() {
