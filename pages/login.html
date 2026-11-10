@@ -82,7 +82,6 @@
       
       <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
 
-      <!-- BUTTON WITH LONG PRESS -->
       <button class="btn-primary" id="login-btn">
         <span id="btn-text">Secure Sign In</span>
         <div class="hold-indicator" id="hold-bar"></div>
@@ -150,7 +149,6 @@
       clearInterval(progressTimer);
       holdBar.style.width = '0%';
 
-      // If the user tapped quickly and didn't trigger admin, log in.
       if (progress < 45 && !isHoldTriggered && !isLoggingIn) {
         userLogin();
       }
