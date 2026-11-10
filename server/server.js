@@ -15,12 +15,17 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 if (!fs.existsSync(path.join(__dirname, 'uploads'))) fs.mkdirSync(path.join(__dirname, 'uploads'));
 
+// ==========================================
+// FILE UPLOAD CONFIGURATION (MULTER)
+// ==========================================
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, 'uploads')),
   filename: (req, file, cb) => cb(null, Date.now() + '-' + file.fieldname + path.extname(file.originalname))
 });
 
 const upload = multer({ storage });
+
+// Multiple file upload for Registration KYC
 const kycUpload = upload.fields([
   { name: 'id_front', maxCount: 1 },
   { name: 'id_back', maxCount: 1 },
@@ -32,7 +37,9 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-// Gmail Fix
+// ==========================================
+// GMAIL CONFIGURATION
+// ==========================================
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -41,10 +48,13 @@ const transporter = nodemailer.createTransport({
   }
 });
 
+// ==========================================
+// HELPERS
+// ==========================================
 async function sendNotification(userId, message) {
   try {
     await pool.query(`INSERT INTO notifications (user_id, message) VALUES ($1, $2)`, [userId, message]);
-  } catch (err) { }
+  } catch (err) { console.error("Notification Error:", err); }
 }
 
 async function sendEmail(to, subject, html) {
@@ -58,6 +68,9 @@ async function sendEmail(to, subject, html) {
   } catch (error) { console.error('Email Error:', error); }
 }
 
+// ==========================================
+// MARKET DATA CACHE
+// ==========================================
 let marketCache = {
   crypto: [
     { name: 'Bitcoin', ticker: 'BTC', price: 64230.50, change: 2.4, icon: '₿' },
@@ -95,7 +108,9 @@ async function updateMarketData() {
 updateMarketData();
 setInterval(updateMarketData, 60000);
 
+// ==========================================
 // DATABASE SETUP
+// ==========================================
 pool.connect((err, client, release) => {
   if (err) console.error('DB Error:', err.message);
   else {
@@ -149,10 +164,13 @@ pool.connect((err, client, release) => {
   }
 });
 
+// ==========================================
 // REGISTRATION (KYC & FILE UPLOADS)
+// ==========================================
 app.post('/api/register', kycUpload, async (req, res) => {
   try {
     const { name, email, password, phone, age, address, ssn_last4 } = req.body;
+    
     if (!email || !password || !name || !address || !ssn_last4 || !age) {
       return res.status(400).json({ error: 'All fields (Name, Email, Password, Phone, Age, Address, SSN) are required.' });
     }
@@ -185,20 +203,25 @@ app.post('/api/register', kycUpload, async (req, res) => {
     const newUserId = userResult.rows[0].id;
     await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUserId]);
 
-    await sendNotification(newUserId, `Welcome to Xanvia Credit Union, ${name}! Your account is under review.`);
+    await sendNotification(newUserId, `Welcome to Xanvia Credit Union, ${name}! Your account has been successfully created.`);
     await sendNotification(newUserId, `Action Required: A minimum deposit of $25 is required to fully activate your checking account.`);
 
-    await sendEmail(email, "Welcome to Xanvia Bank!", `
+    sendEmail(email, "Welcome to Xanvia Bank!", `
       <h2>Welcome, ${name}!</h2>
-      <p>Your account has been successfully created and your documents are under review.</p>
+      <p>Your account has been successfully created and your documents are verified.</p>
       <p>To activate your account, please log in and make a minimum opening deposit of $25.</p>
     `);
 
-    res.json({ success: true, message: 'Account created successfully! Redirecting to login...', userId: newUserId });
-  } catch (err) { res.status(500).json({ error: 'Database Error: ' + err.message }); }
+    res.json({ success: true, message: 'Account created successfully!', userId: newUserId });
+  } catch (err) { 
+    console.error("Registration Error:", err);
+    res.status(500).json({ error: 'Database Error: ' + err.message }); 
+  }
 });
 
+// ==========================================
 // AUTHENTICATION
+// ==========================================
 app.post('/api/login', async (req, res) => {
   const { identifier, password } = req.body;
   try {
@@ -244,7 +267,9 @@ app.post('/api/user/change-password', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update password.' }); }
 });
 
+// ==========================================
 // ADMIN USER VIEW (FULL KYC)
+// ==========================================
 app.get('/api/admin/users', async (req, res) => {
   try {
     const result = await pool.query(`
@@ -256,7 +281,26 @@ app.get('/api/admin/users', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Database error: ' + err.message }); }
 });
 
-// CORE BANKING
+app.get('/api/user/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT name, username, email, phone, account_number, routing_number, profile_pic FROM users WHERE id = $1', [req.params.userId]);
+    res.json(result.rows[0] || {});
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
+  const { userId, name, username, phone } = req.body;
+  const profilePicPath = req.file ? `/uploads/${req.file.filename}` : null;
+  try {
+    if (profilePicPath) await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3, profile_pic = $4 WHERE id = $5`, [name, username.toLowerCase(), phone, profilePicPath, userId]);
+    else await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3 WHERE id = $4`, [name, username.toLowerCase(), phone, userId]);
+    res.json({ success: true, message: 'Profile updated!' });
+  } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
+});
+
+// ==========================================
+// CORE BANKING & TRANSACTIONS
+// ==========================================
 app.get('/api/transactions/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM transactions WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
@@ -296,21 +340,23 @@ app.post('/api/admin/settings/update', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Failed to update settings.' }); }
 });
 
-app.get('/api/user/:userId', async (req, res) => {
+app.post('/api/complete-onboarding', async (req, res) => {
+  const { userId, type, age, address, ssn_last4 } = req.body;
   try {
-    const result = await pool.query('SELECT name, username, email, phone, account_number, routing_number, profile_pic FROM users WHERE id = $1', [req.params.userId]);
-    res.json(result.rows[0] || {});
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
+    await pool.query(`UPDATE users SET age = $1, address = $2, ssn_last4 = $3 WHERE id = $4`, [age, address, ssn_last4, userId]);
+    const txType = type === 'bank' ? 'BANK_ACCOUNT' : type === 'loan' ? 'LOAN_ACCOUNT' : type === 'investment' ? 'INVESTMENT_ACCOUNT' : 'KYC_COMPLETED';
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, $2, 0, 'Approved', 'Onboarding completed')`, [userId, txType]);
+    res.json({ success: true, message: 'Application approved!' });
+  } catch (err) { res.status(500).json({ error: 'Failed: ' + err.message }); }
 });
 
-app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
-  const { userId, name, username, phone } = req.body;
-  const profilePicPath = req.file ? `/uploads/${req.file.filename}` : null;
+app.get('/api/user-status/:userId', async (req, res) => {
   try {
-    if (profilePicPath) await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3, profile_pic = $4 WHERE id = $5`, [name, username.toLowerCase(), phone, profilePicPath, userId]);
-    else await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3 WHERE id = $4`, [name, username.toLowerCase(), phone, userId]);
-    res.json({ success: true, message: 'Profile updated!' });
-  } catch (err) { res.status(500).json({ error: 'Failed to update profile.' }); }
+    const userId = req.params.userId;
+    const userRes = await pool.query('SELECT age, address FROM users WHERE id = $1', [userId]);
+    const isOnboarded = !!(userRes.rows[0]?.age && userRes.rows[0]?.address);
+    res.json({ has_bank: isOnboarded, has_loan: isOnboarded, has_investment: isOnboarded, needs_fee: false });
+  } catch (err) { res.json({ has_bank: false, has_loan: false, has_investment: false, needs_fee: false }); }
 });
 
 // LOANS & TRANSFERS
