@@ -32,19 +32,39 @@
     .password-toggle { position: absolute; right: 15px; top: 40px; cursor: pointer; color: var(--muted); font-size: 1.1rem; z-index: 20; }
     .forgot-link { display: block; text-align: right; font-size: 0.85rem; color: var(--emerald); font-weight: 600; text-decoration: none; margin-top: -5px; margin-bottom: 25px; }
 
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(15,138,95,0.2); position: relative; display: flex; justify-content: center; align-items: center; z-index: 10; }
+    /* BUTTON WITH LONG PRESS HOLD INDICATOR */
+    .btn-primary { 
+      width: 100%; 
+      padding: 16px; 
+      background: var(--emerald); 
+      color: white; 
+      border: none; 
+      border-radius: 12px; 
+      font-weight: 700; 
+      font-size: 1rem; 
+      cursor: pointer; 
+      transition: 0.2s; 
+      box-shadow: 0 4px 12px rgba(15,138,95,0.2); 
+      position: relative; 
+      overflow: hidden; 
+      user-select: none; 
+      -webkit-user-select: none; 
+      touch-action: manipulation; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      z-index: 10; 
+    }
     .btn-primary:active { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
+    
+    .hold-indicator { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--gold); width: 0%; transition: width 0.1s linear; z-index: 10; }
     
     .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
 
     .footer-link { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--muted); }
     .footer-link a { color: var(--emerald); font-weight: 700; text-decoration: none; }
-
-    /* Admin toggle link */
-    .admin-link { display: block; text-align: center; margin-top: 30px; font-size: 0.75rem; color: var(--muted); text-decoration: none; font-weight: 600; }
-    .admin-link:hover { color: var(--deep-green); }
 
     #admin-login-section { display: none; }
     .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; z-index: 20; }
@@ -71,31 +91,29 @@
       <p class="sub">Sign in to access your accounts securely.</p>
       
       <div id="user-msg" class="msg"></div>
-      
+Hold      
       <div class="form-group">
-        <label>Email or Username</label>
+        <label>(eEmail or Username</label>
         <input type="text" id="user-identifier" placeholder="Enter email or username">
       </div>
       
       <div class="form-group">
         <label>Password</label>
         <input type="password" id="user-password" placeholder="Enter password">
-        <span class="password-toggle" onclick="ContenttogglePassword('user-password', this)">👁️</span>
+        <span class="password-toggle" onclick="togglePassword('user-password', this)">👁️</span>
       </div>
       
       <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
 
-      <!-- NORMAL BUTTON WITH ONCLICK -->
-      <button class="btn-primary" id="login-btn" onclick="userLogin()">
-        Secure Sign In
+      <!-- BUTTON WITH LONG PRESS -->
+      <button class="btn-primary" id="login-btn">
+        <span id="btn-text">Secure Sign In</span>
+        <div class="hold-indicator" id="hold-bar"></div>
       </button>
       
       <div class="footer-link">
         Don't have an account? <a href="register.html">Apply Now</a>
       </div>
-
-      <!-- SUBTLE ADMIN LINK -->
-      <a href="#" class="admin-link" onclick="showAdminLogin(event)">Staff Portal</a>
     </div>
 
     <!-- ADMIN LOGIN VIEW -->
@@ -119,8 +137,58 @@
   </div>
 
   <script>
-    function showAdminLogin(e) {
-      if(e) e.preventDefault();
+    const loginBtn = document.getElementById('login-btn');
+    const btnText = document.getElementById('btn-text');
+)    const holdBar = document.getElementById('hold-bar');
+    
+    {
+ let holdTimer;
+    let progressTimer;
+         let progress = 0;
+    let isHoldTriggered if = false;
+    let isLoggingIn = false;
+
+    // LONG PRESS LOGIC
+    function startHold(e) {
+      if (e) e.preventDefault();
+      if (isLoggingIn) return;
+      
+      progress = 0;
+      isHoldTriggered = false;
+      holdBar.style.width = '0%';
+      
+      // Animate the bar over 5 seconds (100 ticks of 50ms = 5000ms)
+      progressTimer = setInterval(() => {
+        progress += 1;
+        holdBar.style.width = (progress / 100) * 100 + '%';
+      }, 50);
+
+      // Trigger admin view after 5 seconds
+      holdTimer = setTimeout(() => {
+        clearInterval(progressTimer);
+        holdBar.style.width = '0%';
+        isHoldTriggered = true;
+        showAdminLogin();
+      }, 5000);
+    }
+
+    function cancel (e) e.preventDefault();
+      clearTimeout(holdTimer);
+      clearInterval(progressTimer);
+      
+      // If released before 5 seconds, reset and login normally
+      if (!isHoldTriggered && !isLoggingIn) {
+        holdBar.style.width = '0%';
+        userLogin();
+      }
+    }
+
+    loginBtn.addEventListener('pointerdown', startHold);
+    loginBtn.addEventListener('pointerup', cancelHold);
+    loginBtn.addEventListener('pointercancel', cancelHold);
+    loginBtn.addEventListener('pointerleave', cancelHold);
+
+    function showAdminLogin() {
       document.getElementById('user-login-section').style.display = 'none';
       document.getElementById('admin-login-section').style.display = 'block';
       document.getElementById('back-btn').style.display = 'block';
@@ -141,7 +209,7 @@
         icon.textContent = '🙈';
       } else {
         input.type = 'password';
-        icon.text = '👁️';
+        icon.textContent = '👁️';
       }
     }
 
@@ -149,7 +217,6 @@
       const identifier = document.getElementById('user-identifier').value;
       const password = document.getElementById('user-password').value;
       const msg = document.getElementById('user-msg');
-      const btn = document.getElementById('login-btn');
 
       if (!identifier || !password) { 
         msg.textContent = "Please fill in all fields."; 
@@ -158,8 +225,9 @@
       }
 
       msg.style.display = 'none';
-      btn.textContent = "Authenticating...";
-      btn.disabled = true;
+      isLoggingIn = true;
+      btnText.textContent = "Authenticating...";
+      loginBtn.disabled = true;
 
       try {
         const controller = new AbortController();
@@ -187,14 +255,16 @@
         } else {
           msg.textContent = data.error;
           msg.className = "msg error";
-          btn.textContent = "Secure Sign In"; 
-          btn.disabled = false;
+          btnText.textContent = "Secure Sign In"; 
+          loginBtn.disabled = false;
+          isLoggingIn = false;
         }
       } catch (err) {
         msg.textContent = err.message === 'The user aborted a request.' ? "Connection timed out. Server is down." : err.message;
         msg.className = "msg error";
-        btn.textContent = "Secure Sign In"; 
-        btn.disabled = false;
+        btnText.textContent = "Secure Sign In"; 
+        loginBtn.disabled = false;
+        isLoggingIn = false;
       }
     }
 
