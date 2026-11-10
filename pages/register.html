@@ -127,22 +127,17 @@
       const idBack = document.getElementById('id-back').files[0];
       const poa = document.getElementById('proof-of-address').files[0];
 
-      // Frontend Validations
       if (!email.endsWith('@gmail.com')) {
         msg.className = "msg error"; msg.textContent = "Please enter a valid Gmail address."; return;
       }
       if (password.length < 8) {
         msg.className = "msg error"; msg.textContent = "Password must be at least 8 characters."; return;
       }
-      if (age < 18) {
-        msg.className = "msg error"; msg.textContent = "You must be 18 or older to open an account."; return;
-      }
 
       btn.innerHTML = "Verifying Information... ⏳"; 
       btn.disabled = true; 
       msg.style.display = "none";
 
-      // Build FormData to support file uploads
       const formData = new FormData();
       formData.append('name', name);
       formData.append('email', email);
@@ -161,26 +156,22 @@
           method: 'POST', 
           body: formData 
         });
+        
+        // Check if the response is JSON or an HTML error page
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+           throw new Error("Server returned an invalid response. Check if server.js is running.");
+        }
+
         const data = await res.json();
 
         if (data.success) {
           msg.className = "msg success";
-          msg.textContent = "Information Verified! Opening account...";
+          msg.textContent = "Account Created! Redirecting to login...";
           
-          // Auto-login the user by storing their token/user details
-          localStorage.setItem("xanvia_user", JSON.stringify({ 
-            id: data.userId, 
-            name: name, 
-            email: email, 
-            has_bank: true, 
-            has_loan: true, 
-            has_investment: true 
-          }));
-          
-          // Redirect straight to the dashboard
           setTimeout(() => {
-            window.location.href = "hub.html";
-          }, 1500);
+            window.location.href = "login.html";
+          }, 2000);
         } else {
           msg.className = "msg error"; 
           msg.textContent = data.error || "Verification failed.";
@@ -189,7 +180,7 @@
         }
       } catch (err) {
         msg.className = "msg error"; 
-        msg.textContent = "Server error. Try again.";
+        msg.textContent = err.message || "Server error. Try again.";
         btn.innerHTML = "Submit & Open Account"; 
         btn.disabled = false;
       }
