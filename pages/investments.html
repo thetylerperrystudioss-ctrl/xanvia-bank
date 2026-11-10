@@ -3,105 +3,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Investment Terminal | Xanvia Credit Union</title>
+  <title>Investment Terminal | Xanvia</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root { 
-      --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; 
-      --surface: #FFFFFF; --text: #1A1A1A; --border: #E5E7EB; 
-      --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; 
-      --font-main: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace; 
-    }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --surface: #FFFFFF; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; --font-main: 'Inter', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font-main); }
     body { background: var(--bg); display: flex; justify-content: center; min-height: 100vh; }
-    .app-container { width: 100%; max-width: 650px; background: var(--bg); min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); overflow-x: hidden; padding-bottom: 40px; }
+    .app-container { width: 100%; max-width: 650px; background: var(--bg); min-height: 100vh; position: relative; overflow-x: hidden; padding-bottom: 40px; }
 
-    /* LIVE TICKER */
-    .ticker-wrap { width: 100%; overflow: hidden; background: #061a13; padding: 12px 0; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .ticker-wrap { width: 100%; overflow: hidden; background: #061a13; padding: 10px 0; white-space: nowrap; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .ticker { display: inline-block; animation: ticker 35s linear infinite; }
-    .ticker-item { display: inline-flex; align-items: center; gap: 8px; color: white; font-size: 0.85rem; font-weight: 600; margin-right: 35px; font-family: var(--font-mono); }
+    .ticker-item { display: inline-flex; align-items: center; gap: 8px; color: white; font-size: 0.8rem; font-weight: 600; margin-right: 30px; font-family: var(--font-mono); }
     .ticker-item span.up { color: #34D399; }
     .ticker-item span.down { color: #F87171; }
     @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
-    /* HEADER */
-    .invest-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 70px; border-radius: 0 0 30px 30px; text-align: center; }
-    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .invest-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; text-align: center; }
+    .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
-    .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-    .invest-summary h2 { font-size: 3.2rem; font-weight: 800; margin: 0; letter-spacing: -1px; font-family: var(--font-mono); text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .invest-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    .invest-summary h2 { font-size: 3rem; font-weight: 800; margin: 0; letter-spacing: -1px; font-family: var(--font-mono); }
 
-    /* STATS GRID */
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -50px 20px 25px; position: relative; z-index: 10; }
-    .stat-card { background: var(--surface); padding: 20px 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(11,46,35,0.08); text-align: center; border: 1px solid var(--border); }
-    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
+    .stat-card { background: var(--surface); padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.06); text-align: center; border: 1px solid var(--border); }
+    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
     .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 800; font-family: var(--font-mono); margin: 0; }
     .stat-card h3.profit { color: var(--emerald); }
 
-    /* ACTION BUTTONS */
-    .action-grid { display: flex; gap: 15px; padding: 0 20px 25px; }
+    .action-grid { display: flex; gap: 15px; padding: 0 20px 20px; }
     .action-btn { flex: 1; padding: 16px; border-radius: 12px; font-weight: 700; font-size: 1rem; text-align: center; border: none; cursor: pointer; transition: 0.2s; }
-    .action-btn:active { transform: scale(0.97); }
-    .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 12px rgba(15,138,95,0.3); }
-    .btn-withdraw { background: white; color: var(--deep-green); border: 1px solid var(--border); }
+    .btn-deposit { background: var(--emerald); color: white; box-shadow: 0 4px 10px rgba(15,138,95,0.3); }
 
-    /* MARKETPLACE */
     .marketplace { padding: 0 20px 20px; }
     .marketplace h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
     
-    .tab-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
+    .tab-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; scrollbar-width: none; }
     .tab-container::-webkit-scrollbar { display: none; }
-    .tab-btn { background: var(--surface); border: 1px solid var(--border); padding: 10px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--muted); white-space: nowrap; cursor: pointer; transition: 0.2s; }
+    .tab-btn { background: var(--surface); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; color: var(--muted); white-space: nowrap; cursor: pointer; transition: 0.2s; }
     .tab-btn.active { background: var(--deep-green); color: white; border-color: var(--deep-green); }
 
     .asset-list { display: flex; flex-direction: column; gap: 12px; margin-top: 15px; }
-    .asset-card { background: var(--surface); padding: 16px; border-radius: 14px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-    .asset-card:active { transform: scale(0.98); }
-    .asset-info { display: flex; align-items: center; gap: 14px; }
-    .asset-icon { width: 44px; height: 44px; background: #F4F7F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--deep-green); font-size: 1.2rem; }
-    .asset-name { font-weight: 700; font-size: 1rem; margin-bottom: 2px; color: var(--text); }
-    .asset-ticker { font-size: 0.75rem; color: var(--muted); font-weight: 600; }
-    .asset-price { text-align: right; }
-    .asset-price h4 { font-family: var(--font-mono); font-size: 1.05rem; margin: 0 0 2px 0; color: var(--text); }
-    .asset-price span { font-size: 0.8rem; font-weight: 700; }
+    
+    .asset-card-img { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; cursor: pointer; }
+    .asset-img { width: 100%; height: 140px; object-fit: cover; background: #eee; }
+    .asset-info-box { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .asset-name { font-weight: 700; font-size: 1rem; color: var(--text); margin-bottom: 4px; }
+    .asset-cat { font-size: 0.75rem; color: var(--muted); }
+    .asset-price-box { text-align: right; }
+    .asset-price-box h4 { font-family: var(--font-mono); font-size: 1.1rem; margin: 0; color: var(--emerald); }
+    
+    .asset-card { background: var(--surface); padding: 15px; border-radius: 14px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+    .asset-icon { width: 40px; height: 40px; background: #F4F7F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: var(--deep-green); }
+    .asset-price span { font-size: 0.8rem; font-weight: 600; }
     .asset-price span.up { color: var(--emerald); }
     .asset-price span.down { color: var(--danger); }
 
-    /* HISTORY */
     .history-panel { padding: 0 20px 30px; }
     .history-panel h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
-    .tx-item { background: var(--surface); padding: 16px; border-radius: 14px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+    .tx-item { background: var(--surface); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
     .tx-info h4 { font-size: 0.95rem; margin: 0 0 4px 0; color: var(--text); }
     .tx-info p { font-size: 0.75rem; color: var(--muted); margin: 0; }
     .tx-amount { font-weight: 800; text-align: right; font-family: var(--font-mono); }
-    
-    /* MODALS & FORMS */
+
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal-content { background: var(--surface); width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
-    .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #333; }
-    .form-group input, .form-group select { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; font-family: var(--font-main); background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background: white; }
+    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+    .form-group { display: flex; flex-direction: column; margin-bottom: 15px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
     
-    /* QUICK AMOUNTS */
-    .quick-amounts { display: flex; gap: 10px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+    .quick-amounts { display: flex; gap: 10px; margin-bottom: 10px; overflow-x: auto; scrollbar-width: none; }
     .quick-amounts::-webkit-scrollbar { display: none; }
-    .quick-btn { background: #F4F7F6; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; color: var(--deep-green); cursor: pointer; transition: 0.2s; white-space: nowrap; }
-    .quick-btn:hover { background: #E6F4EE; border-color: var(--emerald); }
-    .quick-btn:active { transform: scale(0.95); }
-
+    .quick-btn { background: #F4F7F6; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
   </style>
 </head>
 <body>
   <div class="app-container">
     
-    <!-- LIVE MARKET TICKER -->
     <div class="ticker-wrap">
-      <div class="ticker" id="ticker-track">
-        <!-- Data injected by JS -->
-      </div>
+      <div class="ticker" id="ticker-track"></div>
     </div>
 
     <header class="invest-header">
@@ -129,8 +110,8 @@
       </div>
 
       <div class="action-grid">
-        <button class="action-btn btn-deposit" onclick="openModal('deposit')">Deposit</button>
-        <button class="action-btn btn-withdraw" onclick="openModal('withdraw')">Withdraw</button>
+        <button class="action-btn btn-deposit" onclick="openModal('deposit')">Fund Account</button>
+        <button class="action-btn" style="background:white; border:1px solid var(--border); color:var(--text);" onclick="openModal('withdraw')">Withdraw</button>
       </div>
 
       <div class="marketplace">
@@ -138,13 +119,11 @@
         <div class="tab-container">
           <button class="tab-btn active" onclick="switchTab('crypto', this)">Crypto</button>
           <button class="tab-btn" onclick="switchTab('stocks', this)">US Stocks</button>
-          <button class="tab-btn" onclick="alert('Real Estate module coming soon.')">Real Estate</button>
-          <button class="tab-btn" onclick="alert('Bonds module coming soon.')">Bonds</button>
+          <button class="tab-btn" onclick="switchTab('Real Estate', this)">Real Estate</button>
+          <button class="tab-btn" onclick="switchTab('Bonds', this)">Bonds</button>
         </div>
 
-        <div id="asset-list-container" class="asset-list">
-          <!-- Assets injected by JS -->
-        </div>
+        <div id="asset-list-container" class="asset-list"></div>
       </div>
 
       <div class="history-panel" style="margin-top: 20px;">
@@ -158,59 +137,34 @@
   <div id="modal-deposit" class="modal-overlay">
     <div class="modal-content">
       <button class="close-modal" onclick="closeModal()">×</button>
-      <h2 style="color:var(--deep-green); margin-bottom:15px; font-size:1.3rem;">Fund Account</h2>
-      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem; line-height: 1.6;">
-        <p style="margin: 0 0 5px; font-weight: 700; color: var(--deep-green);">Send payment to:</p>
+      <h2 style="color:var(--deep-green); margin-bottom:15px; font-size:1.3rem;">Fund Investment</h2>
+      
+      <div style="background: #F4F7F6; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 0.85rem;">
+        <p style="margin: 0 0 5px; font-weight: 700;">Send payment to:</p>
         <div><strong>Bank:</strong> <span id="adm-bank">Loading...</span></div>
         <div><strong>Acct:</strong> <span id="adm-acc">Loading...</span></div>
         <div><strong>Routing:</strong> <span id="adm-rout">Loading...</span></div>
-        <hr style="border:none; border-top:1px solid #ddd; margin:10px 0;">
-        <div>₿ <strong>Bitcoin:</strong> <span id="adm-btc" style="word-break:break-all;">Loading...</span></div>
       </div>
       
       <div class="form-group">
+        <label>Selected Asset</label>
+        <input type="text" id="dep-asset-name" readonly style="background:#E6F4EE; color:var(--emerald); font-weight:700;">
+      </div>
+
+      <div class="form-group">
         <label>Amount ($)</label>
         <div class="quick-amounts">
-          <button type="button" class="quick-btn" onclick="setVal('dep-amount', 500)">$500</button>
-          <button type="button" class="quick-btn" onclick="setVal('dep-amount', 1000)">$1,000</button>
-          <button type="button" class="quick-btn" onclick="setVal('dep-amount', 5000)">$5,000</button>
+          <button class="quick-btn" onclick="setVal('dep-amount', 100)">$100</button>
+          <button class="quick-btn" onclick="setVal('dep-amount', 500)">$500</button>
+          <button class="quick-btn" onclick="setVal('dep-amount', 1000)">$1,000</button>
         </div>
         <input type="number" id="dep-amount" placeholder="0.00">
       </div>
       
-      <div class="form-group"><label>Payment Reference</label><input type="text" id="dep-ref" placeholder="e.g. BTC TXID"></div>
-      <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*" style="padding: 8px; font-family: var(--font-main); background: white;"></div>
+      <div class="form-group"><label>Transaction Reference</label><input type="text" id="dep-ref" placeholder="e.g. TXID"></div>
+      <div class="form-group"><label>Upload Receipt</label><input type="file" id="dep-screenshot" accept="image/*"></div>
       <button onclick="submitDeposit()" style="width:100%; padding:16px; background:var(--emerald); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Submit Deposit</button>
       <div id="dep-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
-    </div>
-  </div>
-
-  <!-- WITHDRAW MODAL -->
-  <div id="modal-withdraw" class="modal-overlay">
-    <div class="modal-content">
-      <button class="close-modal" onclick="closeModal()">×</button>
-      <h2 style="color:var(--deep-green); margin-bottom:15px; font-size:1.3rem;">Request Withdrawal</h2>
-      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">Select your lock-in period.</p>
-      <div class="form-group">
-        <label>Withdrawal Timeline</label>
-        <select id="withdraw-timeline">
-          <option value="7">7 Days (Standard)</option>
-          <option value="14">14 Days (Extended)</option>
-          <option value="30">30 Days (Premium)</option>
-          <option value="60">60 Days (VIP)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Amount to Withdraw ($)</label>
-        <div class="quick-amounts">
-          <button type="button" class="quick-btn" onclick="setVal('withdraw-amount', 100)">$100</button>
-          <button type="button" class="quick-btn" onclick="setVal('withdraw-amount', 500)">$500</button>
-          <button type="button" class="quick-btn" onclick="setVal('withdraw-amount', 1000)">$1,000</button>
-        </div>
-        <input type="number" id="withdraw-amount" placeholder="0.00">
-      </div>
-      <button onclick="submitWithdraw()" style="width:100%; padding:16px; background:var(--deep-green); color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Confirm Request</button>
-      <div id="withdraw-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
 
@@ -222,29 +176,31 @@
     let liveCapital = 0;
     let liveProfit = 0;
     let profitTickRate = 0;
-    let liveMarketData = { crypto: [], stocks: [] };
+    let marketData = { crypto: [], stocks: [] };
+    let customAssets = [];
 
     function setVal(id, val) { document.getElementById(id).value = val; }
 
     async function fetchMarketData() {
       try {
         const res = await fetch('/api/market');
-        liveMarketData = await res.json();
+        marketData = await res.json();
         
         const track = document.getElementById('ticker-track');
-        if(liveMarketData.crypto && liveMarketData.crypto.length > 0) {
-          const tickerHtml = liveMarketData.crypto.map(coin => `
+        if(marketData.crypto && marketData.crypto.length > 0) {
+          const tickerHtml = marketData.crypto.map(coin => `
             <div class="ticker-item">${coin.ticker} <span class="${coin.change >= 0 ? 'up' : 'down'}">$${coin.price.toLocaleString()} (${coin.change > 0 ? '+' : ''}${coin.change.toFixed(2)}%)</span></div>
           `).join('');
-          // Duplicate to make it loop seamlessly
           track.innerHTML = tickerHtml + tickerHtml;
         }
+      } catch (err) { console.log("Market fail", err); }
+    }
 
-        const activeTab = document.querySelector('.tab-btn.active').innerText.toLowerCase();
-        if (activeTab === 'crypto') switchTab('crypto', document.querySelector('.tab-btn.active'));
-        if (activeTab === 'us stocks') switchTab('stocks', document.querySelector('.tab-btn.active'));
-
-      } catch (err) { console.log("Market data failed to load", err); }
+    async function fetchCustomAssets() {
+      try {
+        const res = await fetch('/api/assets');
+        customAssets = await res.json();
+      } catch (err) { console.log("Assets fail", err); }
     }
 
     function switchTab(category, btn) {
@@ -252,28 +208,50 @@
       btn.classList.add('active');
 
       const container = document.getElementById('asset-list-container');
-      const assets = liveMarketData[category] || [];
-      
-      if (assets.length === 0) {
-        container.innerHTML = '<p style="text-align:center; color:var(--muted); padding:20px;">Loading market data...</p>';
-        return;
-      }
 
-      container.innerHTML = assets.map(asset => `
-        <div class="asset-card" onclick="alert('Trading ${asset.name} requires an active brokerage link. Contact support.')">
-          <div class="asset-info">
-            <div class="asset-icon">${asset.icon}</div>
-            <div>
-              <div class="asset-name">${asset.name}</div>
-              <div class="asset-ticker">${asset.ticker}</div>
+      if (category === 'crypto' || category === 'stocks') {
+        const assets = marketData[category] || [];
+        if (assets.length === 0) { container.innerHTML = '<p>Loading...</p>'; return; }
+
+        container.innerHTML = assets.map(asset => `
+          <div class="asset-card" onclick="selectAsset('${asset.name}', '${category}')">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div class="asset-icon">${asset.icon}</div>
+              <div>
+                <div class="asset-name">${asset.name}</div>
+                <div class="asset-cat">${asset.ticker}</div>
+              </div>
+            </div>
+            <div class="asset-price" style="text-align:right;">
+              <h4 style="font-family:var(--font-mono);">$${parseFloat(asset.price).toLocaleString()}</h4>
+              <span class="${asset.change >= 0 ? 'up' : 'down'}">${asset.change > 0 ? '+' : ''}${parseFloat(asset.change).toFixed(2)}%</span>
             </div>
           </div>
-          <div class="asset-price">
-            <h4>$${parseFloat(asset.price).toLocaleString()}</h4>
-            <span class="${asset.change >= 0 ? 'up' : 'down'}">${asset.change > 0 ? '+' : ''}${parseFloat(asset.change).toFixed(2)}%</span>
+        `).join('');
+      } else {
+        const assets = customAssets.filter(a => a.category === category);
+        if (assets.length === 0) { container.innerHTML = `<p style="text-align:center; color:var(--muted);">No ${category} available right now.</p>`; return; }
+
+        container.innerHTML = assets.map(asset => `
+          <div class="asset-card-img" onclick="selectAsset('${asset.name}', '${asset.category}')">
+            <img src="${asset.image_url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop'}" class="asset-img">
+            <div class="asset-info-box">
+              <div>
+                <div class="asset-name">${asset.name}</div>
+                <div class="asset-cat">${asset.category}</div>
+              </div>
+              <div class="asset-price-box">
+                <h4>${formatUSD(asset.price)}</h4>
+              </div>
+            </div>
           </div>
-        </div>
-      `).join('');
+        `).join('');
+      }
+    }
+
+    function selectAsset(name, category) {
+      document.getElementById('dep-asset-name').value = `${name} (${category})`;
+      openModal('deposit');
     }
 
     async function loadDashboardData() {
@@ -283,7 +261,6 @@
         document.getElementById('adm-bank').textContent = settings.bank_name || 'Chase Bank';
         document.getElementById('adm-acc').textContent = settings.bank_account || '123456789';
         document.getElementById('adm-rout').textContent = settings.bank_routing || '021000021';
-        document.getElementById('adm-btc').textContent = settings.btc_address || 'bc1q...xanvia';
 
         const res = await fetch(`/api/investments/${user.id}`);
         const data = await res.json();
@@ -299,7 +276,7 @@
 
             if (inv.start_date && inv.maturity_date) {
               const totalDurationSeconds = (new Date(inv.maturity_date) - new Date(inv.start_date)) / 1000;
-              const totalExpectedProfit = parseFloat(inv.amount) * 1.4;
+              const totalExpectedProfit = parseFloat(inv.amount) * 0.4;
               const profitPerSecond = totalExpectedProfit / totalDurationSeconds;
               if (new Date() < new Date(inv.maturity_date)) {
                 profitTickRate += profitPerSecond;
@@ -319,17 +296,15 @@
           <div class="tx-item">
             <div class="tx-info">
               <h4>${tx.type.replace(/_/g, ' ')}</h4>
-              <p>${new Date(tx.created_at).toLocaleDateString()}</p>
+              <p>${tx.details && tx.details.includes('|') ? tx.details.split('|')[0] : 'General Portfolio'}</p>
             </div>
             <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : (tx.status === 'Rejected' ? 'var(--danger)' : '#F59E0B')}">
               ${formatUSD(tx.amount)}
-              <div style="font-size:0.7rem; color:var(--muted); font-family: var(--font-main); font-weight:600;">${tx.status}</div>
+              <div style="font-size:0.7rem; color:var(--muted); font-family: var(--font-main);">${tx.status}</div>
             </div>
           </div>
         `).join('') : '<p style="color: var(--muted); font-size: 0.9rem;">No investment history.</p>';
-      } catch(err) {
-        console.error(err);
-      }
+      } catch(err) { console.error(err); }
     }
 
     function updateUI() {
@@ -338,15 +313,12 @@
       document.getElementById('total-val').textContent = formatUSD(liveCapital + liveProfit);
     }
 
-    // LIVE PROFIT TICKER (Runs every second)
     setInterval(() => {
       if (profitTickRate > 0) {
         liveProfit += profitTickRate;
         updateUI();
       }
     }, 1000);
-
-    setInterval(fetchMarketData, 60000);
 
     function openModal(type) { document.getElementById(`modal-${type}`).classList.add('open'); }
     function closeModal() { document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('open')); }
@@ -355,51 +327,40 @@
       const amount = parseFloat(document.getElementById('dep-amount').value);
       const ref = document.getElementById('dep-ref').value;
       const file = document.getElementById('dep-screenshot').files[0];
+      const assetFull = document.getElementById('dep-asset-name').value;
       const msg = document.getElementById('dep-msg');
 
-      if (!amount || !file) { msg.textContent = "Enter amount and upload receipt."; msg.style.color = "red"; return; }
+      if (!amount || !file) { msg.textContent = "Amount and receipt required."; msg.style.color = "red"; return; }
+
+      const assetName = assetFull.split(' (')[0];
+      const assetCategory = assetFull.split('(')[1].replace(')', '');
 
       const formData = new FormData();
       formData.append('userId', user.id);
       formData.append('amount', amount);
       formData.append('reference', ref);
+      formData.append('assetName', assetName);
+      formData.append('assetCategory', assetCategory);
       formData.append('screenshot', file);
 
       msg.textContent = "Uploading..."; msg.style.color = "var(--emerald)";
 
       const res = await fetch('/api/investments/deposit', { method: 'POST', body: formData });
       const data = await res.json();
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
       
       if(data.success) {
-        msg.textContent = "Payment processing. Please wait for Admin approval."; 
-        setTimeout(() => { closeModal(); loadDashboardData(); }, 2500);
+        msg.textContent = "Pending Admin Approval."; 
+        msg.style.color = "var(--emerald)";
+        setTimeout(() => { closeModal(); loadDashboardData(); }, 2000);
+      } else {
+        msg.textContent = data.error; msg.style.color = "red";
       }
     }
 
-    async function submitWithdraw() {
-      const amount = parseFloat(document.getElementById('withdraw-amount').value);
-      const timeline = document.getElementById('withdraw-timeline').value;
-      const msg = document.getElementById('withdraw-msg');
-
-      if (!amount || amount <= 0) { msg.textContent = "Enter a valid amount."; msg.style.color = "red"; return; }
-
-      msg.textContent = "Processing..."; msg.style.color = "var(--emerald)";
-
-      const res = await fetch('/api/investments/withdraw', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: user.id, amount, timeline })
-      });
-      
-      const data = await res.json();
-      msg.textContent = data.message || data.error;
-      msg.style.color = data.success ? "var(--emerald)" : "red";
-      if(data.success) setTimeout(() => { closeModal(); loadDashboardData(); }, 2500);
-    }
-
     fetchMarketData();
+    fetchCustomAssets().then(() => {
+      switchTab('crypto', document.querySelector('.tab-btn.active'));
+    });
     loadDashboardData();
   </script>
 </body>
