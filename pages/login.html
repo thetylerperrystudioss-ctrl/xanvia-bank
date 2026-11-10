@@ -91,14 +91,14 @@
       <p class="sub">Sign in to access your accounts securely.</p>
       
       <div id="user-msg" class="msg"></div>
-Hold      
+      
       <div class="form-group">
-        <label>(eEmail or Username</label>
+        <label for="user-identifier">Email or Username</label>
         <input type="text" id="user-identifier" placeholder="Enter email or username">
       </div>
       
       <div class="form-group">
-        <label>Password</label>
+        <label for="user-password">Password</label>
         <input type="password" id="user-password" placeholder="Enter password">
         <span class="password-toggle" onclick="togglePassword('user-password', this)">👁️</span>
       </div>
@@ -127,7 +127,7 @@ Hold
       <div id="admin-msg" class="msg"></div>
       
       <div class="form-group">
-        <label>Admin Passcode</label>
+        <label for="admin-pass">Admin Passcode</label>
         <input type="password" id="admin-pass" maxlength="4" placeholder="••••" style="text-align: center; letter-spacing: 8px; font-size: 1.5rem;">
       </div>
       
@@ -139,13 +139,12 @@ Hold
   <script>
     const loginBtn = document.getElementById('login-btn');
     const btnText = document.getElementById('btn-text');
-)    const holdBar = document.getElementById('hold-bar');
+    const holdBar = document.getElementById('hold-bar');
     
-    {
- let holdTimer;
+    let holdTimer;
     let progressTimer;
-         let progress = 0;
-    let isHoldTriggered if = false;
+    let progress = 0;
+    let isHoldTriggered = false;
     let isLoggingIn = false;
 
     // LONG PRESS LOGIC
@@ -172,7 +171,8 @@ Hold
       }, 5000);
     }
 
-    function cancel (e) e.preventDefault();
+    function cancelHold(e) {
+      if (e) e.preventDefault();
       clearTimeout(holdTimer);
       clearInterval(progressTimer);
       
