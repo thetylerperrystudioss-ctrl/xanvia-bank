@@ -50,7 +50,7 @@ let marketCache = {
 };
 
 // ==========================================
-// DATABASE SETUP (SAFE VERSION)
+// BULLETPROOF DATABASE SETUP
 // ==========================================
 pool.connect(async (err, client, release) => {
   if (err) {
@@ -60,48 +60,86 @@ pool.connect(async (err, client, release) => {
   
   try {
     await client.query(`
-      CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
-        name VARCHAR(100),
-        email VARCHAR(100) UNIQUE,
-        password VARCHAR(100),
-        username VARCHAR(50) UNIQUE,
-        phone VARCHAR(20),
-        account_number VARCHAR(20) UNIQUE,
-        routing_number VARCHAR(20),
-        status VARCHAR(20) DEFAULT 'Active',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        age INTEGER,
-        address TEXT,
-        ssn_last4 VARCHAR(4),
-        id_front TEXT,
-        id_back TEXT,
-        proof_of_address TEXT,
-        profile_pic TEXT,
-        deleted BOOLEAN DEFAULT false
-      );
-      CREATE TABLE IF NOT EXISTS accounts (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), balance DECIMAL(12,2) DEFAULT 0.00);
-      CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, type VARCHAR(50), amount DECIMAL(12,2), status VARCHAR(20) DEFAULT 'Pending', reference VARCHAR(100), details TEXT, proof_image TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-      CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, message TEXT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-      CREATE TABLE IF NOT EXISTS system_settings (key VARCHAR(50) PRIMARY KEY, value TEXT);
-      CREATE TABLE IF NOT EXISTS cards (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, card_type VARCHAR(50), status VARCHAR(20) DEFAULT 'Active', last4 VARCHAR(4));
-      CREATE TABLE IF NOT EXISTS investments (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, amount DECIMAL(12,2), status VARCHAR(50), start_date TIMESTAMP, maturity_date TIMESTAMP, profit DECIMAL(12,2), asset_name VARCHAR(100), asset_category VARCHAR(50));
-      CREATE TABLE IF NOT EXISTS investment_assets (id SERIAL PRIMARY KEY, category VARCHAR(50), name VARCHAR(100), description TEXT, price DECIMAL(12,2), image_url TEXT);
-      CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, ref_number VARCHAR(20), category VARCHAR(50), subject VARCHAR(100), message TEXT, status VARCHAR(50) DEFAULT 'Pending');
-      CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE, sender VARCHAR(20), message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-      CREATE TABLE IF NOT EXISTS login_history (id SERIAL PRIMARY KEY, user_id INTEGER, ip_address TEXT, device_info TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+      CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS accounts (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS cards (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS investments (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS investment_assets (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS login_history (id SERIAL PRIMARY KEY);
     `);
+
+    // Forcefully add all missing columns safely
+    const queries = [
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS id_front TEXT",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS id_back TEXT",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS proof_of_address TEXT",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS user_id INTEGER",
+      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
+      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS user_id INTEGER",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
+      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+      "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS user_id INTEGER",
+      "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS message TEXT",
+      "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false",
+      "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+      "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS key VARCHAR(50) UNIQUE",
+      "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT",
+      "ALTER TABLE cards ADD COLUMN IF NOT EXISTS user_id INTEGER",
+      "ALTER TABLE cards ADD COLUMN IF NOT EXISTS card_type VARCHAR(50)",
+      "ALTER TABLE cards ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'",
+      "ALTER TABLE cards ADD COLUMN IF NOT EXISTS last4 VARCHAR(4)",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS user_id INTEGER",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50)",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS asset_name VARCHAR(100)",
+      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS asset_category VARCHAR(50)",
+      "ALTER TABLE investment_assets ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
+      "ALTER TABLE investment_assets ADD COLUMN IF NOT EXISTS name VARCHAR(100)",
+      "ALTER TABLE investment_assets ADD COLUMN IF NOT EXISTS description TEXT",
+      "ALTER TABLE investment_assets ADD COLUMN IF NOT EXISTS price DECIMAL(12,2)",
+      "ALTER TABLE investment_assets ADD COLUMN IF NOT EXISTS image_url TEXT"
+    ];
+
+    for (let q of queries) {
+      try { await client.query(q); } catch (e) { console.log('Column update skipped:', e.message); }
+    }
 
     await client.query(`
       INSERT INTO system_settings (key, value) VALUES 
-      ('btc_address', 'bc1q...xanvia'), 
-      ('bank_name', 'Chase Bank'), 
-      ('bank_account', '123456789'), 
-      ('bank_routing', '021000021') 
+      ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), 
+      ('bank_account', '123456789'), ('bank_routing', '021000021') 
       ON CONFLICT (key) DO NOTHING
     `);
     
-    console.log('✅ Database connected and tables verified.');
+    console.log('✅ Database fully verified and updated.');
   } catch (dbErr) {
     console.error('DB Setup Error:', dbErr.message);
   } finally {
@@ -110,7 +148,7 @@ pool.connect(async (err, client, release) => {
 });
 
 // ==========================================
-// AUTHENTICATION ROUTES
+// AUTHENTICATION
 // ==========================================
 app.post('/api/register', kycUpload, async (req, res) => {
   try {
@@ -166,36 +204,8 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.post('/api/auth/forgot-password', async (req, res) => {
-  const { email } = req.body;
-  try {
-    const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email.toLowerCase()]);
-    if (result.rows.length === 0) return res.status(404).json({ error: 'Email not found.' });
-    
-    const tempPassword = "Reset" + Math.floor(1000 + Math.random() * 9000);
-    await pool.query('UPDATE users SET password = $1 WHERE email = $2', [await bcrypt.hash(tempPassword, 10), email.toLowerCase()]);
-    await sendEmail(email, 'Xanvia Password Reset', `<h2>Hello ${result.rows[0].name},</h2><p>Temp password: <b>${tempPassword}</b></p>`);
-    
-    res.json({ success: true, message: `Check email.` });
-  } catch (err) { 
-    res.status(500).json({ error: 'Database error.' }); 
-  }
-});
-
-app.post('/api/user/change-password', async (req, res) => {
-  const { userId, currentPassword, newPassword } = req.body;
-  try {
-    const result = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
-    if (!(await bcrypt.compare(currentPassword, result.rows[0].password))) return res.status(400).json({ error: 'Incorrect current password.' });
-    await pool.query('UPDATE users SET password = $1 WHERE id = $2', [await bcrypt.hash(newPassword, 10), userId]);
-    res.json({ success: true, message: 'Password updated.' });
-  } catch (err) { 
-    res.status(500).json({ error: 'Error' }); 
-  }
-});
-
 // ==========================================
-// DASHBOARD & USER ROUTES
+// USER ROUTES
 // ==========================================
 app.get('/api/user/:userId', async (req, res) => {
   try {
@@ -216,6 +226,25 @@ app.get('/api/accounts/:userId', async (req, res) => {
     const query = `SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT') THEN amount WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) AS checking_balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`;
     const result = await pool.query(query, [req.params.userId]);
     res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0, loan: 0 });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/notifications/:userId', async (req, res) => {
+  try { const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/cards/:userId', async (req, res) => {
+  try { const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/assets', async (req, res) => {
+  try { const result = await pool.query('SELECT * FROM investment_assets ORDER BY created_at DESC'); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.get('/api/investments/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
+    res.json(result.rows);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
@@ -268,7 +297,7 @@ app.post('/api/admin/approve', async (req, res) => {
 });
 
 // ==========================================
-// OTHER ROUTES (Deposits, Transfers, etc.)
+// MISC ROUTES
 // ==========================================
 app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
   const { userId, amount, targetAccount } = req.body;
@@ -298,28 +327,9 @@ app.get('/api/lookup-account/:accountNumber', async (req, res) => {
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
-app.get('/api/notifications/:userId', async (req, res) => {
-  try { const result = await pool.query('SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.get('/api/cards/:userId', async (req, res) => {
-  try { const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.get('/api/assets', async (req, res) => {
-  try { const result = await pool.query('SELECT * FROM investment_assets ORDER BY created_at DESC'); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.get('/api/investments/:userId', async (req, res) => {
-  try {
-    const result = await pool.query('SELECT * FROM investments WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]);
-    res.json(result.rows);
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
 app.get('/api/market', (req, res) => { res.json(marketCache); });
 
-// Catch-all for missing images or pages
+// Catch-all
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 
 const PORT = process.env.PORT || 3000;
