@@ -4,45 +4,47 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Login | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
+    :root { --emerald: #0F8A5F; --emerald-dark: #0A5F42; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; }
     
-    .login-card { background: white; width: 100%; max-width: 400px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+    /* DARK OVERLAY ON BACKGROUND */
+    body::before { content: ''; position: absolute; inset: 0; background: rgba(11, 46, 35, 0.85); z-index: 1; backdrop-filter: blur(8px); }
+
+    .login-card { background: white; width: 100%; max-width: 420px; padding: 40px 30px; border-radius: 24px;; box-shadow: 0 25px font 50px rgba(0,0,0,-size0.3); position: relative; z-index:: 10; }
     
-    .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; justify-content: center; }
-    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
+    .logo { display:  flex; align-items: center; gap: 010px; margin-bottom: 30px; justify-content: center; }
+    .logo-icon { background: var(--emerald); color: white; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 900; }
     .logo-text { display: flex; flex-direction: column; }
-    .logo-title { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
-    .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
+    .logo-title { font-family: 'Merriweather', serif; font-size: 1.5rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
+    .logo-subtitle { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
+
+    .login-card h2 { text-align: center; color: var(--deep-green); margin-bottom: 8px; font-size: 1.5rem; }
+    .login-card p.sub { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 30px; }
 
     .form-group { margin-bottom: 20px; position: relative; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    .form-group label { display: block.85rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
+    .form-group input { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; outline: none; background: #FAFAFA; transition: 0.2s; }
+    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 4px rgba(15,138,95,0.1); }
     
-    /* Forgot password link */
-    .forgot-link { display: block; text-align: right; font-size: 0.8rem; color: var(--emerald); font-weight: 600; text-decoration: none; margin-top: -10px; margin-bottom: 20px; }
+    /* PASSWORD TOGGLE */
+    .password-toggle { position: absolute; right: 15px; top: 40px; cursor: pointer; color: var(--muted); font-size: 1.1rem; }
 
-    .btn-primary { 
-      width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; 
-      cursor: pointer; transition: transform 0.1s; user-select: none; -webkit-user-select: none; touch-action: manipulation; 
-      position: relative; overflow: hidden; display: block; text-align: center;
-    }
+    .forgot-link { display: block; text-align: right; font-size: 0.85rem; color: var(--emerald); font-weight: 600; text-decoration: none; margin-top: -5px; margin-bottom: 25px; }
+
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(15,138,95,0.2); }
     .btn-primary:active { transform: scale(0.98); }
     
-    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
+    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
-    
-    .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
-    .footer-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
 
-    #user-login-section { display: none; }
+    .footer-link { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--muted); }
+    .footer-link a { color: var(--emerald); font-weight: 700; text-decoration: none; }
+
+    /* HIDDEN ADMIN VIEW */
     #admin-login-section { display: none; }
-    
-    .hold-indicator { position: absolute; bottom: 0; left: 0; height: 4px; background: var(--gold); width: 0%; transition: width 0.1s linear; z-index: 10; }
     .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); display: none; z-index: 20; }
   </style>
 </head>
@@ -51,7 +53,8 @@
   <div class="login-card">
     <button class="back-btn" id="back-btn" onclick="resetView()">←</button>
 
-    <div id="hold-screen">
+    <!-- USER LOGIN VIEW -->
+    <div id="user-login-section">
       <div class="logo">
         <div class="logo-icon">X</div>
         <div class="logo-text">
@@ -59,121 +62,85 @@
           <span class="logo-subtitle">Credit Union</span>
         </div>
       </div>
-      <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 10px;">Welcome Back</h2>
-      <p style="text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 30px;">Tap to Login.</p>
+      <h2>Welcome Back</h2>
+      <p class="sub">Sign in to access your accounts securely.</p>
       
-      <button class="btn-primary" id="magic-btn">
-        Login
-        <div class="hold-indicator" id="hold-bar"></div>
-      </button>
-    </div>
-
-    <div id="user-login-section">
-      <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">User Login</h2>
       <div id="user-msg" class="msg"></div>
+      
       <div class="form-group">
         <label>Email or Username</label>
         <input type="text" id="user-identifier" placeholder="Enter email or username">
       </div>
+      
       <div class="form-group">
         <label>Password</label>
         <input type="password" id="user-password" placeholder="Enter password">
+        <span class="password-toggle" onclick="togglePassword('user-password', this)">👁️</span>
       </div>
       
-      <!-- NEW: FORGOT PASSWORD LINK -->
       <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
 
-      <button class="btn-primary" onclick="userLogin()" style="position: static;">Sign In</button>
+      <button class="btn-primary" onclick="userLogin()">Secure Sign In</button>
+      
       <div class="footer-link">
-        Don't have an account? <a href="register.html">Register</a>
+        Don't have an account? <a href="register.html">Apply Now</a>
       </div>
     </div>
 
+    <!-- ADMIN LOGIN VIEW -->
     <div id="admin-login-section">
-      <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 20px;">Admin Access</h2>
+      <div class="logo" style="margin-bottom: 20px;">
+        <div class="logo-icon" style="background:var(--deep-green);">🛡️</div>
+      </div>
+      <h2>Admin Access</h2>
+      <p class="sub">Authorized personnel only.</p>
+      
       <div id="admin-msg" class="msg"></div>
+      
       <div class="form-group">
         <label>Admin Passcode</label>
         <input type="password" id="admin-pass" maxlength="4" placeholder="••••" style="text-align: center; letter-spacing: 8px; font-size: 1.5rem;">
       </div>
-      <button class="btn-primary" onclick="verifyAdmin()" style="position: static;">Unlock Admin</button>
+      
+      <button class="btn-primary" onclick="verifyAdmin()" style="background: var(--deep-green);">Unlock Terminal</button>
     </div>
 
   </div>
 
   <script>
-    const magicBtn = document.getElementById('magic-btn');
-    const holdBar = document.getElementById('hold-bar');
-    const backBtn = document.getElementById('back-btn');
-    
-    let holdTimer;
-    let progressTimer;
-    let progress = 0;
-
-    function startHold(e) {
-      if (e) e.preventDefault();
-      progress = 0;
-      holdBar.style.width = '0%';
-      
-      progressTimer = setInterval(() => {
-        progress += 1;
-        holdBar.style.width = (progress / 50) * 100 + '%';
-      }, 50);
-
-      holdTimer = setTimeout(() => {
-        clearInterval(progressTimer);
-        holdBar.style.width = '0%';
-        showSection('admin-login-section');
-      }, 5000);
-    }
-
-    function cancelHold(e) {
-      if (e) e.preventDefault();
-      clearTimeout(holdTimer);
-      clearInterval(progressTimer);
-      
-      if (progress < 45) {
-        holdBar.style.width = '0%';
-        showSection('user-login-section');
-      }
-    }
-
-    function showSection(id) {
-      document.getElementById('hold-screen').style.display = 'none';
+    // Check URL for admin mode
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('admin') === 'true') {
       document.getElementById('user-login-section').style.display = 'none';
-      document.getElementById('admin-login-section').style.display = 'none';
-      
-      document.getElementById(id).style.display = 'block';
-      backBtn.style.display = 'block';
+      document.getElementById('admin-login-section').style.display = 'block';
+      document.getElementById('back-btn').style.display = 'block';
     }
 
     function resetView() {
-      document.getElementById('hold-screen').style.display = 'block';
-      document.getElementById('user-login-section').style.display = 'none';
-      document.getElementById('admin-login-section').style.display = 'none';
-      backBtn.style.display = 'none';
-      
-      document.getElementById('user-identifier').value = '';
-      document.getElementById('user-password').value = '';
-      document.getElementById('admin-pass').value = '';
-      document.getElementById('user-msg').style.display = 'none';
-      document.getElementById('admin-msg').style.display = 'none';
-      
-      progress = 0;
-      holdBar.style.width = '0%';
+      window.location.href = 'login.html'; // Strip the admin parameter
     }
 
-    magicBtn.addEventListener('pointerdown', startHold);
-    magicBtn.addEventListener('pointerup', cancelHold);
-    magicBtn.addEventListener('pointercancel', cancelHold);
-    magicBtn.addEventListener('pointerleave', cancelHold);
+    function togglePassword(inputId, icon) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password"') {
+        input.type = 'text';
+        icon.text rel="stylesheetContent = '🙈';
+      } else {
+        input.type = 'password';
+">
+        icon.textContent = '👁️';
+      }
+    }
 
-    async function userLogin() {
+     async function userLogin() {
       const identifier = document.getElementById('user-identifier').value;
       const password = document.getElementById('user-password').value;
       const msg = document.getElementById('user-msg');
 
-      if (!identifier || !password) { msg.textContent = "Fill all fields."; msg.className = "msg error"; return; }
+      if (!identifier || !password) { msg.textContent = "Please fill in all fields."; msg.className = "msg error"; return; }
+
+      const btn = event.target;
+      btn.textContent = "Authenticating..."; btn.disabled = true;
 
       try {
         const res = await fetch('/api/login', {
@@ -186,21 +153,23 @@
 
         if (data.success) {
           localStorage.setItem("xanvia_user", JSON.stringify(data.user));
-          window.location.replace("hub.html"); 
+          window.location.replace("hub.html");
         } else {
           msg.textContent = data.error;
           msg.className = "msg error";
+          btn.textContent = "Secure Sign In"; btn.disabled = false;
         }
       } catch (err) {
-        msg.textContent = "Server error.";
+        msg.textContent = "Server error. Please try again.";
         msg.className = "msg error";
+        btn.textContent = "Secure Sign In"; btn.disabled = false;
       }
     }
 
-    function verifyAdmin() {
+    async function verifyAdmin() {
       const pass = document.getElementById('admin-pass').value;
       const msg = document.getElementById('admin-msg');
-
+      
       if (pass === "@@@@") {
         window.location.replace("admin.html");
       } else {

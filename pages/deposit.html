@@ -39,14 +39,27 @@
 
     .form-group { margin-bottom: 20px; }
     .form-group label { display: block; font-size: 0.95rem; font-weight: 600; margin-bottom: 8px; }
-    .form-group input[type="number"], .form-group input[type="text"] { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
+    .form-group input[type="number"], .form-group input[type="text"] { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; transition: 0.2s; }
+    .form-group input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
 
-    .file-upload { border: 2px dashed #ccc; border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; margin-bottom: 20px; }
-    .file-upload:hover { border-color: var(--emerald); background: #FAFAFA; }
+    /* NEW: QUICK AMOUNTS */
+    .quick-amounts { display: flex; gap: 10px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+    .quick-amounts::-webkit-scrollbar { display: none; }
+    .quick-btn { background: #F4F7F6; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; color: var(--deep-green); cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .quick-btn:hover { background: #E6F4EE; border-color: var(--emerald); }
+    .quick-btn:active { transform: scale(0.95); }
+
+    /* FILE UPLOAD DESIGN */
+    .file-upload { border: 2px dashed #ccc; border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; position: relative; margin-bottom: 20px; background: #FAFAFA; }
+    .file-upload:hover { border-color: var(--emerald); background: #F4F7F6; }
     .file-upload input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
     .file-upload p { margin: 0; font-size: 0.9rem; font-weight: 600; color: var(--text); }
     .file-upload span { font-size: 0.8rem; color: var(--muted); }
+    
+    /* File uploaded state */
     .file-upload.has-file { border-color: var(--emerald); background: #E6F4EE; }
+    .file-upload.has-file p { color: var(--emerald-dark); }
+    .file-upload.has-file span { color: var(--emerald); font-weight: 600; }
 
     .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; }
     .btn-primary:active { transform: scale(0.98); }
@@ -105,6 +118,14 @@
       <form id="deposit-form">
         <div class="form-group">
           <label>Amount Sent ($)</label>
+          <!-- NEW: QUICK AMOUNTS -->
+          <div class="quick-amounts">
+            <button type="button" class="quick-btn" onclick="setAmount(100)">$100</button>
+            <button type="button" class="quick-btn" onclick="setAmount(250)">$250</button>
+            <button type="button" class="quick-btn" onclick="setAmount(500)">$500</button>
+            <button type="button" class="quick-btn" onclick="setAmount(1000)">$1,000</button>
+            <button type="button" class="quick-btn" onclick="setAmount(2500)">$2,500</button>
+          </div>
           <input type="number" id="amount" placeholder="0.00" min="1" step="0.01" required>
         </div>
 
@@ -130,11 +151,15 @@
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
 
-    // Pre-select target account from URL (?target=checking)
     const urlParams = new URLSearchParams(window.location.search);
     const targetAccount = urlParams.get('target') || 'checking';
 
-    // --- Fetch admin payment details ---
+    // --- NEW: QUICK AMOUNT LOGIC ---
+    function setAmount(val) {
+      document.getElementById('amount').value = val;
+    }
+
+    // --- FETCH ADMIN DETAILS ---
     async function loadAdminDetails() {
       try {
         const res = await fetch('/api/admin/settings');
@@ -151,7 +176,7 @@
       }
     }
 
-    // --- Copy to clipboard ---
+    // --- COPY TEXT ---
     function copyText(elementId) {
       const text = document.getElementById(elementId).textContent;
       const showToast = () => {
@@ -172,7 +197,7 @@
       }
     }
 
-    // --- File upload preview ---
+    // --- FILE UPLOAD LOGIC ---
     const fileInput = document.getElementById('screenshot');
     const fileBox = document.getElementById('file-upload-box');
     const fileLabel = document.getElementById('file-label');
@@ -190,7 +215,7 @@
       }
     });
 
-    // --- Submit ---
+    // --- SUBMIT ---
     document.getElementById('deposit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const msg = document.getElementById('msg');
@@ -201,19 +226,13 @@
       const file = fileInput.files[0];
 
       if (!amount || amount <= 0) {
-        msg.className = 'error';
-        msg.textContent = 'Please enter a valid amount.';
-        return;
+        msg.className = 'error'; msg.textContent = 'Please enter a valid amount.'; return;
       }
       if (!reference) {
-        msg.className = 'error';
-        msg.textContent = 'Please enter your payment reference.';
-        return;
+        msg.className = 'error'; msg.textContent = 'Please enter your payment reference.'; return;
       }
       if (!file) {
-        msg.className = 'error';
-        msg.textContent = 'Please upload a receipt screenshot.';
-        return;
+        msg.className = 'error'; msg.textContent = 'Please upload a receipt screenshot.'; return;
       }
 
       btn.textContent = 'Uploading...';
@@ -235,9 +254,12 @@
           msg.className = 'success';
           msg.textContent = 'Deposit submitted! Awaiting admin approval.';
           document.getElementById('deposit-form').reset();
+          
+          // Reset the file upload box UI
           fileBox.classList.remove('has-file');
           fileLabel.textContent = 'Tap to upload receipt';
           fileName.textContent = 'PNG or JPG';
+          
           btn.textContent = 'Submitted ✓';
           setTimeout(() => { window.location.href = 'dashboard.html'; }, 2200);
         } else {

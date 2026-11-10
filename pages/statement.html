@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Statement | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -12,62 +12,78 @@
 
     .app-container { max-width: 800px; margin: 0 auto; padding: 20px; padding-bottom: 60px; }
 
-    .header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; }
+    /* HEADER & FILTERS */
+    .header { display: flex; align-items: center; gap: 15px; margin-bottom: 25px; }
     .back-btn { text-decoration: none; font-size: 1.5rem; color: var(--deep-green); }
     .header h1 { font-size: 1.4rem; color: var(--deep-green); font-weight: 700; }
 
-    .filters {
-      background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px;
-      border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: end;
+    .filters { background: white; border-radius: 16px; padding: 20px; margin-bottom: 20px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    .filter-group label { display: block; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 6px; color: var(--muted); }
+    
+    /* NORMAL DATE SETTINGS */
+    .filter-group input[type="date"] { 
+      width: 100%; 
+      padding: 12px; 
+      border: 1px solid var(--border); 
+      border-radius: 10px; 
+      font-size: 0.95rem; 
+      outline: none; 
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      background: #FAFAFA;
     }
-    .filter-group label { display: block; font-size: 0.8rem; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
-    .filter-group input, .filter-group select {
-      width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; outline: none;
+    .filter-group input[type="date"]:focus {
+      border-color: var(--emerald);
+      background: white;
     }
-    .btn-run { padding: 11px 20px; background: var(--emerald); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+    
+    .btn-run { padding: 12px 24px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 0.95rem; transition: 0.2s; }
+    .btn-run:active { transform: scale(0.97); }
 
-    .statement-card { background: white; border-radius: 16px; padding: 30px; border: 1px solid var(--border); }
+    /* STATEMENT CARD */
+    .statement-card { background: white; border-radius: 16px; padding: 40px; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.03); }
 
-    .stmt-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--deep-green); padding-bottom: 20px; margin-bottom: 20px; }
-    .stmt-brand { display: flex; gap: 12px; align-items: center; }
-    .stmt-logo { background: var(--emerald); color: white; width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; font-weight: 800; }
-    .stmt-brand-text h2 { font-family: 'Merriweather', serif; font-size: 1.2rem; color: var(--deep-green); line-height: 1; }
-    .stmt-brand-text p { font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); font-weight: 700; margin-top: 3px; }
-    .stmt-meta { text-align: right; font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+    .stmt-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--deep-green); padding-bottom: 25px; margin-bottom: 25px; }
+    .stmt-brand { display: flex; gap: 15px; align-items: center; }
+    .stmt-logo { background: var(--emerald); color: white; width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; }
+    .stmt-brand-text h2 { font-family: 'Merriweather', serif; font-size: 1.4rem; color: var(--deep-green); line-height: 1; }
+    .stmt-brand-text p { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--gold); font-weight: 700; margin-top: 4px; }
+    .stmt-meta { text-align: right; font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
     .stmt-meta strong { color: var(--deep-green); }
 
-    .stmt-account { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px; padding: 15px; background: #F8F9FA; border-radius: 10px; font-size: 0.85rem; }
-    .stmt-account .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
-    .stmt-account .value { font-weight: 700; color: var(--deep-green); font-size: 0.95rem; margin-top: 2px; }
+    .stmt-account { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; padding: 20px; background: #F8F9FA; border-radius: 12px; border: 1px solid var(--border); }
+    .stmt-account .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .stmt-account .value { font-weight: 700; color: var(--deep-green); font-size: 1rem; margin-top: 4px; }
 
-    .stmt-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; }
-    .stmt-summary div { padding: 15px; border-radius: 10px; background: #F8F9FA; text-align: center; border: 1px solid var(--border); }
-    .stmt-summary .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
-    .stmt-summary .value { font-size: 1.3rem; font-weight: 800; margin-top: 4px; }
+    .stmt-summary { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px; }
+    .stmt-summary div { padding: 20px; border-radius: 12px; background: white; text-align: center; border: 1px solid var(--border); }
+    .stmt-summary .label { font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+    .stmt-summary .value { font-size: 1.4rem; font-weight: 800; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
     .stmt-summary .credit { color: var(--emerald); }
     .stmt-summary .debit { color: var(--danger); }
 
-    .tx-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .tx-table th { text-align: left; padding: 12px 8px; border-bottom: 2px solid var(--border); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 700; }
-    .tx-table td { padding: 12px 8px; border-bottom: 1px solid var(--border); }
+    .tx-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .tx-table th { text-align: left; padding: 15px 10px; border-bottom: 2px solid var(--border); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 700; }
+    .tx-table td { padding: 15px 10px; border-bottom: 1px solid var(--border); }
     .tx-table tr:last-child td { border-bottom: none; }
-    .tx-table .amount { text-align: right; font-weight: 700; }
+    .tx-table .amount { text-align: right; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
     .tx-table .credit { color: var(--emerald); }
     .tx-table .debit { color: var(--danger); }
-    .empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 0.9rem; }
+    .empty { padding: 40px 20px; text-align: center; color: var(--muted); font-size: 0.95rem; }
 
-    .stmt-footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.7rem; color: var(--muted); line-height: 1.6; text-align: center; }
+    .stmt-footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--muted); line-height: 1.8; text-align: center; }
 
-    .action-bar { display: flex; gap: 12px; margin-top: 20px; }
-    .btn-outline { flex: 1; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.95rem; background: white; color: var(--deep-green); border: 1px solid var(--border); }
-    .btn-primary { flex: 1; padding: 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.95rem; background: var(--emerald); color: white; border: none; }
+    .action-bar { display: flex; gap: 15px; margin-top: 25px; }
+    .btn-outline { flex: 1; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; background: white; color: var(--deep-green); border: 1px solid var(--border); }
+    .btn-primary { flex: 1; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95rem; background: var(--emerald); color: white; border: none; box-shadow: 0 4px 12px rgba(15,138,95,0.2); }
 
+    /* PRINT STYLES */
     @media print {
       body { background: white; }
       .app-container { max-width: 100%; padding: 0; }
       .header, .filters, .action-bar { display: none !important; }
-      .statement-card { border: none; padding: 0; border-radius: 0; }
-      .stmt-summary div, .stmt-account { background: white; }
+      .statement-card { border: none; padding: 0; border-radius: 0; box-shadow: none; }
+      .stmt-summary div, .stmt-account { background: white; border: 1px solid #ddd; }
     }
   </style>
 </head>
@@ -79,18 +95,20 @@
       <h1>Account Statement</h1>
     </div>
 
+    <!-- FILTERS -->
     <div class="filters">
       <div class="filter-group">
-        <label>From</label>
+        <label>From Date</label>
         <input type="date" id="from-date">
       </div>
       <div class="filter-group">
-        <label>To</label>
+        <label>To Date</label>
         <input type="date" id="to-date">
       </div>
-      <button class="btn-run" onclick="loadStatement()">Run</button>
+      <button class="btn-run" onclick="loadStatement()">Generate</button>
     </div>
 
+    <!-- STATEMENT -->
     <div class="statement-card" id="statement-card">
       <div class="stmt-head">
         <div class="stmt-brand">
@@ -174,12 +192,11 @@
 
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
-    let allTxs = [];
-
     async function loadStatement() {
       const from = document.getElementById('from-date').value;
       const to = document.getElementById('to-date').value;
 
+      // Load User details
       const userRes = await fetch(`/api/user/${user.id}`);
       const userInfo = await userRes.json();
       document.getElementById('stmt-name').textContent = userInfo.name || user.name || '—';
@@ -188,17 +205,20 @@
       document.getElementById('stmt-date').textContent = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
       document.getElementById('stmt-ref').textContent = 'STMT-' + Math.floor(100000 + Math.random() * 900000);
 
+      // Load Transactions
       const txRes = await fetch(`/api/transactions/${user.id}`);
-      allTxs = await txRes.json();
+      const allTxs = await txRes.json();
 
+      // Only approved transactions belong on a statement
       let filtered = allTxs.filter(tx => tx.status === 'Approved');
 
+      // Apply Date Filters
       if (from) {
         const fromTime = new Date(from).getTime();
         filtered = filtered.filter(tx => new Date(tx.created_at).getTime() >= fromTime);
       }
       if (to) {
-        const toTime = new Date(to).getTime() + 86400000;
+        const toTime = new Date(to).getTime() + 86400000; // include whole end day
         filtered = filtered.filter(tx => new Date(tx.created_at).getTime() < toTime);
       }
 
@@ -208,13 +228,15 @@
       const rows = filtered.map(tx => {
         const isCredit = tx.type.includes('DEPOSIT') || (tx.type === 'INTERNAL_TRANSFER' && tx.details === 'received');
         const amt = parseFloat(tx.amount) || 0;
-        if (isCredit) totalCredit += amt; else totalDebit += amt;
+        
+        if (isCredit) totalCredit += amt; 
+        else totalDebit += amt;
 
         return `
           <tr>
             <td>${new Date(tx.created_at).toLocaleDateString()}</td>
             <td>${tx.type.replace(/_/g, ' ')}${tx.reference ? ' • ' + tx.reference : ''}</td>
-            <td>${tx.status}</td>
+            <td><span style="font-size:0.75rem; font-weight:700; color:var(--emerald); background:#D1FAE5; padding:2px 8px; border-radius:4px;">${tx.status}</span></td>
             <td class="amount ${isCredit ? 'credit' : 'debit'}">${isCredit ? '+' : '-'}${formatUSD(amt)}</td>
           </tr>
         `;
@@ -222,32 +244,35 @@
 
       document.getElementById('stmt-rows').innerHTML = rows.length > 0
         ? rows.join('')
-        : '<tr><td colspan="4" class="empty">No transactions in this range.</td></tr>';
+        : '<tr><td colspan="4" class="empty">No transactions found in this date range.</td></tr>';
 
       document.getElementById('sum-credit').textContent = formatUSD(totalCredit);
       document.getElementById('sum-debit').textContent = formatUSD(totalDebit);
       document.getElementById('sum-balance').textContent = formatUSD(totalCredit - totalDebit);
     }
 
+    // --- NORMAL DATE SETTINGS (Default to current month) ---
     const today = new Date();
-    const thirtyAgo = new Date(today.getTime() - 30 * 86400000);
-    document.getElementById('to-date').value = today.toISOString().split('T')[0];
-    document.getElementById('from-date').value = thirtyAgo.toISOString().split('T')[0];
+    const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    // Format to YYYY-MM-DD for the HTML input default values
+    const formatInputDate = (date) => {
+      const d = new Date(date);
+      let month = '' + (d.getMonth() + 1);
+      let day = '' + d.getDate();
+      const year = d.getFullYear();
+
+      if (month.length < 2) month = '0' + month;
+      if (day.length < 2) day = '0' + day;
+
+      return [year, month, day].join('-');
+    };
+
+    // Set the inputs to the 1st of the month and today
+    document.getElementById('from-date').value = formatInputDate(firstDayOfMonth);
+    document.getElementById('to-date').value = formatInputDate(today);
 
     loadStatement();
   </script>
 </body>
-</html><!DOCTYPE html>
-<html>
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
-</head>
-
-<body>
-  
-</body>
-
 </html>

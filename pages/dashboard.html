@@ -6,17 +6,12 @@
   <title>Dashboard | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ADDED DARK MODE VARIABLES */
     :root { 
       --emerald: #0F8A5F; --deep-green: #0B2E23; 
       --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; 
       --gold: #C9A24B; --danger: #EF4444; --surface: #FFFFFF;
     }
-
-    body.dark-mode {
-      --bg: #0D1117; --text: #F3F4F6; --border: #30363D; --muted: #8B949E; --surface: #161B22;
-    }
-
+    body.dark-mode { --bg: #0D1117; --text: #F3F4F6; --border: #30363D; --muted: #8B949E; --surface: #161B22; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
     body { background: var(--bg); color: var(--text); }
 
@@ -36,7 +31,6 @@
     .bell-btn:hover { background: rgba(255,255,255,0.2); }
     .bell-badge { position: absolute; top: 0px; right: 0px; background: var(--danger); color: white; font-size: 0.6rem; font-weight: 700; padding: 2px 5px; border-radius: 10px; border: 2px solid var(--deep-green); display: none; }
 
-    /* BALANCE WITH EYE TOGGLE */
     .balance-section { margin-top: 10px; position: relative; display: inline-block; }
     .balance-amount { font-size: 3rem; font-weight: 700; margin-bottom: 5px; letter-spacing: -1px; display: flex; align-items: center; justify-content: center; gap: 12px; }
     .balance-label { font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
@@ -57,6 +51,10 @@
     .tx-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
     .tx-header h3 { font-size: 1.1rem; color: var(--text); }
     .transaction-list { background: var(--surface); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+    
+    /* NEW: DATE GROUP HEADERS */
+    .date-group-header { padding: 12px 20px; background: var(--bg); font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); }
+    
     .tx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; border-bottom: 1px solid var(--border); }
     .tx-item:last-child { border-bottom: none; }
     .tx-left { display: flex; align-items: center; gap: 15px; }
@@ -91,7 +89,6 @@
     .info-row span:first-child { color: var(--muted); font-weight: 600; }
     .info-row span:last-child { font-weight: 700; color: var(--text); word-break: break-all; text-align: right; max-width: 60%; }
     
-    /* SIDEBAR MENU BUTTONS */
     .menu-btn { width: 100%; text-align: left; padding: 12px 15px; background: transparent; border: none; border-bottom: 1px solid var(--border); color: var(--text); font-weight: 600; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: 0.2s; }
     .menu-btn:hover { background: var(--bg); color: var(--emerald); }
     .logout-btn { background: #FEE2E2; color: #991B1B; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-top: auto; }
@@ -106,7 +103,7 @@
     .form-group input, .form-group select, .form-group textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-family: inherit; outline: none; background: var(--bg); color: var(--text); }
     .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
 
-    /* TOGGLE SWITCHES (SETTINGS) */
+    /* TOGGLE SWITCHES */
     .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
     .settings-row:last-child { border-bottom: none; }
     .settings-row span { font-size: 0.9rem; font-weight: 600; color: var(--text); }
@@ -116,6 +113,13 @@
     .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
     input:checked + .slider { background-color: var(--emerald); }
     input:checked + .slider:before { transform: translateX(20px); }
+
+    /* LOGIN HISTORY STYLES */
+    .history-item { display: flex; align-items: center; gap: 15px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .history-item:last-child { border-bottom: none; }
+    .history-icon { width: 40px; height: 40px; background: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .history-details h4 { font-size: 0.9rem; color: var(--text); margin-bottom: 2px; }
+    .history-details p { font-size: 0.75rem; color: var(--muted); }
 
     /* NOTIFICATIONS & CHAT */
     .notif-item { padding: 15px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
@@ -159,11 +163,11 @@
     <div class="info-row"><span>Phone</span> <span id="prof-phone">Loading...</span></div>
     <div class="info-row"><span>Email</span> <span id="prof-email">Loading...</span></div>
     
-    <!-- NEW SIDEBAR MENU -->
     <div style="margin-top: 15px; border-top: 1px solid var(--border);">
       <button class="menu-btn" onclick="openEditModal()">👤 Edit Profile</button>
       <button class="menu-btn" onclick="document.getElementById('deposit-modal').classList.add('open')">🏦 Direct Deposit Form</button>
       <button class="menu-btn" onclick="document.getElementById('password-modal').classList.add('open')">🔒 Change Password</button>
+      <button class="menu-btn" onclick="openSecurityCenter()">🛡️ Security Center</button>
       <button class="menu-btn" onclick="document.getElementById('settings-modal').classList.add('open')">⚙️ App Settings</button>
     </div>
 
@@ -193,6 +197,21 @@
       <div class="form-group"><label>Confirm New Password</label><input type="password" id="conf-pass"></div>
       <button onclick="changePassword()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:8px; font-weight:600;">Update Password</button>
       <p id="pass-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
+    </div>
+  </div>
+
+  <!-- SECURITY CENTER MODAL -->
+  <div id="security-modal" class="modal-overlay">
+    <div class="modal-content">
+      <button class="close-modal" onclick="document.getElementById('security-modal').classList.remove('open')">×</button>
+      <h3 style="color:var(--emerald); margin-bottom:15px;">Security Center</h3>
+      <p style="font-size:0.85rem; color:var(--muted); margin-bottom:15px;">Review your recent login activity. If you see something you don't recognize, change your password immediately.</p>
+      
+      <div id="login-history-list">
+        <p style="text-align:center; color:var(--muted);">Loading history...</p>
+      </div>
+
+      <button onclick="logoutAllDevices()" style="width:100%; padding:14px; background:#FEE2E2; color:#991B1B; border:1px solid #F87171; border-radius:8px; font-weight:600; margin-top:20px; cursor:pointer;">Log out of all other devices</button>
     </div>
   </div>
 
@@ -355,7 +374,12 @@
 
     function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
 
-    // --- UI TOGGLES (DARK MODE, HIDE BALANCE) ---
+    function logoutAllDevices() {
+      if (!confirm("Are you sure you want to log out of all devices? You will be logged out here as well.")) return;
+      localStorage.removeItem("xanvia_user");
+      window.location.replace("../index.html");
+    }
+
     function toggleDarkMode() {
       const isDark = document.getElementById('dark-toggle').checked;
       if (isDark) {
@@ -376,18 +400,16 @@
         balanceEl.textContent = '****';
         eyeIcon.textContent = '🙈';
       } else {
-        loadDashboard(); // Reload the real balance
+        loadDashboard();
         eyeIcon.textContent = '👁️';
       }
     }
 
-    // Check saved theme on load
     if (localStorage.getItem('xanvia_theme') === 'dark') {
       document.body.classList.add('dark-mode');
       setTimeout(() => { document.getElementById('dark-toggle').checked = true; }, 500);
     }
 
-    // --- SIDEBAR & PROFILE ---
     function toggleSidebar() {
       document.getElementById('sidebar').classList.toggle('open');
       document.getElementById('sidebar-overlay').classList.toggle('open');
@@ -405,7 +427,6 @@
         document.getElementById('prof-phone').textContent = data.phone || 'Not provided';
         document.getElementById('prof-email').textContent = data.email || 'N/A';
         
-        // Fill deposit modal
         document.getElementById('dep-rout').textContent = data.routing_number || '—';
         document.getElementById('dep-acc').textContent = data.account_number || '—';
 
@@ -415,6 +436,42 @@
           document.getElementById('prof-pic-img').src = `https://ui-avatars.com/api/?name=${data.name || 'User'}&background=0F8A5F&color=fff&size=150`;
         }
       } catch (err) { console.error("Sidebar error:", err); }
+    }
+
+    async function openSecurityCenter() {
+      document.getElementById('security-modal').classList.add('open');
+      const list = document.getElementById('login-history-list');
+      list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+      
+      try {
+        const res = await fetch(`/api/security/logins/${user.id}`);
+        const history = await res.json();
+        
+        if (history.length === 0) {
+          list.innerHTML = '<p style="text-align:center; color:var(--muted);">No recent activity.</p>';
+          return;
+        }
+
+        list.innerHTML = history.map(h => {
+          let deviceName = "Unknown Device";
+          if (h.device_info.includes("iPhone")) deviceName = "iPhone";
+          else if (h.device_info.includes("Android")) deviceName = "Android Device";
+          else if (h.device_info.includes("Mac")) deviceName = "MacBook / iMac";
+          else if (h.device_info.includes("Windows")) deviceName = "Windows PC";
+          
+          return `
+            <div class="history-item">
+              <div class="history-icon">💻</div>
+              <div class="history-details">
+                <h4>${deviceName}</h4>
+                <p>${h.ip_address} • ${new Date(h.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (err) {
+        list.innerHTML = '<p style="text-align:center; color:red;">Failed to load history.</p>';
+      }
     }
 
     function openEditModal() {
@@ -446,7 +503,6 @@
       } else { alert(data.error); }
     }
 
-    // --- CHANGE PASSWORD ---
     async function changePassword() {
       const curr = document.getElementById('curr-pass').value;
       const newP = document.getElementById('new-pass').value;
@@ -473,7 +529,6 @@
       }
     }
 
-    // --- COPY CLIPBOARD ---
     function copyToClipboard(elementId, successMessage) {
       const textToCopy = document.getElementById(elementId).textContent;
       if (textToCopy === 'Loading...' || textToCopy === 'Generating...') return;
@@ -504,7 +559,6 @@
       setTimeout(() => { toast.style.opacity = "0"; }, 2500);
     }
 
-    // --- NOTIFICATIONS ---
     async function loadNotifications() {
       try {
         const res = await fetch(`/api/notifications/${user.id}`);
@@ -530,7 +584,7 @@
         list.innerHTML = notifs.map(n => `
           <div class="notif-item" style="background:${n.is_read ? 'transparent' : 'rgba(15,138,95,0.1)'};">
             <p style="margin:0; font-weight:${n.is_read ? '400' : '600'};">${n.message}</p>
-            <span class="notif-date">${new Date(n.created_at).toLocaleString()}</span>
+            <span class="notif-date">${new Date(n.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
           </div>
         `).join('');
       } catch (err) { console.error(err); }
@@ -542,7 +596,6 @@
       loadNotifications();
     }
 
-    // --- SUPPORT ---
     function showSupportForm() {
       document.getElementById('support-list-view').style.display = 'none';
       document.getElementById('support-form-view').style.display = 'block';
@@ -660,9 +713,9 @@
       showSupportList();
     }
 
-    // --- DASHBOARD ---
+    // --- DASHBOARD LOGIC ---
     async function loadDashboard() {
-      if (isBalanceHidden) return; // Don't overwrite if hidden
+      if (isBalanceHidden) return;
 
       try {
         const res = await fetch(`/api/accounts/${user.id}`);
@@ -686,6 +739,19 @@
       }
     }
 
+    // NEW: Helper to format dates nicely for the history headers
+    function formatGroupDate(dateStr) {
+      const d = new Date(dateStr);
+      const today = new Date();
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      if (d.toDateString() === today.toDateString()) return "Today";
+      if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+      
+      return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    }
+
     function renderTransactions(txs) {
       const list = document.getElementById('transaction-list');
       if (!list) return;
@@ -695,23 +761,39 @@
         return;
       }
 
-      list.innerHTML = txs.map(tx => {
+      let html = '';
+      let currentDateLabel = '';
+
+      txs.forEach(tx => {
+        const txDate = new Date(tx.created_at);
+        const dateLabel = formatGroupDate(txDate);
+
+        // If the date changes, insert a new date header
+        if (dateLabel !== currentDateLabel) {
+          html += `<div class="date-group-header">${dateLabel}</div>`;
+          currentDateLabel = dateLabel;
+        }
+
         const isCredit = tx.type.includes('DEPOSIT') || (tx.type === 'INTERNAL_TRANSFER' && tx.details === 'received');
         const amountClass = isCredit ? 'credit' : 'debit';
         const safeAmount = parseFloat(tx.amount) || 0;
+        
         let icon = '🔄';
         if (tx.type.includes('DEPOSIT')) icon = '💵';
         if (tx.type.includes('WITHDRAWAL')) icon = '💸';
         if (tx.type === 'FEE') icon = '⚠️';
         if (tx.type === 'INTERNAL_TRANSFER') icon = '↗️';
 
-        return `
+        // Format time (e.g., "10:45 AM")
+        const timeString = txDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+        html += `
           <div class="tx-item">
             <div class="tx-left">
               <div class="tx-icon">${icon}</div>
               <div class="tx-details">
                 <h4>${tx.type.replace(/_/g, ' ')}</h4>
-                <p>${new Date(tx.created_at).toLocaleDateString()} • ${tx.status}</p>
+                <p>${timeString} • ${tx.status}</p>
               </div>
             </div>
             <div class="tx-amount ${amountClass}">
@@ -719,7 +801,9 @@
             </div>
           </div>
         `;
-      }).join('');
+      });
+
+      list.innerHTML = html;
     }
 
     function filterTransactions() {
@@ -731,7 +815,6 @@
       renderTransactions(filtered);
     }
 
-    // Initialize
     loadDashboard();
     loadNotifications();
   </script>

@@ -94,6 +94,7 @@ pool.connect((err, client, release) => {
       CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, message TEXT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
       CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
       CREATE TABLE IF NOT EXISTS cards (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS login_history (id SERIAL PRIMARY KEY, user_id INTEGER, ip_address TEXT, device_info TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
     `, async (err) => {
       if (err) console.error('Create Table Error:', err.message);
 
@@ -202,14 +203,27 @@ app.post('/api/login', async (req, res) => {
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
 
     const isOnboarded = !!(user.age && user.address);
-
     user.has_bank = isOnboarded;
     user.has_loan = isOnboarded;
     user.has_investment = isOnboarded;
 
+    // --- SECURITY LOGGING ---
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'Unknown IP';
+    const device = req.headers['user-agent'] || 'Unknown Device';
+    
+    await pool.query(`INSERT INTO login_history (user_id, ip_address, device_info) VALUES ($1, $2, $3)`, [user.id, ip, device]);
+
     await pool.query('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = $1', [user.id]);
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Database error.' }); }
+});
+
+// GET LOGIN HISTORY
+app.get('/api/security/logins/:userId', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM login_history WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5', [req.params.userId]);
+    res.json(result.rows);
+  } catch (err) { res.status(500).json({ error: 'Failed to load history.' }); }
 });
 
 // CHANGE PASSWORD
@@ -512,12 +526,25 @@ app.post('/api/cards/request', async (req, res) => {
     const last4 = Math.floor(1000 + Math.random() * 9000).toString();
     await pool.query(
       `INSERT INTO cards (user_id, card_type, status, last4)
-       VALUES ($1, $2, 'Processing', $3)`,
+       VALUES ($1, $2, 'Active', $3)`,
       [userId, cardType, last4]
     );
-    res.json({ success: true, message: 'Card request submitted! Pending admin approval.' });
+    res.json({ success: true, message: 'Card created successfully!' });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Failed to request card.' });
+  }
+});
+
+// Toggle Card Status (Freeze/Unfreeze)
+app.post('/api/cards/:cardId/toggle', async (req, res) => {
+  const { cardId } = req.params;
+  const { status } = req.body; // 'Active' or 'Frozen'
+  try {
+    await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, cardId]);
+    res.json({ success: true, status });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update card status.' });
   }
 });
 

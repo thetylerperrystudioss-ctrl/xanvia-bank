@@ -4,33 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Register | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap <style>
+    :root { --emerald: #0F8A5F; --emerald-dark: #0A5F42; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .reg-card { background: white; width: 100%; max-width: 450px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); position: relative; }
+    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; }
+    
+    body::before { content: ''; position: absolute; inset: 0; background: rgba(11, 46, 35, 0.85); z-index: 1; backdrop-filter: blur(8px); }
+
+    .reg-card { background: white; width: 100%; max-width: 450px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); position: relative; z-index: 10; }
+    
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; justify-content: center; }
-    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
+    .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; }
     .logo-text { display: flex; flex-direction: column; }
     .logo-title { font-family: 'Merriweather', serif; font-size: 1.4rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
 
-    .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
+    .reg-card h2 { text-align: center; color: var(--deep-green); margin-bottom: 8px; font-size: 1.4rem; }
+    .reg-card p.sub { text-align: center; color: var(--muted); font-size: 0.9rem; margin-bottom: 25px; }
+
+    .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; position: relative; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
-    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
+    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; transition: 0.2s; }
+    .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 4px rgba(15,138,95,0.1); }
     
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+    .password-toggle { position: absolute; right: 15px; top: 38px; cursor: pointer; color: var(--muted); font-size: 1.1rem; }
+    
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; box-shadow: 0 4px 12px rgba(15,138,95,0.2); }
     .btn-primary:active { transform: scale(0.98); }
     
-    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
+    .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
     .msg.success { display: block; background: #D1FAE5; color: #065F46; }
     
     .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
-    .footer-link a { color: var(--emerald); font-weight: 600; text-decoration: none; }
-    .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); text-decoration: none; }
+    .footer-link a { color: var(--emerald); font-weight: 700; text-decoration: none; }
+    .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); text-decoration: none; z-index: 20; }
   </style>
 </head>
 <body>
@@ -44,19 +52,39 @@
       </div>
     </div>
 
-    <h2 style="text-align: center; color: var(--deep-green); margin-bottom: 10px;">Create an Account</h2>
+    <h2>Create an Account</h2>
+    <p class="sub">Join the future of modern banking.</p>
     <div id="msg" class="msg"></div>
 
     <form id="register-form">
       <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe" required></div>
       <div class="form-group"><label>Gmail Address</label><input type="email" id="reg-email" placeholder="john@gmail.com" required></div>
       <div class="form-group"><label>Phone Number</label><input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required></div>
-      <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create a strong password" required></div>
-      <button type="submit" class="btn-primary" id="reg-btn">Sign Up</button>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Create a strong password" required>
+        <span class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</span>
+      </div>
+      <button type="submit" class="btn-primary" id="reg-btn">Open Account</button>
     </form>
+    
+    <div class="footer-link">
+      Already have an account? <a href="login.html">Sign In</a>
+    </div>
   </div>
 
   <script>
+    function togglePassword(inputId, icon) {
+      const input = document.getElementById(inputId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        icon.textContent = '👁️';
+      }
+    }
+
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('reg-btn');
@@ -71,7 +99,7 @@
         msg.className = "msg error"; msg.textContent = "Please enter a valid Gmail address."; return;
       }
 
-      btn.textContent = "Creating Account..."; msg.style.display = "none";
+      btn.textContent = "Creating Account..."; btn.disabled = true; msg.style.display = "none";
 
       try {
         const res = await fetch('/api/register', {
@@ -84,19 +112,18 @@
           msg.className = "msg success";
           msg.textContent = "Account created! Redirecting to verification...";
           
-          // CRITICAL FIX: Save temporary user for onboarding
           localStorage.setItem("temp_user", JSON.stringify({ id: data.userId, email, name }));
           
           setTimeout(() => {
-            window.location.href = "onboarding.html?type=kyc";
+            window.location.href = "onboarding.html?type=bank";
           }, 1500);
         } else {
           msg.className = "msg error"; msg.textContent = data.error || "Registration failed.";
-          btn.textContent = "Sign Up";
+          btn.textContent = "Open Account"; btn.disabled = false;
         }
       } catch (err) {
         msg.className = "msg error"; msg.textContent = "Server error. Try again.";
-        btn.textContent = "Sign Up";
+        btn.textContent = "Open Account"; btn.disabled = false;
       }
     });
   </script>

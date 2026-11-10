@@ -4,54 +4,78 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Loan Center | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    body { background-color: #F4F7F6; display: flex; justify-content: center; font-family: 'Inter', sans-serif; margin: 0; padding: 0;}
-    .app-container { width: 100%; max-width: 600px; background: #F4F7F6; min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); }
-    .loan-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 50px; border-radius: 0 0 30px 30px; position: relative; text-align: center; }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+    body { background-color: var(--bg); display: flex; justify-content: center; }
+    .app-container { width: 100%; max-width: 600px; background: var(--bg); min-height: 100vh; position: relative; box-shadow: 0 0 20px rgba(0,0,0,0.05); padding-bottom: 40px;}
+    
+    /* PREMIUM HEADER */
+    .loan-header { background: linear-gradient(160deg, #11553F 0%, #0A2E23 100%); color: white; padding: 30px 20px 60px; border-radius: 0 0 30px 30px; position: relative; text-align: center; }
     .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
     .header-top a { color: white; text-decoration: none; font-size: 1.5rem; }
     .loan-summary p { font-size: 0.85rem; color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 1px; margin: 0 0 5px 0; }
-    .loan-summary h2 { font-size: 3rem; font-weight: 700; margin: 0; letter-spacing: -1px; }
+    .loan-summary h2 { font-size: 3rem; font-weight: 800; margin: 0; letter-spacing: -1px; font-family: monospace; }
     
-    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -30px 20px 20px; position: relative; z-index: 10; }
-    .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 8px 20px rgba(0,0,0,0.05); text-align: center; }
-    .stat-card p { font-size: 0.75rem; color: #6B7280; font-weight: 600; text-transform: uppercase; margin: 0 0 8px 0; }
-    .stat-card h3 { font-size: 1.4rem; color: #0B2E23; font-weight: 700; margin: 0; }
-    .stat-card h3.debt { color: #EF4444; }
+    /* STATS GRID */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: -40px 20px 20px; position: relative; z-index: 10; }
+    .stat-card { background: white; padding: 20px 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(11,46,35,0.08); text-align: center; border: 1px solid var(--border); }
+    .stat-card p { font-size: 0.75rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 8px 0; }
+    .stat-card h3 { font-size: 1.4rem; color: var(--deep-green); font-weight: 800; margin: 0; }
+    .stat-card h3.debt { color: var(--danger); }
     
-    .deposit-warning { background: #FFFBEB; border-left: 4px solid #C9A24B; padding: 15px; margin: 0 20px 20px; border-radius: 8px; color: #92400E; font-size: 0.85rem; line-height: 1.5; }
+    /* PROGRESS BAR */
+    .progress-container { padding: 0 20px 20px; }
+    .progress-bar-bg { width: 100%; height: 10px; background: #E5E7EB; border-radius: 5px; overflow: hidden; margin-bottom: 8px; }
+    .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--emerald), #34D399); border-radius: 5px; transition: width 0.5s ease; }
+    .progress-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); font-weight: 600; }
+
+    /* WARNING BANNER */
+    .deposit-warning { background: #FFFBEB; border-left: 4px solid var(--gold); padding: 15px; margin: 0 20px 20px; border-radius: 8px; color: #92400E; font-size: 0.85rem; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
     .deposit-warning strong { color: #78350F; }
 
     /* ACTION BUTTONS */
     .action-grid { display: flex; flex-direction: column; gap: 15px; padding: 0 20px 20px; }
     .row-btns { display: flex; gap: 15px; }
-    .action-btn { padding: 16px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-align: center; border: none; cursor: pointer; width: 100%; display: block; }
-    .btn-primary { background: #0F8A5F; color: white; }
-    .btn-outline { background: white; color: #1A1A1A; border: 1px solid #E5E7EB; }
+    .action-btn { padding: 16px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; text-align: center; border: none; cursor: pointer; width: 100%; display: block; transition: 0.2s; }
+    .btn-primary { background: var(--emerald); color: white; box-shadow: 0 4px 10px rgba(15,138,95,0.3); }
+    .btn-primary:active { transform: scale(0.98); }
+    .btn-outline { background: white; color: var(--deep-green); border: 1px solid var(--border); }
+    .btn-outline:active { background: var(--bg); }
     
+    /* HISTORY */
     .history-panel { padding: 0 20px 30px; }
-    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #E5E7EB; display: flex; justify-content: space-between; align-items: center; }
-    .tx-info h4 { font-size: 0.95rem; margin: 0 0 4px 0; color: #1A1A1A; }
-    .tx-info p { font-size: 0.75rem; color: #6B7280; margin: 0; }
-    .tx-amount { font-weight: 700; text-align: right; }
+    .history-panel h3 { color: var(--deep-green); margin-bottom: 15px; font-size: 1.1rem; }
+    .tx-item { background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .tx-info h4 { font-size: 0.95rem; margin: 0 0 4px 0; color: var(--text); }
+    .tx-info p { font-size: 0.75rem; color: var(--muted); margin: 0; }
+    .tx-amount { font-weight: 800; text-align: right; font-family: monospace; }
     
-    /* MODAL */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; }
+    /* MODALS & FORMS */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(4px); }
     .modal-overlay.open { display: flex; }
-    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; }
-    .modal-content h2 { color: #0B2E23; margin: 0 0 10px 0; font-size: 1.3rem; }
-    .modal-content p { color: #6B7280; font-size: 0.9rem; margin: 0 0 20px 0; line-height: 1.5; }
+    .modal-content { background: white; width: 100%; max-width: 450px; padding: 25px; border-radius: 20px; position: relative; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+    .modal-content h2 { color: var(--deep-green); margin: 0 0 10px 0; font-size: 1.3rem; }
+    .modal-content p { color: var(--muted); font-size: 0.9rem; margin: 0 0 20px 0; line-height: 1.5; }
     
     .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; }
-    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: #333; }
-    .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; outline: none; box-sizing: border-box; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .form-group input, .form-group select { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; }
+    .form-group input:focus { border-color: var(--emerald); background: white; }
     
-    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6B7280; }
-    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #E5E7EB; font-size: 0.9rem; line-height: 1.5; }
-    .admin-details-box strong { color: #0B2E23; }
+    /* QUICK AMOUNTS */
+    .quick-amounts { display: flex; gap: 10px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+    .quick-amounts::-webkit-scrollbar { display: none; }
+    .quick-btn { background: #F4F7F6; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; color: var(--deep-green); cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .quick-btn:hover { background: #E6F4EE; border-color: var(--emerald); }
+    .quick-btn:active { transform: scale(0.95); }
+
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--muted); }
+    .admin-details-box { background: #F4F7F6; padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); font-size: 0.9rem; line-height: 1.5; }
+    .admin-details-box strong { color: var(--deep-green); }
     .admin-details-box hr { margin: 10px 0; border: none; border-top: 1px solid #ddd; }
-    .external-fields { display: none; padding-top: 15px; border-top: 1px dashed #E5E7EB; margin-top: 15px; }
+    .external-fields { display: none; padding-top: 15px; border-top: 1px dashed var(--border); margin-top: 15px; }
   </style>
 </head>
 <body>
@@ -59,29 +83,40 @@
     <header class="loan-header">
       <div class="header-top">
         <a href="hub.html">←</a>
-        <div class="logo" style="font-weight: 700;">Xanvia</div>
+        <div class="logo" style="font-family: 'Merriweather', serif; font-weight: 900; font-size: 1.2rem;">Xanvia</div>
         <div style="width: 24px;"></div>
       </div>
       <div class="loan-summary">
-        <p>Available Loan Balance</p>
+        <p>Outstanding Loan Balance</p>
         <h2 id="loan-balance">$0.00</h2>
       </div>
     </header>
 
     <main>
-      <div class="deposit-warning">
-        <strong>Important Notice:</strong> All loan applications require a <strong>10% security deposit</strong> of the requested amount. Your loan will not be approved by the Admin until this deposit is confirmed.
-      </div>
-
       <div class="stats-grid">
         <div class="stat-card">
-          <p>Total Approved</p>
+          <p>Total Borrowed</p>
           <h3 id="total-approved">$0.00</h3>
         </div>
         <div class="stat-card">
-          <p>Outstanding Debt</p>
-          <h3 class="debt" id="total-debt">$0.00</h3>
+          <p>Amount Repaid</p>
+          <h3 style="color:var(--emerald)" id="total-repaid">$0.00</h3>
         </div>
+      </div>
+
+      <!-- PROGRESS BAR -->
+      <div class="progress-container">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="repayment-progress" style="width: 0%;"></div>
+        </div>
+        <div class="progress-labels">
+          <span>Repayment Progress</span>
+          <span id="progress-percent">0%</span>
+        </div>
+      </div>
+
+      <div class="deposit-warning">
+        <strong>Important Notice:</strong> All loan applications require a <strong>10% security deposit</strong> of the requested amount. Your loan will not be approved until this deposit is confirmed.
       </div>
 
       <div class="action-grid">
@@ -93,7 +128,7 @@
       </div>
 
       <div class="history-panel">
-        <h3 style="color: #0B2E23; margin-bottom: 15px;">Loan Transaction History</h3>
+        <h3>Loan Transaction History</h3>
         <div id="history-list"></div>
       </div>
     </main>
@@ -107,11 +142,20 @@
       <p>Enter the amount you wish to borrow.</p>
       
       <div style="background: #FFFBEB; border: 1px solid #FCD34D; color: #92400E; padding: 12px; border-radius: 8px; font-size: 0.85rem; margin-bottom: 15px;">
-        <strong>Note:</strong> A 10% security deposit is required before the Admin can approve your loan. For example, a $5,000 loan requires a $500 deposit.
+        <strong>Note:</strong> A 10% security deposit is required before approval. For a $5,000 loan, you must deposit $500.
       </div>
 
-      <div class="form-group"><label>Loan Amount Requested ($)</label><input type="number" id="apply-amount" placeholder="e.g. 5000"></div>
-      <button onclick="submitApply()" style="width:100%; padding:14px; background:#0F8A5F; color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
+      <div class="form-group">
+        <label>Loan Amount Requested ($)</label>
+        <!-- QUICK AMOUNTS -->
+        <div class="quick-amounts">
+          <button type="button" class="quick-btn" onclick="setVal('apply-amount', 1000)">$1,000</button>
+          <button type="button" class="quick-btn" onclick="setVal('apply-amount', 5000)">$5,000</button>
+          <button type="button" class="quick-btn" onclick="setVal('apply-amount', 10000)">$10,000</button>
+        </div>
+        <input type="number" id="apply-amount" placeholder="e.g. 5000">
+      </div>
+      <button onclick="submitApply()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:10px; font-weight:600; margin-top:10px; cursor:pointer;">Submit Application</button>
       <div id="apply-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -123,7 +167,14 @@
       <h2>Transfer Funds</h2>
       <p>Move approved loan funds to your checking account or another bank.</p>
       
-      <div class="form-group"><label>Amount ($)</label><input type="number" id="transfer-amount" placeholder="500"></div>
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <div class="quick-amounts">
+          <button type="button" class="quick-btn" onclick="setVal('transfer-amount', 500)">$500</button>
+          <button type="button" class="quick-btn" onclick="setVal('transfer-amount', 1000)">$1,000</button>
+        </div>
+        <input type="number" id="transfer-amount" placeholder="500">
+      </div>
       
       <div class="form-group">
         <label>Destination</label>
@@ -140,7 +191,7 @@
         <div class="form-group"><label>Routing Number</label><input type="text" id="ext-rout-num" placeholder="021000021"></div>
       </div>
 
-      <button onclick="submitTransfer()" style="width:100%; padding:14px; background:#0F8A5F; color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Transfer</button>
+      <button onclick="submitTransfer()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:10px; font-weight:600; margin-top:10px; cursor:pointer;">Transfer</button>
       <div id="transfer-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -158,8 +209,16 @@
         <div id="adm-bank" style="font-size: 0.85rem;">Loading...</div>
       </div>
 
-      <div class="form-group"><label>Amount to Repay ($)</label><input type="number" id="repay-amount" placeholder="Enter amount"></div>
-      <button onclick="submitRepay()" style="width:100%; padding:14px; background:#0F8A5F; color:white; border:none; border-radius:8px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
+      <div class="form-group">
+        <label>Amount to Repay ($)</label>
+        <div class="quick-amounts">
+          <button type="button" class="quick-btn" onclick="setVal('repay-amount', 100)">$100</button>
+          <button type="button" class="quick-btn" onclick="setVal('repay-amount', 500)">$500</button>
+          <button type="button" class="quick-btn" onclick="setVal('repay-amount', 1000)">$1,000</button>
+        </div>
+        <input type="number" id="repay-amount" placeholder="Enter amount">
+      </div>
+      <button onclick="submitRepay()" style="width:100%; padding:14px; background:var(--emerald); color:white; border:none; border-radius:10px; font-weight:600; margin-top:10px; cursor:pointer;">Confirm Repayment</button>
       <div id="repay-msg" style="margin-top:10px; text-align:center; font-weight:bold;"></div>
     </div>
   </div>
@@ -168,7 +227,13 @@
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if(!user) window.location.replace("../index.html");
     const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+    
     let totalOutstanding = 0;
+
+    // --- QUICK AMOUNTS ---
+    function setVal(id, val) {
+      document.getElementById(id).value = val;
+    }
 
     async function loadData() {
       const res = await fetch(`/api/accounts/${user.id}`);
@@ -190,22 +255,34 @@
       });
 
       document.getElementById('total-approved').textContent = formatUSD(totalBorrowed);
+      document.getElementById('total-repaid').textContent = formatUSD(totalRepaid);
       
       totalOutstanding = totalBorrowed - totalRepaid;
-      document.getElementById('total-debt').textContent = formatUSD(totalOutstanding > 0 ? totalOutstanding : 0);
+      if (totalOutstanding < 0) totalOutstanding = 0;
+
+      // Update Progress Bar
+      if (totalBorrowed > 0) {
+        let percent = (totalRepaid / totalBorrowed) * 100;
+        if (percent > 100) percent = 100;
+        document.getElementById('repayment-progress').style.width = `${percent}%`;
+        document.getElementById('progress-percent').textContent = `${Math.round(percent)}% Paid`;
+      } else {
+        document.getElementById('repayment-progress').style.width = `0%`;
+        document.getElementById('progress-percent').textContent = `0% Paid`;
+      }
 
       document.getElementById('history-list').innerHTML = loanTxs.map(tx => `
         <div class="tx-item">
           <div class="tx-info">
-            <h4>${tx.type.replace('_', ' ')}</h4>
+            <h4>${tx.type.replace(/_/g, ' ')}</h4>
             <p>${new Date(tx.created_at).toLocaleDateString()}</p>
           </div>
-          <div class="tx-amount" style="color:${tx.status === 'Approved' ? '#0F8A5F' : '#F59E0B'}">
+          <div class="tx-amount" style="color:${tx.status === 'Approved' ? 'var(--emerald)' : (tx.status === 'Rejected' ? 'var(--danger)' : '#F59E0B')}">
             ${formatUSD(tx.amount)}
-            <div style="font-size:0.7rem; color:#6B7280;">${tx.status}</div>
+            <div style="font-size:0.7rem; color:var(--muted); font-family:'Inter', sans-serif; font-weight:600;">${tx.status}</div>
           </div>
         </div>
-      `).join('') || '<p style="color:#6B7280; font-size:0.9rem;">No loan history.</p>';
+      `).join('') || '<p style="color:var(--muted); font-size:0.9rem;">No loan history.</p>';
     }
 
     async function fetchAdminDetails() {
@@ -231,9 +308,12 @@
     async function submitApply() {
       const amount = parseFloat(document.getElementById('apply-amount').value);
       const msg = document.getElementById('apply-msg');
+      if (!amount || amount <= 0) { msg.textContent = "Enter a valid amount."; msg.style.color = "red"; return; }
+      
+      msg.textContent = "Processing..."; msg.style.color = "var(--emerald)";
       const res = await fetch('/api/loans/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 2500);
     }
 
@@ -242,6 +322,8 @@
       const dest = document.getElementById('transfer-dest').value;
       const msg = document.getElementById('transfer-msg');
       
+      if (!amount || amount <= 0) { msg.textContent = "Enter a valid amount."; msg.style.color = "red"; return; }
+
       let bankDetails = null;
       if (dest === 'external') {
         bankDetails = {
@@ -254,21 +336,25 @@
           msg.textContent = "Please fill all external bank details."; msg.style.color = "red"; return;
         }
       }
-      msg.textContent = "Processing..."; msg.style.color = "#0F8A5F";
+      msg.textContent = "Processing..."; msg.style.color = "var(--emerald)";
 
       const res = await fetch('/api/loans/transfer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount, destination: dest, bankDetails }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 2500);
     }
 
     async function submitRepay() {
       const amount = parseFloat(document.getElementById('repay-amount').value);
       const msg = document.getElementById('repay-msg');
+      
+      if (!amount || amount <= 0) { msg.textContent = "Enter a valid amount."; msg.style.color = "red"; return; }
       if (amount > totalOutstanding) { msg.textContent = "Amount exceeds outstanding debt."; msg.style.color = "red"; return; }
+      
+      msg.textContent = "Processing..."; msg.style.color = "var(--emerald)";
       const res = await fetch('/api/loans/repay', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id, amount }) });
       const data = await res.json();
-      msg.textContent = data.message || data.error; msg.style.color = data.success ? "#0F8A5F" : "red";
+      msg.textContent = data.message || data.error; msg.style.color = data.success ? "var(--emerald)" : "red";
       if(data.success) setTimeout(() => { closeModal(); loadData(); }, 2500);
     }
 

@@ -24,18 +24,33 @@
     
     .form-group { margin-bottom: 20px; display: flex; flex-direction: column; }
     .form-group label { font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-    .form-group input, .form-group select { padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; }
+    .form-group input, .form-group select { padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; transition: 0.2s; }
+    .form-group input:focus { border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(15,138,95,0.1); }
     
     .recipient-info { display: none; background: #D1FAE5; color: #065F46; padding: 12px; border-radius: 8px; margin-top: 10px; font-weight: 600; font-size: 0.9rem; text-align: center; }
 
-    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    /* NEW: QUICK AMOUNTS */
+    .quick-amounts { display: flex; gap: 10px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; scrollbar-width: none; }
+    .quick-amounts::-webkit-scrollbar { display: none; }
+    .quick-btn { background: #F4F7F6; border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; color: var(--deep-green); cursor: pointer; transition: 0.2s; white-space: nowrap; }
+    .quick-btn:hover { background: #E6F4EE; border-color: var(--emerald); }
+    .quick-btn:active { transform: scale(0.95); }
+
+    /* NEW: RECENT RECIPIENTS */
+    .recent-recipients { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 10px; scrollbar-width: none; }
+    .recent-recipients::-webkit-scrollbar { display: none; }
+    .recipient-avatar { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; min-width: 65px; }
+    .recipient-avatar .circle { width: 50px; height: 50px; border-radius: 50%; background: var(--emerald); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.2rem; border: 2px solid transparent; transition: 0.2s; }
+    .recipient-avatar:hover .circle { border-color: var(--gold); transform: translateY(-2px); }
+    .recipient-avatar span { font-size: 0.75rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 65px; }
+
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px;; font-weight: 600; font-size: 1rem; cursor font: pointer; transition: 0.2-weights; margin-top: 10px;: }
+    .btn-primary:disabled { opacity:  0.5; cursor: not-allowed; }
     
-    #msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
+600    #msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; }
     #msg.error { background: #FEE2E2; color: #991B1B; }
     #msg.success { background: #D1FAE5; color: #065F46; }
 
-    /* External form hidden by default */
     #external-form { display: none; }
   </style>
 </head>
@@ -49,7 +64,6 @@
 
     <div id="msg"></div>
 
-    <!-- TABS -->
     <div class="tabs">
       <button class="tab-btn active" id="tab-internal" onclick="switchTab('internal')">Xanvia Bank</button>
       <button class="tab-btn" id="tab-external" onclick="switchTab('external')">Other Banks</button>
@@ -58,6 +72,15 @@
     <div class="card">
       <!-- INTERNAL TRANSFER FORM -->
       <div id="internal-form">
+        
+        <!-- NEW RECENT RECIPIENTS UI -->
+        <div id="recent-container" style="display: none;">
+          <label style="font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; display: block; color: var(--text);">Recent Recipients</label>
+          <div class="recent-recipients" id="recent-list">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Recipient Xanvia Account Number</label>
           <input type="number" id="recipient-account" placeholder="Enter account number" oninput="lookupAccount()">
@@ -66,6 +89,13 @@
 
         <div class="form-group">
           <label>Amount ($)</label>
+          <!-- NEW QUICK AMOUNTS UI -->
+          <div class="quick-amounts">
+            <button class="quick-btn" onclick="setAmount('internal-amount', 50)">$50</button>
+            <button class="quick-btn" onclick="setAmount('internal-amount', 100)">$100</button>
+            <button class="quick-btn" onclick="setAmount('internal-amount', 500)">$500</button>
+            <button class="quick-btn" onclick="setAmount('internal-amount', 1000)">$1,000</button>
+          </div>
           <input type="number" id="internal-amount" placeholder="0.00">
         </div>
 
@@ -92,6 +122,13 @@
         </div>
         <div class="form-group">
           <label>Amount ($)</label>
+          <!-- NEW QUICK AMOUNTS UI FOR EXTERNAL -->
+          <div class="quick-amounts">
+            <button class="quick-btn" onclick="setAmount('external-amount', 50)">$50</button>
+            <button class="quick-btn" onclick="setAmount('external-amount', 100)">$100</button>
+            <button class="quick-btn" onclick="setAmount('external-amount', 500)">$500</button>
+            <button class="quick-btn" onclick="setAmount('external-amount', 1000)">$1,000</button>
+          </div>
           <input type="number" id="external-amount" placeholder="0.00">
         </div>
 
@@ -107,7 +144,44 @@
     let validRecipient = false;
     let currentTab = 'internal';
 
-    // Switch between Internal and External
+    // --- NEW: QUICK AMOUNT LOGIC ---
+    function setAmount(inputId, amount) {
+      document.getElementById(inputId).value = amount;
+    }
+
+    // --- NEW: RECENT RECIPIENTS LOGIC ---
+    function loadRecentRecipients() {
+      const recents = JSON.parse(localStorage.getItem("xanvia_recents")) || [];
+      if (recents.length === 0) return;
+
+      document.getElementById('recent-container').style.display = 'block';
+      document.getElementById('recent-list').innerHTML = recents.map(r => `
+        <div class="recipient-avatar" onclick="selectRecipient('${r.account}', '${r.name}')">
+          <div class="circle">${r.name.charAt(0).toUpperCase()}</div>
+          <span>${r.name.split(' ')[0]}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectRecipient(account, name) {
+      document.getElementById('recipient-account').value = account;
+      document.getElementById('recipient-name').textContent = `Recipient: ${name}`;
+      document.getElementById('recipient-name').style.display = 'block';
+      document.getElementById('internal-btn').disabled = false;
+      validRecipient = true;
+    }
+
+    function saveRecentRecipient(account, name) {
+      let recents = JSON.parse(localStorage.getItem("xanvia_recents")) || [];
+      // Remove if it already exists to move it to the front
+      recents = recents.filter(r => r.account !== account);
+      recents.unshift({ account, name });
+      // Keep only the top 5
+      recents = recents.slice(0, 5);
+      localStorage.setItem("xanvia_recents", JSON.stringify(recents));
+    }
+
+    // --- EXISTING TABS LOGIC ---
     function switchTab(tab) {
       currentTab = tab;
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -122,13 +196,13 @@
       }
     }
 
-    // Instantly look up the Xanvia account name
+    // --- EXISTING LOOKUP LOGIC ---
     async function lookupAccount() {
       const accNum = document.getElementById('recipient-account').value;
       const nameDisplay = document.getElementById('recipient-name');
       const sendBtn = document.getElementById('internal-btn');
 
-      if (accNum.length < 8) { // Allows 8-10 digit numbers
+      if (accNum.length < 8) {
         nameDisplay.style.display = 'none';
         sendBtn.disabled = true;
         validRecipient = false;
@@ -154,7 +228,7 @@
       }
     }
 
-    // Send Xanvia to Xanvia
+    // --- EXISTING SUBMIT INTERNAL ---
     async function submitInternalTransfer() {
       const recipientAccount = document.getElementById('recipient-account').value;
       const amount = document.getElementById('internal-amount').value;
@@ -163,6 +237,9 @@
 
       if (!validRecipient) { msg.className = "error"; msg.textContent = "Invalid account."; msg.style.display = "block"; return; }
       if (!amount || isNaN(amount) || amount <= 0) { msg.className = "error"; msg.textContent = "Enter a valid amount."; msg.style.display = "block"; return; }
+
+      // Grab the name before we send the request
+      const recipientName = document.getElementById('recipient-name').textContent.replace('Recipient: ', '');
 
       btn.textContent = "Sending...";
       btn.disabled = true;
@@ -178,6 +255,9 @@
         const data = await res.json();
 
         if (data.success) {
+          // NEW: Save to recent recipients on success
+          saveRecentRecipient(recipientAccount, recipientName);
+
           msg.className = "success";
           msg.textContent = data.message;
           msg.style.display = "block";
@@ -196,7 +276,7 @@
       }
     }
 
-    // Send to External Bank (We can reuse the withdraw API for this)
+    // --- EXISTING SUBMIT EXTERNAL ---
     async function submitExternalTransfer() {
       const bankName = document.getElementById('ext-bank').value;
       const accountName = document.getElementById('ext-name').value;
@@ -235,6 +315,9 @@
         msg.className = "error"; msg.textContent = "Network error."; msg.style.display = "block";
       }
     }
+
+    // Initialize recent recipients on load
+    loadRecentRecipients();
   </script>
 </body>
 </html>

@@ -4,36 +4,70 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>My Cards | Xanvia</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../css/dashboard.css">
   <style>
+    /* 3D CARD DESIGN */
+    .wallet-container { perspective: 1000px; margin-bottom: 25px; }
     .card-visual {
-      background: linear-gradient(135deg, var(--emerald) 0%, var(--deep-green) 100%);
-      border-radius: 20px; padding: 25px; color: white; margin-bottom: 20px;
-      position: relative; box-shadow: 0 15px 30px rgba(11,46,35,0.2);
+      background: linear-gradient(135deg, #0F8A5F 0%, #0B2E23 100%);
+      border-radius: 20px; padding: 25px; color: white;
+      position: relative; box-shadow: 0 20px 40px rgba(11,46,35,0.25);
       aspect-ratio: 1.586 / 1; display: flex; flex-direction: column; justify-content: space-between;
+      transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s;
+      transform-style: preserve-3d;
+      overflow: hidden;
     }
-    .card-chip { width: 40px; height: 30px; background: linear-gradient(135deg, #d4b56a, #a1842e); border-radius: 6px; }
-    .card-number { font-family: monospace; font-size: 1.2rem; letter-spacing: 2px; }
-    .card-details { display: flex; justify-content: space-between; font-size: 0.8rem; opacity: 0.8; }
+    .card-visual::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at top right, rgba(255,255,255,0.15) 0%, transparent 60%);
+      z-index: 1;
+    }
+    .card-visual.frozen { filter: grayscale(100%) opacity(0.8); transform: rotateY(10deg); }
+    .card-visual > * { position: relative; z-index: 2; }
     
-    .request-form { background: white; padding: 25px; border-radius: 16px; border: 1px solid var(--border); margin-bottom: 20px; }
+    .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+    .card-brand { font-weight: 800; font-size: 1.2rem; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
+    .contactless { font-size: 1.5rem; transform: rotate(90deg); opacity: 0.8; }
+    .card-status-badge { font-size: 0.7rem; font-weight: 700; background: rgba(255,255,255,0.2); padding: 4px 8px; border-radius: 4px; text-transform: uppercase; backdrop-filter: blur(4px); }
+    
+    .card-chip { width: 45px; height: 35px; background: linear-gradient(135deg, #e3c47c, #b8994d); border-radius: 6px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.2); }
+    .card-chip::after { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: rgba(0,0,0,0.2); }
+    .card-chip::before { content: ''; position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(0,0,0,0.2); }
+
+    .card-number { font-family: 'JetBrains Mono', monospace; font-size: 1.35rem; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.3); margin-top: 15px; }
+    .card-details { display: flex; justify-content: space-between; align-items: flex-end; font-size: 0.85rem; }
+    .card-details .label { font-size: 0.6rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .card-details .value { font-weight: 600; font-family: 'JetBrains Mono', monospace; text-transform: uppercase; }
+    
+    .card-network { font-size: 1.8rem; font-style: italic; font-weight: 900; opacity: 0.9; }
+
+    /* CONTROLS */
+    .card-controls { display: flex; gap: 10px; margin-bottom: 30px; }
+    .control-btn { flex: 1; background: white; border: 1px solid var(--border); padding: 12px; border-radius: 10px; font-weight: 600; font-size: 0.85rem; color: var(--deep-green); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s; }
+    .control-btn:hover { background: #F4F7F6; }
+    .control-btn.danger { color: #EF4444; border-color: #FECACA; background: #FEF2F2; }
+    .control-btn.danger:hover { background: #FEE2E2; }
+
+    /* REQUEST FORM */
+    .request-form { background: white; padding: 25px; border-radius: 16px; border: 1px solid var(--border); }
     .request-form h3 { color: var(--deep-green); margin-bottom: 15px; }
+    .form-group label { font-weight: 600; font-size: 0.9rem; margin-bottom: 8px; display: block; }
+    .form-group select { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
   </style>
 </head>
 <body class="mobile-app-body">
 
-  <!-- Header -->
   <header class="app-header" style="padding-bottom: 20px; border-radius: 0 0 20px 20px;">
     <div style="text-align: left; width: 100%;">
-      <h1 style="font-size: 1.5rem; margin-bottom: 5px;">My Cards</h1>
+      <h1 style="font-size: 1.5rem; margin-bottom: 5px;">My Wallet</h1>
       <p style="font-size: 0.85rem; color: rgba(255,255,255,0.7);">Manage your physical and virtual cards.</p>
     </div>
   </header>
 
   <main class="app-main" style="padding-top: 20px;">
     
-    <!-- EXISTING CARDS -->
+    <!-- CARDS WILL BE INJECTED HERE -->
     <div id="cards-container"></div>
 
     <!-- REQUEST A NEW CARD -->
@@ -43,14 +77,14 @@
       
       <div class="form-group">
         <label>Card Type</label>
-        <select id="card-type" style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem;">
+        <select id="card-type">
           <option value="Visa Debit">Visa Debit Card</option>
           <option value="Mastercard Credit">Mastercard Credit Card</option>
           <option value="Virtual Card">Virtual Card (Instant)</option>
         </select>
       </div>
       
-      <button class="btn-submit" onclick="requestCard()" style="background: var(--emerald); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 10px;">Request Card</button>
+      <button onclick="requestCard()" style="background: var(--emerald); color: white; border: none; padding: 16px; border-radius: 10px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 10px;">Request Card</button>
       <div id="msg" style="margin-top: 15px; font-weight: 600; text-align: center; font-size: 0.9rem;"></div>
     </div>
 
@@ -69,6 +103,11 @@
     const user = JSON.parse(localStorage.getItem("xanvia_user"));
     if (!user) window.location.replace("../index.html");
 
+    // Generate a fake but realistic full card number based on the last 4
+    function generateFullNumber(last4) {
+      return `4532 8912 3412 ${last4}`;
+    }
+
     async function loadCards() {
       const res = await fetch(`/api/cards/${user.id}`);
       const cards = await res.json();
@@ -79,22 +118,93 @@
         return;
       }
 
-      container.innerHTML = cards.map(card => `
-        <div class="card-visual">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-weight:700; font-size:1.1rem; font-family:var(--font-display);">XANVIA</span>
-            <span style="font-size:0.8rem; opacity:0.8;">${card.status}</span>
-          </div>
-          <div class="card-chip"></div>
-          <div>
-            <div class="card-number">**** **** **** 4821</div>
+      container.innerHTML = cards.map(card => {
+        const isFrozen = card.status === 'Frozen';
+        const fullNumber = generateFullNumber(card.last4 || '0000');
+        const maskedNumber = `**** **** **** ${card.last4 || '0000'}`;
+        
+        return `
+        <div class="wallet-container">
+          <div class="card-visual ${isFrozen ? 'frozen' : ''}" id="card-visual-${card.id}">
+            <div class="card-top">
+              <div class="card-brand">
+                <div class="logo-icon" style="width: 24px; height: 24px; font-size: 0.8rem;">X</div> XANVIA
+              </div>
+              <div class="card-status-badge">${card.status}</div>
+            </div>
+            
+            <div>
+              <div class="contactless">📶</div>
+              <div class="card-chip"></div>
+              <div class="card-number" id="card-num-${card.id}">${maskedNumber}</div>
+            </div>
+
             <div class="card-details">
-              <span>${user.name.toUpperCase()}</span>
-              <span>${card.card_type}</span>
+              <div>
+                <div class="label">Card Holder</div>
+                <div class="value">${user.name}</div>
+              </div>
+              <div>
+                <div class="label">Expires</div>
+                <div class="value">12/28</div>
+              </div>
+              <div class="card-network">${card.card_type.includes('Visa') ? 'VISA' : 'MC'}</div>
             </div>
           </div>
         </div>
-      `).join('');
+
+        <div class="card-controls">
+          <button class="control-btn" onclick="toggleDetails(${card.id}, '${fullNumber}', '${maskedNumber}')" id="reveal-btn-${card.id}">
+            👁️ Show Details
+          </button>
+          <button class="control-btn ${isFrozen ? '' : 'danger'}" onclick="toggleFreeze(${card.id}, '${card.status}')">
+            ${isFrozen ? '🔥 Unfreeze Card' : '❄️ Freeze Card'}
+          </button>
+        </div>
+        `;
+      }).join('');
+    }
+
+    // Toggle between full details and masked details
+    function toggleDetails(id, full, masked) {
+      const numEl = document.getElementById(`card-num-${id}`);
+      const btn = document.getElementById(`reveal-btn-${id}`);
+      
+      if (numEl.textContent === masked) {
+        numEl.textContent = full;
+        btn.innerHTML = '🙈 Hide Details';
+      } else {
+        numEl.textContent = masked;
+        btn.innerHTML = '👁️ Show Details';
+      }
+    }
+
+    // Toggle Freeze Status
+    async function toggleFreeze(id, currentStatus) {
+      const newStatus = currentStatus === 'Active' ? 'Frozen' : 'Active';
+      
+      // Optimistic UI update
+      const cardEl = document.getElementById(`card-visual-${id}`);
+      if (newStatus === 'Frozen') cardEl.classList.add('frozen');
+      else cardEl.classList.remove('frozen');
+
+      try {
+        const res = await fetch(`/api/cards/${id}/toggle`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (res.ok) {
+          loadCards(); // Reload to update the badges and buttons
+        } else {
+          alert("Failed to update card status.");
+          loadCards(); // Revert UI
+        }
+      } catch (err) {
+        alert("Network error.");
+        loadCards();
+      }
     }
 
     async function requestCard() {
@@ -110,23 +220,13 @@
       msg.textContent = data.message || data.error;
       msg.style.color = data.success ? "var(--emerald)" : "red";
       
-      if (data.success) loadCards();
+      if (data.success) {
+        document.getElementById('card-type').value = 'Visa Debit'; // reset
+        loadCards();
+      }
     }
 
     loadCards();
   </script>
 </body>
-</html><!DOCTYPE html>
-<html>
-
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title></title>
-</head>
-
-<body>
-  
-</body>
-
 </html>

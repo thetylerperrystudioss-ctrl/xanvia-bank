@@ -6,26 +6,91 @@
   <title>My Accounts | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F8F9FA; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; }
+    :root { --emerald: #0F8A5F; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; --danger: #EF4444; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 50px; }
-    .grid { display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin: 0 auto; }
-    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    body { background: var(--bg); color: var(--text); padding: 20px; padding-bottom: 50px; display: flex; justify-content: center; }
+    
+    .app-container { width: 100%; max-width: 600px; }
+    
+    /* HEADER */
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding: 10px 0; }
     .logo { display: flex; align-items: center; gap: 10px; }
-    .logo-icon { background: var(--emerald); color: white; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 800; }
+    .logo-icon { background: var(--emerald); color: white; width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 800; }
     .logo-text { display: flex; flex-direction: column; }
-    .logo-title { font-family: 'Merriweather', serif; font-size: 1.1rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
+    .logo-title { font-family: 'Merriweather', serif; font-size: 1.2rem; font-weight: 900; color: var(--deep-green); line-height: 1; }
     .logo-subtitle { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; color: var(--gold); letter-spacing: 1.5px; margin-top: 2px; }
-    .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
+    .btn-logout { background: transparent; border: 1px solid var(--border); color: var(--text); padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+    .btn-logout:hover { background: #FEE2E2; color: #991B1B; border-color: #FECACA; }
 
-    .panel { background: white; border-radius: 16px; padding: 25px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.02); width: 100%; }
-    .panel h2 { font-size: 1.2rem; color: var(--deep-green); margin-bottom: 10px; }
-    .panel p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; }
-    .btn-primary { background: var(--emerald); color: white; border: none; padding: 14px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; width: 100%; display: block; text-align: center; text-decoration: none; font-size: 0.95rem; }
+    .greeting { margin-bottom: 25px; }
+    .greeting h2 { font-size: 1.6rem; color: var(--deep-green); margin-bottom: 5px; }
+    .greeting p { color: var(--muted); font-size: 0.9rem; }
+
+    /* GRID */
+    .grid { display: flex; flex-direction: column; gap: 20px; }
+
+    /* PREMIUM PANELS */
+    .panel { 
+      background: white; 
+      border-radius: 20px; 
+      padding: 25px; 
+      border: 1px solid var(--border); 
+      box-shadow: 0 10px 25px rgba(11,46,35,0.03); 
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .panel:hover { transform: translateY(-2px); box-shadow: 0 15px 35px rgba(11,46,35,0.06); }
+    
+    /* Top accent line */
+    .panel::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    }
+    .panel.banking::before { background: linear-gradient(90deg, #0F8A5F, #34D399); }
+    .panel.loan::before { background: linear-gradient(90deg, #C9A24B, #FDE047); }
+    .panel.invest::before { background: linear-gradient(90deg, #3B82F6, #8B5CF6); }
+
+    .panel-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .panel-icon { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: var(--bg); }
+    .panel-status { font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+    .status-active { background: #D1FAE5; color: #065F46; }
+    .status-pending { background: #FEF3C7; color: #92400E; }
+
+    .panel h2 { font-size: 1.25rem; color: var(--deep-green); margin-bottom: 8px; font-weight: 700; }
+    .panel p { color: var(--muted); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+
+    /* BALANCES */
+    .balance-preview { display: flex; gap: 20px; margin-bottom: 25px; padding: 15px; background: var(--bg); border-radius: 12px; }
+    .balance-item { flex: 1; }
+    .balance-label { font-size: 0.75rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .balance-value { font-size: 1.2rem; font-weight: 800; color: var(--deep-green); font-family: monospace; }
+    .balance-value.debt { color: var(--danger); }
+
+    .btn-primary { 
+      background: var(--deep-green); 
+      color: white; 
+      border: none; 
+      padding: 16px; 
+      border-radius: 12px; 
+      font-weight: 600; 
+      cursor: pointer; 
+      width: 100%; 
+      display: block; 
+      text-align: center; 
+      text-decoration: none; 
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #061a13; }
+    .btn-secondary { background: var(--emerald); }
+    .btn-secondary:hover { background: var(--emerald-dark); }
+
   </style>
 </head>
 <body>
-  <div class="grid">
+  <div class="app-container">
+    
+    <!-- HEADER -->
     <div class="header">
       <div class="logo">
         <div class="logo-icon">X</div>
@@ -37,22 +102,77 @@
       <button class="btn-logout" onclick="logout()">Log Out</button>
     </div>
 
-    <div class="panel">
-      <h2>🏦 Personal Banking</h2>
-      <p>Manage checking, savings, deposits, and transfers.</p>
-      <div id="bank-action">Loading...</div>
+    <!-- GREETING -->
+    <div class="greeting">
+      <h2 id="greeting-text">Welcome Back.</h2>
+      <p>Select an account below to view details and manage your funds.</p>
     </div>
-    
-    <div class="panel">
-      <h2>💳 Smart Lending</h2>
-      <p>Apply for personal loans and track repayments.</p>
-      <div id="loan-action">Loading...</div>
-    </div>
-    
-    <div class="panel">
-      <h2>📈 Wealth Management</h2>
-      <p>Trade stocks and buy Bitcoin.</p>
-      <div id="invest-action">Loading...</div>
+
+    <div class="grid">
+      
+      <!-- BANKING PANEL -->
+      <div class="panel banking">
+        <div class="panel-top">
+          <div class="panel-icon">🏦</div>
+          <div class="panel-status status-active" id="bank-status">Active</div>
+        </div>
+        <h2>Personal Banking</h2>
+        <p>Manage your checking, savings, deposits, and transfers.</p>
+        
+        <div class="balance-preview" id="bank-balance-preview" style="display: none;">
+          <div class="balance-item">
+            <div class="balance-label">Checking Balance</div>
+            <div class="balance-value" id="hub-checking-bal">$0.00</div>
+          </div>
+        </div>
+
+        <div id="bank-action">
+          <a href="#" class="btn-primary">Loading...</a>
+        </div>
+      </div>
+      
+      <!-- LOANS PANEL -->
+      <div class="panel loan">
+        <div class="panel-top">
+          <div class="panel-icon">💳</div>
+          <div class="panel-status status-active" id="loan-status">Active</div>
+        </div>
+        <h2>Smart Lending</h2>
+        <p>Apply for personal loans, track repayments, and manage debt.</p>
+        
+        <div class="balance-preview" id="loan-balance-preview" style="display: none;">
+          <div class="balance-item">
+            <div class="balance-label">Outstanding Debt</div>
+            <div class="balance-value debt" id="hub-loan-bal">$0.00</div>
+          </div>
+        </div>
+
+        <div id="loan-action">
+          <a href="#" class="btn-primary btn-secondary">Loading...</a>
+        </div>
+      </div>
+      
+      <!-- INVESTMENTS PANEL -->
+      <div class="panel invest">
+        <div class="panel-top">
+          <div class="panel-icon">📈</div>
+          <div class="panel-status status-active" id="invest-status">Active</div>
+        </div>
+        <h2>Wealth Management</h2>
+        <p>Trade stocks, buy crypto, and grow your portfolio.</p>
+        
+        <div class="balance-preview" id="invest-balance-preview" style="display: none;">
+          <div class="balance-item">
+            <div class="balance-label">Portfolio Balance</div>
+            <div class="balance-value" id="hub-invest-bal">$0.00</div>
+          </div>
+        </div>
+
+        <div id="invest-action">
+          <a href="#" class="btn-primary btn-secondary">Loading...</a>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -62,10 +182,16 @@
     
     function logout() { localStorage.removeItem("xanvia_user"); window.location.replace("../index.html"); }
 
-    async function checkStatus() {
+    const formatUSD = (val) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+
+    async function loadHubData() {
+      // Set greeting
+      document.getElementById('greeting-text').textContent = `Welcome back, ${user.name.split(' ')[0]}.`;
+
       let data = { has_bank: false, has_loan: false, has_investment: false };
 
       try {
+        // Check onboarding status
         const res = await fetch(`/api/user-status/${user.id}`);
         const serverData = await res.json();
         
@@ -77,6 +203,7 @@
         localStorage.setItem("xanvia_user", JSON.stringify(user));
         
       } catch (err) {
+        // Fallback to local storage if server fails
         data = {
           has_bank: user.has_bank || false,
           has_loan: user.has_loan || false,
@@ -84,29 +211,57 @@
         };
       }
 
-      // Update Bank Card
+      // Fetch Balances for the UI
+      try {
+        const balRes = await fetch(`/api/accounts/${user.id}`);
+        const balData = await balRes.json();
+        
+        if (data.has_bank) {
+          document.getElementById('bank-balance-preview').style.display = 'flex';
+          document.getElementById('hub-checking-bal').textContent = formatUSD(parseFloat(balData.checking) || 0);
+        }
+        
+        if (data.has_loan && balData.loan > 0) {
+          document.getElementById('loan-balance-preview').style.display = 'flex';
+          document.getElementById('hub-loan-bal').textContent = formatUSD(parseFloat(balData.loan) || 0);
+        }
+      } catch (e) { console.log("Could not fetch balances for Hub."); }
+
+      // --- UPDATE BANK CARD ---
       if (data.has_bank) {
+        document.getElementById('bank-status').textContent = 'Active';
+        document.getElementById('bank-status').className = 'panel-status status-active';
         document.getElementById('bank-action').innerHTML = `<a href="dashboard.html" class="btn-primary">Go to Bank Dashboard</a>`;
       } else {
+        document.getElementById('bank-status').textContent = 'Setup Required';
+        document.getElementById('bank-status').className = 'panel-status status-pending';
         document.getElementById('bank-action').innerHTML = `<a href="onboarding.html?type=bank" class="btn-primary">Apply for Bank Account</a>`;
       }
 
-      // Update Loan Card
+      // --- UPDATE LOAN CARD ---
       if (data.has_loan) {
-        document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary">Go to Loan Center</a>`;
+        document.getElementById('loan-status').textContent = 'Active';
+        document.getElementById('loan-status').className = 'panel-status status-active';
+        document.getElementById('loan-action').innerHTML = `<a href="loans.html" class="btn-primary btn-secondary">Go to Loan Center</a>`;
       } else {
-        document.getElementById('loan-action').innerHTML = `<a href="onboarding.html?type=loan" class="btn-primary">Apply for Loan Account</a>`;
+        document.getElementById('loan-status').textContent = 'Setup Required';
+        document.getElementById('loan-status').className = 'panel-status status-pending';
+        document.getElementById('loan-action').innerHTML = `<a href="onboarding.html?type=loan" class="btn-primary btn-secondary">Apply for Loan Account</a>`;
       }
 
-      // Update Investment Card
+      // --- UPDATE INVESTMENT CARD ---
       if (data.has_investment) {
-        document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary">Go to Investments</a>`;
+        document.getElementById('invest-status').textContent = 'Active';
+        document.getElementById('invest-status').className = 'panel-status status-active';
+        document.getElementById('invest-action').innerHTML = `<a href="investments.html" class="btn-primary btn-secondary">Go to Investments</a>`;
       } else {
-        document.getElementById('invest-action').innerHTML = `<a href="onboarding.html?type=investment" class="btn-primary">Apply for Investment Account</a>`;
+        document.getElementById('invest-status').textContent = 'Setup Required';
+        document.getElementById('invest-status').className = 'panel-status status-pending';
+        document.getElementById('invest-action').innerHTML = `<a href="onboarding.html?type=investment" class="btn-primary btn-secondary">Apply for Investment Account</a>`;
       }
     }
 
-    checkStatus();
+    loadHubData();
   </script>
 </body>
 </html>
