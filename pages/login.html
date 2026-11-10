@@ -201,9 +201,8 @@
       loginBtn.disabled = true;
 
       try {
-        // Add a timeout so it doesn't hang forever if server crashes
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
 
         const res = await fetch('/api/login', {
           method: 'POST',
@@ -214,7 +213,6 @@
         
         clearTimeout(timeoutId);
 
-        // Check if server returned JSON
         const contentType = res.headers.get("content-type");
         if (!contentType || !contentType.includes("application/json")) {
           throw new Error("Server Error. The backend might have crashed.");
@@ -233,7 +231,7 @@
           isLoggingIn = false;
         }
       } catch (err) {
-        msg.textContent = err.message === 'The user aborted a request.' ? "Connection timed out. Server is down." : "Server error. Please try again.";
+        msg.textContent = err.message === 'The user aborted a request.' ? "Connection timed out. Server is down." : err.message;
         msg.className = "msg error";
         btnText.textContent = "Secure Sign In"; 
         loginBtn.disabled = false;
@@ -241,10 +239,9 @@
       }
     }
 
-    async function verifyAdmin() {
+    function verifyAdmin() {
       const pass = document.getElementById('admin-pass').value;
       const msg = document.getElementById('admin-msg');
-      
       if (pass === "@@@@") {
         window.location.replace("admin.html");
       } else {
