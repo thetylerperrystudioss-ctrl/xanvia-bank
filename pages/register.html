@@ -6,58 +6,12 @@
   <title>Register | Xanvia Credit Union</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
   <style>
-    :root { 
-      --emerald: #0F8A5F; 
-      --emerald-dark: #0A5F42; 
-      --deep-green: #0B2E23; 
-      --text: #1A1A1A; 
-      --border: #E5E7EB; 
-      --muted: #6B7280; 
-      --gold: #C9A24B; 
-    }
+    :root { --emerald: #0F8A5F; --emerald-dark: #0A5F42; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    
-    body { 
-      background-color: var(--deep-green); 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      min-height: 100vh; 
-      padding: 20px; 
-      position: relative;
-      overflow-x: hidden;
-    }
+    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; }
+    body::before { content: ''; position: fixed; inset: 0; background: rgba(11, 46, 35, 0.85); z-index: 1; backdrop-filter: blur(10px); }
 
-    /* BACKGROUND LAYERS */
-    .bg-layer {
-      position: fixed;
-      inset: 0;
-      background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop');
-      background-size: cover;
-      background-position: center;
-      z-index: 1;
-    }
-    
-    .bg-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(11, 46, 35, 0.85);
-      z-index: 2;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-    }
-
-    /* REGISTRATION CARD */
-    .reg-card { 
-      background: #FFFFFF; 
-      width: 100%; 
-      max-width: 450px; 
-      padding: 40px 30px; 
-      border-radius: 24px; 
-      box-shadow: 0 25px 50px rgba(0,0,0,0.3); 
-      position: relative; 
-      z-index: 10; 
-    }
+    .reg-card { background: white; width: 100%; max-width: 480px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); position: relative; z-index: 10; margin: 20px 0; }
     
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; justify-content: center; }
     .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; }
@@ -70,11 +24,15 @@
 
     .form-group { display: flex; flex-direction: column; margin-bottom: 15px; width: 100%; position: relative; }
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text); }
-    .form-group input { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; transition: 0.2s; }
+    .form-group input, .form-group select { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 10px; font-size: 1rem; outline: none; background: #FAFAFA; transition: 0.2s; }
     .form-group input:focus { border-color: var(--emerald); background: white; box-shadow: 0 0 0 4px rgba(15,138,95,0.1); }
     
-    .password-toggle { position: absolute; right: 15px; top: 38px; cursor: pointer; color: var(--muted); font-size: 1.1rem; }
-    
+    .file-upload { border: 2px dashed var(--border); padding: 15px; border-radius: 10px; text-align: center; cursor: pointer; background: #FAFAFA; position: relative; margin-bottom: 10px; }
+    .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .file-upload span { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
+    .file-upload.has-file { border-color: var(--emerald); background: #E6F4EE; }
+    .file-upload.has-file span { color: var(--emerald); }
+
     .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; box-shadow: 0 4px 12px rgba(15,138,95,0.2); }
     .btn-primary:active { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
@@ -85,15 +43,10 @@
     
     .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
     .footer-link a { color: var(--emerald); font-weight: 700; text-decoration: none; }
-    
     .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); text-decoration: none; z-index: 20; }
   </style>
 </head>
 <body>
-
-  <!-- BACKGROUND LAYERS -->
-  <div class="bg-layer"></div>
-  <div class="bg-overlay"></div>
 
   <div class="reg-card">
     <a href="../index.html" class="back-btn">←</a>
@@ -106,32 +59,37 @@
     </div>
 
     <h2>Create an Account</h2>
-    <p class="sub">Join the future of modern banking.</p>
+    <p class="sub">Full KYC verification is required to open an account.</p>
     <div id="msg" class="msg"></div>
 
-    <form id="register-form">
-      <div class="form-group">
-        <label>Full Name</label>
-        <input type="text" id="reg-name" placeholder="John Doe" required>
+    <form id="register-form" enctype="multipart/form-data">
+      <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe" required></div>
+      <div class="form-group"><label>Gmail Address</label><input type="email" id="reg-email" placeholder="john@gmail.com" required></div>
+      <div class="form-group"><label>Phone Number</label><input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required></div>
+      <div class="form-group"><label>Age</label><input type="number" id="reg-age" placeholder="Must be 18 or older" min="18" required></div>
+      <div class="form-group"><label>Full Residential Address</label><input type="text" id="reg-address" placeholder="123 Main St, City, State, ZIP" required></div>
+      <div class="form-group"><label>SSN (Last 4 Digits)</label><input type="text" id="reg-ssn" placeholder="XXXX" maxlength="4" required></div>
+      <div class="form-group"><label>Password</label><input type="password" id="reg-password" placeholder="Create a strong password" required></div>
+
+      <label style="font-size:0.85rem; font-weight:600; margin-top:10px; margin-bottom:8px; display:block;">Upload Government ID (Front)</label>
+      <div class="file-upload" id="box-id-front">
+        <input type="file" id="id-front" accept="image/*" required onchange="updateFileName(this, 'box-id-front')">
+        <span>Tap to upload ID Front</span>
       </div>
-      
-      <div class="form-group">
-        <label>Gmail Address</label>
-        <input type="email" id="reg-email" placeholder="john@gmail.com" required>
+
+      <label style="font-size:0.85rem; font-weight:600; margin-top:10px; margin-bottom:8px; display:block;">Upload Government ID (Back)</label>
+      <div class="file-upload" id="box-id-back">
+        <input type="file" id="id-back" accept="image/*" required onchange="updateFileName(this, 'box-id-back')">
+        <span>Tap to upload ID Back</span>
       </div>
-      
-      <div class="form-group">
-        <label>Phone Number</label>
-        <input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required>
+
+      <label style="font-size:0.85rem; font-weight:600; margin-top:10px; margin-bottom:8px; display:block;">Proof of Address (Optional)</label>
+      <div class="file-upload" id="box-poa">
+        <input type="file" id="proof-of-address" accept="image/*" onchange="updateFileName(this, 'box-poa')">
+        <span>Utility bill or Bank Statement</span>
       </div>
-      
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="reg-password" placeholder="Create a strong password" required>
-        <span class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</span>
-      </div>
-      
-      <button type="submit" class="btn-primary" id="reg-btn">Open Account</button>
+
+      <button type="submit" class="btn-primary" id="reg-btn">Submit Application</button>
     </form>
     
     <div class="footer-link">
@@ -140,14 +98,15 @@
   </div>
 
   <script>
-    function togglePassword(inputId, icon) {
-      const input = document.getElementById(inputId);
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.textContent = '🙈';
+    function updateFileName(input, boxId) {
+      const box = document.getElementById(boxId);
+      const span = box.querySelector('span');
+      if (input.files.length > 0) {
+        box.classList.add('has-file');
+        span.textContent = "✅ " + input.files[0].name;
       } else {
-        input.type = 'password';
-        icon.textContent = '👁️';
+        box.classList.remove('has-file');
+        span.textContent = boxId === 'box-id-front' ? 'Tap to upload ID Front' : (boxId === 'box-id-back' ? 'Tap to upload ID Back' : 'Utility bill or Bank Statement');
       }
     }
 
@@ -159,42 +118,61 @@
       const name = document.getElementById('reg-name').value;
       const email = document.getElementById('reg-email').value.toLowerCase();
       const phone = document.getElementById('reg-phone').value;
+      const age = document.getElementById('reg-age').value;
+      const address = document.getElementById('reg-address').value;
+      const ssn = document.getElementById('reg-ssn').value;
       const password = document.getElementById('reg-password').value;
+      
+      const idFront = document.getElementById('id-front').files[0];
+      const idBack = document.getElementById('id-back').files[0];
+      const poa = document.getElementById('proof-of-address').files[0];
 
       if (!email.endsWith('@gmail.com')) {
         msg.className = "msg error"; msg.textContent = "Please enter a valid Gmail address."; return;
       }
 
-      btn.textContent = "Creating Account..."; 
+      btn.textContent = "Submitting KYC..."; 
       btn.disabled = true; 
       msg.style.display = "none";
 
+      // Build FormData to support file uploads
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('phone', phone);
+      formData.append('age', age);
+      formData.append('address', address);
+      formData.append('ssn_last4', ssn);
+      formData.append('password', password);
+      
+      formData.append('id_front', idFront);
+      formData.append('id_back', idBack);
+      if (poa) formData.append('proof_of_address', poa);
+
       try {
         const res = await fetch('/api/register', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, password })
+          method: 'POST', 
+          body: formData // Sending formData instead of JSON
         });
         const data = await res.json();
 
         if (data.success) {
           msg.className = "msg success";
-          msg.textContent = "Account created! Redirecting to verification...";
-          
-          localStorage.setItem("temp_user", JSON.stringify({ id: data.userId, email, name }));
+          msg.textContent = "Application received! Your documents are under review. Redirecting...";
           
           setTimeout(() => {
-            window.location.href = "onboarding.html?type=bank";
-          }, 1500);
+            window.location.href = "login.html";
+          }, 2000);
         } else {
           msg.className = "msg error"; 
           msg.textContent = data.error || "Registration failed.";
-          btn.textContent = "Open Account"; 
+          btn.textContent = "Submit Application"; 
           btn.disabled = false;
         }
       } catch (err) {
         msg.className = "msg error"; 
         msg.textContent = "Server error. Try again.";
-        btn.textContent = "Open Account"; 
+        btn.textContent = "Submit Application"; 
         btn.disabled = false;
       }
     });
