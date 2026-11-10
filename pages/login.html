@@ -32,29 +32,7 @@
     .password-toggle { position: absolute; right: 15px; top: 40px; cursor: pointer; color: var(--muted); font-size: 1.1rem; z-index: 20; }
     .forgot-link { display: block; text-align: right; font-size: 0.85rem; color: var(--emerald); font-weight: 600; text-decoration: none; margin-top: -5px; margin-bottom: 25px; }
 
-    /* BUTTON WITH LONG PRESS HOLD INDICATOR */
-    .btn-primary { 
-      width: 100%; 
-      padding: 16px; 
-      background: var(--emerald); 
-      color: white; 
-      border: none; 
-      border-radius: 12px; 
-      font-weight: 700; 
-      font-size: 1rem; 
-      cursor: pointer; 
-      transition: 0.2s; 
-      box-shadow: 0 4px 12px rgba(15,138,95,0.2); 
-      position: relative; 
-      overflow: hidden; 
-      user-select: none; 
-      -webkit-user-select: none; 
-      touch-action: manipulation; 
-      display: flex; 
-      justify-content: center; 
-      align-items: center; 
-      z-index: 10; 
-    }
+    .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(15,138,95,0.2); position: relative; overflow: hidden; user-select: none; -webkit-user-select: none; touch-action: manipulation; display: flex; justify-content: center; align-items: center; z-index: 10; }
     .btn-primary:active { transform: scale(0.98); }
     .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
     
@@ -78,7 +56,6 @@
   <div class="login-card">
     <button class="back-btn" id="back-btn" onclick="resetView()">←</button>
 
-    <!-- USER LOGIN VIEW -->
     <div id="user-login-section">
       <div class="logo">
         <div class="logo-icon">X</div>
@@ -105,7 +82,6 @@
       
       <a href="forgot-password.html" class="forgot-link">Forgot Password?</a>
 
-      <!-- BUTTON WITH LONG PRESS -->
       <button class="btn-primary" id="login-btn">
         <span id="btn-text">Secure Sign In</span>
         <div class="hold-indicator" id="hold-bar"></div>
@@ -116,7 +92,6 @@
       </div>
     </div>
 
-    <!-- ADMIN LOGIN VIEW -->
     <div id="admin-login-section">
       <div class="logo" style="margin-bottom: 20px;">
         <div class="logo-icon" style="background:var(--deep-green);">🛡️</div>
@@ -147,7 +122,6 @@
     let isHoldTriggered = false;
     let isLoggingIn = false;
 
-    // LONG PRESS LOGIC
     function startHold(e) {
       if (e) e.preventDefault();
       if (isLoggingIn) return;
@@ -156,13 +130,11 @@
       isHoldTriggered = false;
       holdBar.style.width = '0%';
       
-      // Animate the bar over 5 seconds (100 ticks of 50ms = 5000ms)
       progressTimer = setInterval(() => {
         progress += 1;
         holdBar.style.width = (progress / 100) * 100 + '%';
       }, 50);
 
-      // Trigger admin view after 5 seconds
       holdTimer = setTimeout(() => {
         clearInterval(progressTimer);
         holdBar.style.width = '0%';
@@ -176,7 +148,6 @@
       clearTimeout(holdTimer);
       clearInterval(progressTimer);
       
-      // If released before 5 seconds, reset and login normally
       if (!isHoldTriggered && !isLoggingIn) {
         holdBar.style.width = '0%';
         userLogin();

@@ -108,78 +108,66 @@ updateMarketData();
 setInterval(updateMarketData, 60000);
 
 // ==========================================
-// DATABASE SETUP (FIXED)
+// DATABASE SETUP
 // ==========================================
 pool.connect((err, client, release) => {
-  if (err) {
-    console.error('DB Error:', err.message);
-    return;
-  }
-
-  // We run the column updates sequentially in a try-catch to prevent startup crashes.
-  client.query(`
-    CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY);
-    CREATE TABLE IF NOT EXISTS accounts (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS investments (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE, sender VARCHAR(20), message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-    CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, message TEXT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-    CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
-    CREATE TABLE IF NOT EXISTS cards (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
-    CREATE TABLE IF NOT EXISTS login_history (id SERIAL PRIMARY KEY, user_id INTEGER, ip_address TEXT, device_info TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-    CREATE TABLE IF NOT EXISTS investment_assets (id SERIAL PRIMARY KEY, category VARCHAR(50), name VARCHAR(100), description TEXT, price DECIMAL(12,2), image_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
-  `, async (err) => {
-    if (err) {
-      console.error('Create Table Error:', err.message);
-      release();
-      return;
-    }
-
-    const alterQueries = [
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP", "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER", "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT", "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
-      "ALTER TABLE users ADD COLUMN IF NOT EXISTS id_front TEXT", "ALTER TABLE users ADD COLUMN IF NOT EXISTS id_back TEXT", "ALTER TABLE users ADD COLUMN IF NOT EXISTS proof_of_address TEXT",
-      "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)", "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active'",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      "ALTER TABLE investments ADD COLUMN IF NOT EXISTS asset_name VARCHAR(100)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS asset_category VARCHAR(50)",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
-      "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS message TEXT",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_response TEXT",
-      "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
-      "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT", "ALTER TABLE cards ADD COLUMN IF NOT EXISTS card_type VARCHAR(50)",
-      "ALTER TABLE cards ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'", "ALTER TABLE cards ADD COLUMN IF NOT EXISTS last4 VARCHAR(4)",
-      "ALTER TABLE cards ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-    ];
-
-    for (let q of alterQueries) {
-      try {
-        await client.query(q);
-      } catch (e) {
-        console.error('Column Update Error:', e.message);
+  if (err) console.error('DB Error:', err.message);
+  else {
+    client.query(`
+      CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY);
+      CREATE TABLE IF NOT EXISTS accounts (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS investments (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS transactions (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS complaints (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS chat_messages (id SERIAL PRIMARY KEY, complaint_id INTEGER REFERENCES complaints(id) ON DELETE CASCADE, sender VARCHAR(20), message TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+      CREATE TABLE IF NOT EXISTS notifications (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE, message TEXT, is_read BOOLEAN DEFAULT false, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+      CREATE TABLE IF NOT EXISTS system_settings (id SERIAL PRIMARY KEY, key VARCHAR(50) UNIQUE);
+      CREATE TABLE IF NOT EXISTS cards (id SERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE CASCADE);
+      CREATE TABLE IF NOT EXISTS login_history (id SERIAL PRIMARY KEY, user_id INTEGER, ip_address TEXT, device_info TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+      CREATE TABLE IF NOT EXISTS investment_assets (id SERIAL PRIMARY KEY, category VARCHAR(50), name VARCHAR(100), description TEXT, price DECIMAL(12,2), image_url TEXT, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+    `, async (err) => {
+      if (err) {
+        console.error('Create Table Error:', err.message);
+        release();
+        return;
       }
-    }
 
-    try {
+      const alterQueries = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS name VARCHAR(100)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(100) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(100)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS username VARCHAR(50) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS phone VARCHAR(20)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS account_number VARCHAR(20) UNIQUE",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS routing_number VARCHAR(20)", "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_pic TEXT",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'", "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP", "ALTER TABLE users ADD COLUMN IF NOT EXISTS deleted BOOLEAN DEFAULT false",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER", "ALTER TABLE users ADD COLUMN IF NOT EXISTS address TEXT", "ALTER TABLE users ADD COLUMN IF NOT EXISTS ssn_last4 VARCHAR(4)",
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS id_front TEXT", "ALTER TABLE users ADD COLUMN IF NOT EXISTS id_back TEXT", "ALTER TABLE users ADD COLUMN IF NOT EXISTS proof_of_address TEXT",
+        "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS type VARCHAR(50)", "ALTER TABLE accounts ADD COLUMN IF NOT EXISTS balance DECIMAL(12,2) DEFAULT 0.00",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Active'",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS start_date TIMESTAMP", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS maturity_date TIMESTAMP",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS profit DECIMAL(12,2)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE investments ADD COLUMN IF NOT EXISTS asset_name VARCHAR(100)", "ALTER TABLE investments ADD COLUMN IF NOT EXISTS asset_category VARCHAR(50)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS type VARCHAR(50)", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS amount DECIMAL(12,2)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Pending'", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS reference VARCHAR(100)",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS details TEXT", "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS proof_image TEXT",
+        "ALTER TABLE transactions ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS ref_number VARCHAR(20) UNIQUE", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS category VARCHAR(50)",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS subject VARCHAR(100)", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS message TEXT",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'Pending'", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS admin_response TEXT",
+        "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS attachment TEXT", "ALTER TABLE complaints ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP",
+        "ALTER TABLE system_settings ADD COLUMN IF NOT EXISTS value TEXT", "ALTER TABLE cards ADD COLUMN IF NOT EXISTS card_type VARCHAR(50)",
+        "ALTER TABLE cards ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active'", "ALTER TABLE cards ADD COLUMN IF NOT EXISTS last4 VARCHAR(4)",
+        "ALTER TABLE cards ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+      ];
+
+      for (let q of alterQueries) {
+        try { await client.query(q); } catch (e) { }
+      }
+
       await client.query(`INSERT INTO system_settings (key, value) VALUES ('btc_address', 'bc1q...xanvia'), ('bank_name', 'Chase Bank'), ('bank_account', '123456789'), ('bank_routing', '021000021') ON CONFLICT (key) DO NOTHING`);
+      release();
       console.log('✅ Database fully upgraded and ready.');
-    } catch (e) {
-      console.error('Settings Insertion Error:', e.message);
-    }
-
-    release();
-  });
+    });
+  }
 });
 
 // ==========================================
