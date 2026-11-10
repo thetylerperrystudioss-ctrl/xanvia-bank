@@ -4,14 +4,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Register | Xanvia Credit Union</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap <style>
-    :root { --emerald: #0F8A5F; --emerald-dark: #0A5F42; --deep-green: #0B2E23; --bg: #F4F7F6; --text: #1A1A1A; --border: #E5E7EB; --muted: #6B7280; --gold: #C9A24B; }
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root { 
+      --emerald: #0F8A5F; 
+      --emerald-dark: #0A5F42; 
+      --deep-green: #0B2E23; 
+      --text: #1A1A1A; 
+      --border: #E5E7EB; 
+      --muted: #6B7280; 
+      --gold: #C9A24B; 
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-    body { background: var(--deep-green); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop'); background-size: cover; background-position: center; }
     
-    body::before { content: ''; position: absolute; inset: 0; background: rgba(11, 46, 35, 0.85); z-index: 1; backdrop-filter: blur(8px); }
+    body { 
+      background-color: var(--deep-green); 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+      min-height: 100vh; 
+      padding: 20px; 
+      position: relative;
+      overflow-x: hidden;
+    }
 
-    .reg-card { background: white; width: 100%; max-width: 450px; padding: 40px 30px; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.3); position: relative; z-index: 10; }
+    /* BACKGROUND LAYERS */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop');
+      background-size: cover;
+      background-position: center;
+      z-index: 1;
+    }
+    
+    .bg-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(11, 46, 35, 0.85);
+      z-index: 2;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* REGISTRATION CARD */
+    .reg-card { 
+      background: #FFFFFF; 
+      width: 100%; 
+      max-width: 450px; 
+      padding: 40px 30px; 
+      border-radius: 24px; 
+      box-shadow: 0 25px 50px rgba(0,0,0,0.3); 
+      position: relative; 
+      z-index: 10; 
+    }
     
     .logo { display: flex; align-items: center; gap: 10px; margin-bottom: 25px; justify-content: center; }
     .logo-icon { background: var(--emerald); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 900; }
@@ -31,6 +77,7 @@
     
     .btn-primary { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; margin-top: 10px; box-shadow: 0 4px 12px rgba(15,138,95,0.2); }
     .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: 0.7; cursor: not-allowed; }
     
     .msg { display: none; padding: 12px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem; text-align: center; font-weight: 600; }
     .msg.error { display: block; background: #FEE2E2; color: #991B1B; }
@@ -38,10 +85,16 @@
     
     .footer-link { text-align: center; margin-top: 20px; font-size: 0.9rem; color: var(--muted); }
     .footer-link a { color: var(--emerald); font-weight: 700; text-decoration: none; }
+    
     .back-btn { position: absolute; top: 20px; left: 20px; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); text-decoration: none; z-index: 20; }
   </style>
 </head>
 <body>
+
+  <!-- BACKGROUND LAYERS -->
+  <div class="bg-layer"></div>
+  <div class="bg-overlay"></div>
+
   <div class="reg-card">
     <a href="../index.html" class="back-btn">←</a>
     <div class="logo">
@@ -57,14 +110,27 @@
     <div id="msg" class="msg"></div>
 
     <form id="register-form">
-      <div class="form-group"><label>Full Name</label><input type="text" id="reg-name" placeholder="John Doe" required></div>
-      <div class="form-group"><label>Gmail Address</label><input type="email" id="reg-email" placeholder="john@gmail.com" required></div>
-      <div class="form-group"><label>Phone Number</label><input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required></div>
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="reg-name" placeholder="John Doe" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Gmail Address</label>
+        <input type="email" id="reg-email" placeholder="john@gmail.com" required>
+      </div>
+      
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" id="reg-phone" placeholder="+1 (555) 000-0000" required>
+      </div>
+      
       <div class="form-group">
         <label>Password</label>
         <input type="password" id="reg-password" placeholder="Create a strong password" required>
         <span class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</span>
       </div>
+      
       <button type="submit" class="btn-primary" id="reg-btn">Open Account</button>
     </form>
     
@@ -99,7 +165,9 @@
         msg.className = "msg error"; msg.textContent = "Please enter a valid Gmail address."; return;
       }
 
-      btn.textContent = "Creating Account..."; btn.disabled = true; msg.style.display = "none";
+      btn.textContent = "Creating Account..."; 
+      btn.disabled = true; 
+      msg.style.display = "none";
 
       try {
         const res = await fetch('/api/register', {
@@ -118,12 +186,16 @@
             window.location.href = "onboarding.html?type=bank";
           }, 1500);
         } else {
-          msg.className = "msg error"; msg.textContent = data.error || "Registration failed.";
-          btn.textContent = "Open Account"; btn.disabled = false;
+          msg.className = "msg error"; 
+          msg.textContent = data.error || "Registration failed.";
+          btn.textContent = "Open Account"; 
+          btn.disabled = false;
         }
       } catch (err) {
-        msg.className = "msg error"; msg.textContent = "Server error. Try again.";
-        btn.textContent = "Open Account"; btn.disabled = false;
+        msg.className = "msg error"; 
+        msg.textContent = "Server error. Try again.";
+        btn.textContent = "Open Account"; 
+        btn.disabled = false;
       }
     });
   </script>
