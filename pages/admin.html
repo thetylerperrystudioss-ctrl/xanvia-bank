@@ -62,6 +62,11 @@
     .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 5px; }
     .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; outline: none; }
     .btn-save { width: 100%; padding: 16px; background: var(--emerald); color: white; border: none; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+    
+    /* FILE UPLOAD DESIGN */
+    .file-upload { border: 2px dashed var(--border); padding: 15px; border-radius: 8px; text-align: center; cursor: pointer; background: #FAFAFA; position: relative; margin-bottom: 15px; }
+    .file-upload input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .file-upload span { font-size: 0.85rem; color: var(--muted); font-weight: 600; }
   </style>
 </head>
 <body>
@@ -116,7 +121,8 @@
 
     <div id="view-assets" class="view-section">
       <div class="panel">
-        <h2>Manage Assets</h2>
+        <h2>Manage Real Estate Assets</h2>
+        
         <div class="form-group">
           <label>Category</label>
           <select id="asset-cat">
@@ -124,12 +130,33 @@
             <option value="Bonds">Bonds</option>
           </select>
         </div>
-        <div class="form-group"><label>Asset Name</label><input type="text" id="asset-name"></div>
-        <div class="form-group"><label>Price ($)</label><input type="number" id="asset-price"></div>
-        <div class="form-group"><label>Image URL</label><input type="text" id="asset-img"></div>
-        <div class="form-group"><label>Description</label><textarea id="asset-desc" rows="2"></textarea></div>
-        <button class="btn-save" onclick="addAsset()">Publish Asset</button>
-        <div id="asset-list-admin" style="margin-top:20px;"></div>
+        
+        <!-- PRE-FILLED WITH REAL DATA -->
+        <div class="form-group">
+          <label>Asset Name</label>
+          <input type="text" id="asset-name" value="Luxury 4-Bed Villa in Miami, FL">
+        </div>
+        
+        <div class="form-group">
+          <label>Price ($)</label>
+          <input type="number" id="asset-price" value="850000">
+        </div>
+        
+        <div class="form-group">
+          <label>Image URL (or upload below)</label>
+          <input type="text" id="asset-img" value="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=1000&auto=format&fit=crop">
+        </div>
+        
+        <div class="form-group">
+          <label>Description</label>
+          <textarea id="asset-desc" rows="3">Fully renovated 4-bedroom, 3-bathroom luxury villa in the heart of Miami. Features a private pool, smart home technology, and is located just minutes from the beach. Expected annual ROI: 12%.</textarea>
+        </div>
+        
+        <button class="btn-save" onclick="addAsset()">Publish Real Estate Asset</button>
+        <p id="asset-msg" style="text-align:center; margin-top:10px; font-weight:bold; font-size:0.85rem;"></p>
+
+        <h2 style="margin-top:30px; margin-bottom:15px;">Current Marketplace</h2>
+        <div id="asset-list-admin"></div>
       </div>
     </div>
 
@@ -241,7 +268,7 @@
     }
 
     async function loadAdminAssets() {
-      const assets = await (await fetch('/api/assets')).json();
+      const assets = await (await fetch('/api/admin/assets')).json();
       document.getElementById('asset-list-admin').innerHTML = assets.map(a => `
         <div class="req-item">
           <h4>${a.name} <span style="font-size:0.7rem; background:#E0E7FF; padding:2px 6px; border-radius:4px;">${a.category}</span></h4>
@@ -259,7 +286,7 @@
       if(!name || !price) return alert("Name and Price required");
       
       await fetch('/api/admin/assets/add', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ category: cat, name, price, image_url: img, description: desc }) });
-      alert('Asset Added!');
+      alert('Real Estate Asset Added!');
       loadAdminAssets();
     }
 

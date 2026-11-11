@@ -72,15 +72,15 @@ async function sendEmail(to, subject, html) {
 // ==========================================
 let marketCache = {
   crypto: [
-    { name: 'Bitcoin', ticker: 'BTC', price: 64230.50, change: 2.4, icon: '₿' },
-    { name: 'Ethereum', ticker: 'ETH', price: 3120.10, change: 1.8, icon: 'Ξ' },
-    { name: 'Solana', ticker: 'SOL', price: 145.20, change: -0.5, icon: 'S' },
-    { name: 'XRP', ticker: 'XRP', price: 0.52, change: 1.1, icon: 'X' }
+    { name: 'Bitcoin', ticker: 'BTC', price: 67430.50, change: 2.4, icon: '₿' },
+    { name: 'Ethereum', ticker: 'ETH', price: 3520.10, change: 1.8, icon: 'Ξ' },
+    { name: 'Solana', ticker: 'SOL', price: 175.20, change: -0.5, icon: 'S' },
+    { name: 'XRP', ticker: 'XRP', price: 0.62, change: 1.1, icon: 'X' }
   ],
   stocks: [
-    { name: 'Apple Inc.', ticker: 'AAPL', price: 172.50, change: 0.5, icon: 'A' },
-    { name: 'NVIDIA Corp', ticker: 'NVDA', price: 890.20, change: 4.2, icon: 'N' },
-    { name: 'Tesla Inc.', ticker: 'TSLA', price: 175.30, change: -1.2, icon: 'T' }
+    { name: 'Apple Inc.', ticker: 'AAPL', price: 192.50, change: 0.5, icon: 'A' },
+    { name: 'NVIDIA Corp', ticker: 'NVDA', price: 920.20, change: 4.2, icon: 'N' },
+    { name: 'Tesla Inc.', ticker: 'TSLA', price: 185.30, change: -1.2, icon: 'T' }
   ],
   lastUpdated: new Date()
 };
@@ -91,16 +91,17 @@ async function updateMarketData() {
   isFetching = true;
   try {
     const cryptoRes = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,ripple&vs_currencies=usd&include_24hr_change=true');
-    if (!cryptoRes.ok) throw new Error("API Error");
-    const cryptoData = await cryptoRes.json();
-    if (cryptoData.bitcoin) {
-      marketCache.crypto = [
-        { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin.usd, change: cryptoData.bitcoin.usd_24h_change, icon: '₿' },
-        { name: 'Ethereum', ticker: 'ETH', price: cryptoData.ethereum.usd, change: cryptoData.ethereum.usd_24h_change, icon: 'Ξ' },
-        { name: 'Solana', ticker: 'SOL', price: cryptoData.solana.usd, change: cryptoData.solana.usd_24h_change, icon: 'S' },
-        { name: 'XRP', ticker: 'XRP', price: cryptoData.ripple.usd, change: cryptoData.ripple.usd_24h_change, icon: 'X' }
-      ];
-      marketCache.lastUpdated = new Date();
+    if (cryptoRes.ok) {
+      const cryptoData = await cryptoRes.json();
+      if (cryptoData.bitcoin) {
+        marketCache.crypto = [
+          { name: 'Bitcoin', ticker: 'BTC', price: cryptoData.bitcoin.usd, change: cryptoData.bitcoin.usd_24h_change, icon: '₿' },
+          { name: 'Ethereum', ticker: 'ETH', price: cryptoData.ethereum.usd, change: cryptoData.ethereum.usd_24h_change, icon: 'Ξ' },
+          { name: 'Solana', ticker: 'SOL', price: cryptoData.solana.usd, change: cryptoData.solana.usd_24h_change, icon: 'S' },
+          { name: 'XRP', ticker: 'XRP', price: cryptoData.ripple.usd, change: cryptoData.ripple.usd_24h_change, icon: 'X' }
+        ];
+        marketCache.lastUpdated = new Date();
+      }
     }
   } catch (err) { } finally { isFetching = false; }
 }
@@ -183,9 +184,6 @@ app.post('/api/register', kycUpload, async (req, res) => {
     if (!req.files || !req.files['id_front'] || !req.files['id_back']) {
       return res.status(400).json({ error: 'Government ID (Front and Back) are required.' });
     }
-    if (!email.toLowerCase().endsWith('@gmail.com')) {
-      return res.status(400).json({ error: 'Please enter a valid Gmail address.' });
-    }
 
     const existingUser = await pool.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
     if (existingUser.rows.length > 0) return res.status(400).json({ error: 'Email already registered.' });
@@ -211,12 +209,6 @@ app.post('/api/register', kycUpload, async (req, res) => {
 
     await sendNotification(newUser.id, `Welcome to Xanvia Credit Union, ${name}! Your account has been successfully created.`);
     await sendNotification(newUser.id, `Action Required: A minimum deposit of $25 is required to fully activate your checking account.`);
-
-    sendEmail(email, "Welcome to Xanvia Bank!", `
-      <h2>Welcome, ${name}!</h2>
-      <p>Your account has been successfully created and your documents are verified.</p>
-      <p>To activate your account, please log in and make a minimum opening deposit of $25.</p>
-    `);
 
     res.json({ success: true, message: 'Account created successfully!', user: newUser });
   } catch (err) { 
